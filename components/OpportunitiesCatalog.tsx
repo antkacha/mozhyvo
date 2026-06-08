@@ -232,6 +232,7 @@ export default function OpportunitiesCatalog() {
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  const gridKey = paginated.map((o) => o.slug).join("-");
 
   const clearAll = () => {
     setSelectedTypes([]);
@@ -362,9 +363,9 @@ export default function OpportunitiesCatalog() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                {paginated.map((opp) => (
-                  <OpportunityCard key={opp.slug} opp={opp} />
+              <div key={gridKey} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                {paginated.map((opp, i) => (
+                  <OpportunityCard key={opp.slug} opp={opp} index={i} />
                 ))}
               </div>
 

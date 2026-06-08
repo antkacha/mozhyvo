@@ -21,13 +21,16 @@ function isExpiringSoon(deadline: string): boolean {
   return diff <= 14 && diff > 0;
 }
 
-export default function OpportunityCard({ opp }: { opp: Opportunity }) {
+export default function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; index?: number }) {
   const expiring = isExpiringSoon(opp.deadline);
   const { isSaved, toggle, ready } = useSaved();
   const saved = isSaved(opp.slug);
 
   return (
-    <div className={`relative bg-white rounded-2xl border border-border border-t-4 ${typeBorderColors[opp.type] ?? "border-t-gray-200"} shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col p-6 gap-4 group`}>
+    <div
+      className={`card-animate relative bg-white rounded-2xl border border-border border-t-4 ${typeBorderColors[opp.type] ?? "border-t-gray-200"} shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-shadow,transform duration-200 flex flex-col p-6 gap-4 group`}
+      style={{ animationDelay: `${index * 40}ms` }}
+    >
       {/* Save button — floats outside top-right corner */}
       <button
         onClick={() => toggle(opp.slug)}

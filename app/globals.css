@@ -55,3 +55,19 @@ body {
   opacity: 1;
   transform: translateX(0);
 }
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-animate {
+  animation: cardIn 0.3s ease forwards;
+  opacity: 0;
+}
