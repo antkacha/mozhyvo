@@ -12,6 +12,10 @@ const slides = [
   { src: "/about/slides/slide5.jpg", caption: "🏢 Amazon · робочий візит" },
   { src: "/about/slides/slide6.jpg", caption: "🌅 Іспанія · Erasmus+ проєкт" },
   { src: "/about/slides/slide7.jpg", caption: "🏛️ Рим · культурний обмін" },
+  { src: "/about/slides/slide8.jpg", caption: "✈️ Міжнародний проєкт" },
+  { src: "/about/slides/slide9.jpg", caption: "🌍 Міжнародний обмін" },
+  { src: "/about/slides/slide10.jpg", caption: "🎓 Навчання за кордоном" },
+  { src: "/about/slides/slide11.jpg", caption: "🤝 Міжнародна співпраця" },
 ];
 
 export default function HeroSlider() {
