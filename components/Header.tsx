@@ -7,9 +7,10 @@ import { useSaved } from "@/hooks/useSaved";
 import { useAuth } from "@/hooks/useAuth";
 
 const navLinks = [
+  { label: "Головна", href: "/" },
   { label: "Можливості", href: "/opportunities" },
-  { label: "Для організацій", href: "/organizations" },
   { label: "Про нас", href: "/about" },
+  { label: "Для організацій", href: "/organizations" },
 ];
 
 export default function Header() {
@@ -38,10 +39,10 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors duration-200 ${
+                className={`text-sm font-medium transition-all duration-200 pb-0.5 ${
                   isActive(link.href)
-                    ? "text-primary"
-                    : "text-muted hover:text-foreground"
+                    ? "text-primary border-b-2 border-primary font-semibold"
+                    : "text-muted hover:text-foreground border-b-2 border-transparent"
                 }`}
               >
                 {link.label}
@@ -139,13 +140,15 @@ export default function Header() {
 
         {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden border-t border-border py-4 flex flex-col gap-3">
+          <div className="md:hidden border-t border-border py-4 flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors duration-200 py-1 ${
-                  isActive(link.href) ? "text-primary" : "text-muted hover:text-foreground"
+                className={`text-sm py-2 px-1 rounded-lg transition-colors duration-200 ${
+                  isActive(link.href)
+                    ? "text-primary font-semibold"
+                    : "text-muted font-medium hover:text-foreground"
                 }`}
                 onClick={() => setMenuOpen(false)}
               >
@@ -154,8 +157,8 @@ export default function Header() {
             ))}
             <Link
               href="/saved"
-              className={`text-sm font-medium py-1 flex items-center gap-2 ${
-                isActive("/saved") ? "text-primary" : "text-muted hover:text-foreground"
+              className={`text-sm py-2 px-1 flex items-center gap-2 rounded-lg transition-colors duration-200 ${
+                isActive("/saved") ? "text-primary font-semibold" : "text-muted font-medium hover:text-foreground"
               }`}
               onClick={() => setMenuOpen(false)}
             >
@@ -166,35 +169,41 @@ export default function Header() {
                 </span>
               )}
             </Link>
-            <Link
-              href="/profile"
-              className={`text-sm font-medium py-1 ${isActive("/profile") ? "text-primary" : "text-muted hover:text-foreground"}`}
-              onClick={() => setMenuOpen(false)}
-            >
-              Мій профіль
-            </Link>
-            <Link
-              href="/dashboard"
-              className={`text-sm font-medium py-1 ${isActive("/dashboard") ? "text-primary" : "text-muted hover:text-foreground"}`}
-              onClick={() => setMenuOpen(false)}
-            >
-              Панель координатора
-            </Link>
-            <div className="flex flex-col gap-2 pt-3 border-t border-border">
-              <Link
-                href="/login"
-                className="text-sm font-medium px-4 py-2 rounded-xl border border-border text-foreground text-center hover:border-primary hover:text-primary transition-all duration-200"
-                onClick={() => setMenuOpen(false)}
-              >
-                Увійти
-              </Link>
-              <Link
-                href="/register"
-                className="text-sm font-semibold px-4 py-2 rounded-xl bg-primary text-white text-center hover:bg-primary-dark transition-all duration-200"
-                onClick={() => setMenuOpen(false)}
-              >
-                Зареєструватись
-              </Link>
+            <div className="flex flex-col gap-2 pt-3 mt-1 border-t border-border">
+              {!authLoading && user ? (
+                <>
+                  <Link
+                    href="/profile"
+                    className="text-sm font-medium px-4 py-2 rounded-xl border border-border text-foreground text-center hover:border-primary hover:text-primary transition-all duration-200"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Мій профіль
+                  </Link>
+                  <button
+                    onClick={() => { signOut(); setMenuOpen(false); }}
+                    className="text-sm font-medium px-4 py-2 rounded-xl border border-border text-muted text-center hover:border-primary hover:text-primary transition-all duration-200"
+                  >
+                    Вийти
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="text-sm font-medium px-4 py-2 rounded-xl border border-border text-foreground text-center hover:border-primary hover:text-primary transition-all duration-200"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Увійти
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="text-sm font-semibold px-4 py-2 rounded-xl bg-primary text-white text-center hover:bg-primary-dark transition-all duration-200"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Зареєструватись
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}

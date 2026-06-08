@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import OpportunitiesCatalog from "@/components/OpportunitiesCatalog";
+import GuestBanner from "@/components/GuestBanner";
 
 export const metadata: Metadata = {
   title: "Можливості — Моживо",
@@ -39,6 +40,7 @@ export default function OpportunitiesPage() {
           Гранти, стипендії, стажування, обміни та більше — для молоді України.
         </p>
       </div>
+      <GuestBanner />
       <Suspense fallback={<CatalogSkeleton />}>
         <OpportunitiesCatalog />
       </Suspense>
