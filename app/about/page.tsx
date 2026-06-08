@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import FounderImage from "@/components/FounderImage";
+import HeroSlider from "@/components/HeroSlider";
 
 export const metadata: Metadata = {
   title: "Про нас — Моживо",
@@ -12,23 +13,34 @@ export default function AboutPage() {
   return (
     <>
       {/* ── Section 1: Hero ─────────────────────────────────────────── */}
-      <section className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-14">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/25 bg-white text-primary text-xs font-semibold shadow-sm mb-8">
-            <span>✦</span>
-            Наша історія
+      <section className="bg-white min-h-[70vh] flex items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 w-full">
+          <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-16">
+
+            {/* Left: text */}
+            <div className="md:w-1/2 flex flex-col gap-6">
+              <div className="inline-flex items-center gap-2 self-start px-4 py-1.5 rounded-full border border-primary/25 bg-white text-primary text-xs font-semibold shadow-sm">
+                <span>✦</span>
+                Наша історія
+              </div>
+
+              <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-[1.1]">
+                Ми віримо, що кожен українець заслуговує знати про свої можливості
+              </h1>
+
+              <p className="text-gray-500 text-lg leading-relaxed">
+                Моживо — це платформа, яка зібрала гранти, стажування, обміни та
+                волонтерство в одному місці. Ми зробили це, бо самі шукали ці
+                можливості і знаємо, як це складно.
+              </p>
+            </div>
+
+            {/* Right: auto-sliding photo gallery (desktop only) */}
+            <div className="hidden md:block md:w-1/2">
+              <HeroSlider />
+            </div>
+
           </div>
-
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-[1.1] max-w-3xl mb-6">
-            Ми віримо, що кожен українець заслуговує знати про свої можливості
-          </h1>
-
-          <p className="text-gray-500 text-lg leading-relaxed max-w-2xl">
-            Моживо — це платформа, яка зібрала гранти, стажування, обміни та
-            волонтерство в одному місці. Ми зробили це, бо самі шукали ці
-            можливості і знаємо, як це складно.
-          </p>
         </div>
       </section>
 
