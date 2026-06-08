@@ -15,75 +15,47 @@ const badgeColors: Record<string, string> = {
   grant: "bg-yellow-100 text-yellow-700",
 };
 
-const typeBorderColors: Record<string, string> = {
-  exchange: "border-t-green-500",
-  scholarship: "border-t-primary",
-  grant: "border-t-yellow-400",
-};
-
-const featuredOpportunities = [
-  {
-    type: "exchange",
-    typeName: "Обмін",
-    org: "Erasmus+",
-    title: "Програма академічної мобільності для студентів університетів",
-    deadline: "15 лип",
-    flag: "🇪🇺",
-    location: "Євросоюз",
-    href: "/opportunities/erasmus-plus",
-  },
-  {
-    type: "scholarship",
-    typeName: "Стипендія",
-    org: "DAAD",
-    title: "Дослідницькі стипендії для аспірантів і вчених",
-    deadline: "1 серп",
-    flag: "🇩🇪",
-    location: "Німеччина",
-    href: "/opportunities/daad-research",
-  },
-  {
-    type: "grant",
-    typeName: "Грант",
-    org: "Український Католицький Університет",
-    title: "Грант на навчання для вимушено переміщених осіб",
-    deadline: "30 чер",
-    flag: "🇺🇦",
-    location: "Україна",
-    href: "/opportunities/ucu-grant",
-  },
-];
+const heartIcon = (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+    />
+  </svg>
+);
 
 export default function Home() {
   return (
     <>
-      {/* ── Hero ───────────────────────────────────────────────────── */}
-      <section
-        className="relative overflow-hidden min-h-[80vh] flex items-center"
-        style={{ backgroundColor: "#F8F9FF" }}
-      >
-        {/* Soft radial glow behind cards */}
+      {/* ── Hero — white ────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden min-h-[80vh] flex items-center bg-white">
+        {/* Soft radial glow */}
         <div
           aria-hidden
           className="absolute -top-20 right-0 w-[700px] h-[700px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(circle, rgba(59,79,232,0.07) 0%, transparent 65%)",
+              "radial-gradient(circle, rgba(59,79,232,0.06) 0%, transparent 65%)",
           }}
         />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 relative z-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-8 lg:py-16">
 
-            {/* ── Left: content ── */}
+            {/* Left: content */}
             <div className="flex flex-col gap-7">
-              {/* Badge */}
               <div className="inline-flex items-center gap-2 self-start px-4 py-1.5 rounded-full border border-primary/25 bg-white text-primary text-xs font-semibold shadow-sm">
                 <span>✦</span>
                 Платформа можливостей для молоді
               </div>
 
-              {/* Headline */}
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-foreground tracking-tight leading-[1.04]">
                 Знайди свою
                 <br />
@@ -92,13 +64,11 @@ export default function Home() {
                 <span className="text-primary">у світі</span>
               </h1>
 
-              {/* Subheadline */}
               <p className="text-lg text-muted leading-relaxed max-w-[440px]">
                 Гранти, стажування, обміни та волонтерство — все в одному місці
                 для молоді України
               </p>
 
-              {/* CTAs */}
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/opportunities"
@@ -114,7 +84,6 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* Stats */}
               <div className="flex items-center gap-6 pt-1">
                 <div className="flex items-center gap-2.5">
                   <span className="text-xl">🌍</span>
@@ -134,10 +103,10 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ── Right: compact overlapping card stack ── */}
+            {/* Right: compact overlapping card stack */}
             <div className="relative h-[380px] sm:h-[420px] lg:h-[420px] w-full">
 
-              {/* Card 1 — Erasmus, large, indigo bg, float1 */}
+              {/* Card 1 — Erasmus, indigo, float1 */}
               <div
                 className="absolute z-0 animate-float1"
                 style={{ top: "80px", left: "10px", width: "278px" }}
@@ -151,22 +120,16 @@ export default function Home() {
                       1 лип
                     </span>
                   </div>
-                  <p className="font-extrabold text-lg leading-tight mb-1">
-                    Erasmus+ 2025
-                  </p>
-                  <p className="text-white/65 text-sm mb-4">
-                    Навчання в ЄС · До 1 000€/міс
-                  </p>
+                  <p className="font-extrabold text-lg leading-tight mb-1">Erasmus+ 2025</p>
+                  <p className="text-white/65 text-sm mb-4">Навчання в ЄС · До 1 000€/міс</p>
                   <div className="flex items-center justify-between pt-3 border-t border-white/15">
                     <span className="text-xs text-white/60">🇪🇺 Євросоюз</span>
-                    <span className="text-xs font-semibold text-white/85">
-                      Детальніше →
-                    </span>
+                    <span className="text-xs font-semibold text-white/85">Детальніше →</span>
                   </div>
                 </div>
               </div>
 
-              {/* Card 2 — DAAD, medium, white, float2 — overlaps bottom of Card 1 */}
+              {/* Card 2 — DAAD, white, float2, overlaps Card 1 bottom */}
               <div
                 className="absolute z-10 animate-float2"
                 style={{ top: "205px", left: "50px", width: "240px" }}
@@ -189,7 +152,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Card 3 — Notification, small, white, float3 — top-right corner */}
+              {/* Card 3 — Notification, top-right, float3 */}
               <div
                 className="absolute z-20 animate-float3"
                 style={{ top: "15px", right: "10px", width: "178px" }}
@@ -200,12 +163,8 @@ export default function Home() {
                       🔔
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-foreground leading-tight">
-                        Новий дедлайн
-                      </p>
-                      <p className="text-xs text-muted mt-0.5">
-                        FLEX Program · 3 дні
-                      </p>
+                      <p className="text-xs font-bold text-foreground leading-tight">Новий дедлайн</p>
+                      <p className="text-xs text-muted mt-0.5">FLEX Program · 3 дні</p>
                     </div>
                   </div>
                 </div>
@@ -216,17 +175,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Why Mozhyvo ────────────────────────────────────────────── */}
+      {/* ── Why Mozhyvo — white ─────────────────────────────────────── */}
       <section className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-xs font-semibold tracking-widest text-primary uppercase mb-3">
+              Платформа
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+              Чому Моживо?
+            </h2>
+            <p className="text-muted max-w-xl mx-auto">
+              Ми зібрали все, що потрібно молодій людині для розвитку — в одному зручному місці
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-6 rounded-2xl border border-gray-100 shadow-sm">
-              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mb-4 p-3">
+              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mb-4">
                 🔍
               </div>
-              <h3 className="font-bold text-foreground text-lg mb-2">
-                Все в одному місці
-              </h3>
+              <h3 className="font-bold text-foreground text-lg mb-2">Все в одному місці</h3>
               <p className="text-muted text-sm leading-relaxed">
                 Більше не треба шукати по десятках Telegram-каналів. Гранти,
                 стажування, обміни — тут.
@@ -234,12 +203,10 @@ export default function Home() {
             </div>
 
             <div className="p-6 rounded-2xl border border-gray-100 shadow-sm">
-              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mb-4 p-3">
+              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mb-4">
                 🔔
               </div>
-              <h3 className="font-bold text-foreground text-lg mb-2">
-                Не пропусти дедлайн
-              </h3>
+              <h3 className="font-bold text-foreground text-lg mb-2">Не пропусти дедлайн</h3>
               <p className="text-muted text-sm leading-relaxed">
                 Зберігай цікаві можливості і отримуй нагадування до закінчення
                 прийому заявок.
@@ -247,12 +214,10 @@ export default function Home() {
             </div>
 
             <div className="p-6 rounded-2xl border border-gray-100 shadow-sm">
-              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mb-4 p-3">
+              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mb-4">
                 ✅
               </div>
-              <h3 className="font-bold text-foreground text-lg mb-2">
-                Тільки перевірені організації
-              </h3>
+              <h3 className="font-bold text-foreground text-lg mb-2">Тільки перевірені організації</h3>
               <p className="text-muted text-sm leading-relaxed">
                 Всі партнери верифіковані командою Моживо. Жодного шахрайства.
               </p>
@@ -261,47 +226,44 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Category cards ─────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-10 text-center">
-          Що ти шукаєш?
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {categories.map((cat) => (
-            <Link
-              key={cat.slug}
-              href={`/opportunities?category=${cat.slug}`}
-              className="group relative flex items-center gap-4 p-5 bg-white rounded-2xl border border-border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
-            >
-              {/* Indigo left accent bar on hover */}
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-primary rounded-l-2xl transition-colors duration-200" />
-
-              {/* Colored icon background */}
-              <div
-                className={`w-12 h-12 rounded-2xl ${cat.bg} flex items-center justify-center text-2xl flex-shrink-0`}
+      {/* ── Category cards — #F7F8FF ─────────────────────────────────── */}
+      <section style={{ backgroundColor: "#F7F8FF" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-10 text-center">
+            Що ти шукаєш?
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {categories.map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/opportunities?category=${cat.slug}`}
+                className="group relative flex items-center gap-4 p-5 bg-white rounded-2xl border border-border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
               >
-                {cat.emoji}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-foreground group-hover:text-primary transition-colors duration-200">
-                  {cat.name}
-                </p>
-                <span className="inline-block mt-1 text-xs font-medium px-2 py-0.5 bg-muted-bg text-muted rounded-full">
-                  {cat.count} активних
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-primary rounded-l-2xl transition-colors duration-200" />
+                <div
+                  className={`w-12 h-12 rounded-2xl ${cat.bg} flex items-center justify-center text-2xl flex-shrink-0`}
+                >
+                  {cat.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-foreground group-hover:text-primary transition-colors duration-200">
+                    {cat.name}
+                  </p>
+                  <span className="inline-block mt-1 text-xs font-medium px-2 py-0.5 bg-muted-bg text-muted rounded-full">
+                    {cat.count} активних
+                  </span>
+                </div>
+                <span className="text-muted group-hover:text-primary transition-colors duration-200 text-lg flex-shrink-0">
+                  →
                 </span>
-              </div>
-
-              <span className="text-muted group-hover:text-primary transition-colors duration-200 text-lg flex-shrink-0">
-                →
-              </span>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── Featured opportunities ──────────────────────────────────── */}
-      <section style={{ backgroundColor: "#F8F9FF" }}>
+      {/* ── Featured opportunities — white, editorial layout ─────────── */}
+      <section className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex items-center justify-between mb-10">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
@@ -315,66 +277,132 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredOpportunities.map((opp) => (
+          {/* Editorial grid: large card left + 2 stacked right */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+            {/* Large left card — Erasmus, indigo gradient */}
+            <div className="lg:col-span-3">
               <div
-                key={opp.href}
-                className={`bg-white rounded-2xl border border-border border-t-4 ${typeBorderColors[opp.type] ?? ""} shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col p-6 gap-3`}
+                className="h-full min-h-[280px] rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden"
+                style={{
+                  background: "linear-gradient(135deg, #3B4FE8 0%, #6366F1 100%)",
+                }}
               >
-                {/* Type badge + deadline + heart */}
+                {/* Top row */}
                 <div className="flex items-center justify-between gap-2">
-                  <span
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                      badgeColors[opp.type] ?? "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {opp.typeName}
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white text-primary">
+                    🔄 Обмін
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted bg-muted-bg px-2.5 py-1 rounded-full font-medium">
-                      {opp.deadline}
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-accent text-foreground">
+                      15 лип
                     </span>
                     <span
-                      className="text-muted hover:text-rose-500 transition-colors duration-200 cursor-pointer"
+                      className="text-white/60 hover:text-white transition-colors cursor-pointer"
                       aria-label="Зберегти"
                     >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                        />
-                      </svg>
+                      {heartIcon}
                     </span>
                   </div>
                 </div>
 
-                {/* Org name in indigo + title */}
-                <div>
-                  <p className="text-sm font-semibold text-primary mb-1">{opp.org}</p>
-                  <p className="font-semibold text-foreground leading-snug">{opp.title}</p>
+                {/* Content */}
+                <div className="flex-1 flex flex-col gap-2">
+                  <p className="text-sm text-white/75">Erasmus+</p>
+                  <p className="text-xl font-bold text-white leading-snug">
+                    Програма академічної мобільності для студентів університетів
+                  </p>
+                  <p className="text-sm text-white/70 mt-auto">🇪🇺 Євросоюз</p>
                 </div>
 
-                {/* Location + link */}
-                <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
-                  <span className="text-sm text-muted flex items-center gap-1.5">
-                    {opp.flag} {opp.location}
-                  </span>
+                {/* CTA */}
+                <div className="pt-2">
                   <Link
-                    href={opp.href}
+                    href="/opportunities/erasmus-plus"
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white text-primary font-semibold text-sm hover:bg-primary-light transition-all"
+                  >
+                    Детальніше →
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Right column — 2 stacked cards */}
+            <div className="lg:col-span-2 flex flex-col gap-6">
+
+              {/* DAAD — blue top border */}
+              <div className="bg-white rounded-2xl border border-border border-t-4 border-t-blue-500 shadow-sm flex flex-col p-6 gap-3 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badgeColors.scholarship}`}>
+                    Стипендія
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted bg-muted-bg px-2.5 py-1 rounded-full font-medium">
+                      1 серп
+                    </span>
+                    <span
+                      className="text-muted hover:text-rose-500 transition-colors cursor-pointer"
+                      aria-label="Зберегти"
+                    >
+                      {heartIcon}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-primary mb-1">DAAD</p>
+                  <p className="font-semibold text-foreground text-sm leading-snug">
+                    Дослідницькі стипендії для аспірантів і вчених
+                  </p>
+                </div>
+                <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
+                  <span className="text-sm text-muted">🇩🇪 Німеччина</span>
+                  <Link
+                    href="/opportunities/daad-research"
                     className="text-sm font-semibold text-primary hover:underline"
                   >
                     Детальніше →
                   </Link>
                 </div>
               </div>
-            ))}
+
+              {/* UCU — green top border */}
+              <div className="bg-white rounded-2xl border border-border border-t-4 border-t-emerald-500 shadow-sm flex flex-col p-6 gap-3 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badgeColors.grant}`}>
+                    Грант
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted bg-muted-bg px-2.5 py-1 rounded-full font-medium">
+                      30 чер
+                    </span>
+                    <span
+                      className="text-muted hover:text-rose-500 transition-colors cursor-pointer"
+                      aria-label="Зберегти"
+                    >
+                      {heartIcon}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-primary mb-1">
+                    Український Католицький Університет
+                  </p>
+                  <p className="font-semibold text-foreground text-sm leading-snug">
+                    Грант на навчання для вимушено переміщених осіб
+                  </p>
+                </div>
+                <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
+                  <span className="text-sm text-muted">🇺🇦 Україна</span>
+                  <Link
+                    href="/opportunities/ucu-grant"
+                    className="text-sm font-semibold text-primary hover:underline"
+                  >
+                    Детальніше →
+                  </Link>
+                </div>
+              </div>
+
+            </div>
           </div>
 
           <div className="mt-8 text-center sm:hidden">
@@ -388,33 +416,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CTA banner ─────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="bg-primary rounded-3xl px-8 py-16 text-center relative overflow-hidden">
-          {/* Decorative faded circles */}
-          <div
-            aria-hidden
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 15% 50%, rgba(255,214,0,0.15) 0%, transparent 45%), radial-gradient(circle at 85% 20%, rgba(255,255,255,0.10) 0%, transparent 40%), radial-gradient(circle at 75% 80%, rgba(255,255,255,0.07) 0%, transparent 35%)",
-            }}
-          />
-          <div className="relative z-10">
-            <div className="text-4xl mb-5">🏢</div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-4">
-              Ви організація або фонд?
-            </h2>
-            <p className="text-white/80 mb-8 max-w-lg mx-auto">
-              Розмістіть свою програму безкоштовно і охопіть тисячі молодих
-              українців, які шукають саме такі можливості.
-            </p>
-            <Link
-              href="/organizations"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-accent text-foreground font-semibold hover:bg-accent-dark transition-all duration-200 shadow-lg"
-            >
-              Розмістити можливість →
-            </Link>
+      {/* ── CTA banner — white section, indigo inner ─────────────────── */}
+      <section className="bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="bg-primary rounded-3xl px-8 py-16 text-center relative overflow-hidden">
+            <div
+              aria-hidden
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 15% 50%, rgba(255,214,0,0.15) 0%, transparent 45%), radial-gradient(circle at 85% 20%, rgba(255,255,255,0.10) 0%, transparent 40%), radial-gradient(circle at 75% 80%, rgba(255,255,255,0.07) 0%, transparent 35%)",
+              }}
+            />
+            <div className="relative z-10">
+              <div className="text-4xl mb-5">🏢</div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-4">
+                Ви організація або фонд?
+              </h2>
+              <p className="text-white/80 mb-8 max-w-lg mx-auto">
+                Розмістіть свою програму безкоштовно і охопіть тисячі молодих
+                українців, які шукають саме такі можливості.
+              </p>
+              <Link
+                href="/organizations"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-accent text-foreground font-semibold hover:bg-accent-dark transition-all duration-200 shadow-lg"
+              >
+                Розмістити можливість →
+              </Link>
+            </div>
           </div>
         </div>
       </section>

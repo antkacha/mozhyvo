@@ -1,10 +1,9 @@
 import Link from "next/link";
 
 const footerLinks = [
-  { label: "Можливості", href: "/opportunities" },
-  { label: "Збережені", href: "/saved" },
-  { label: "Для організацій", href: "/organizations" },
   { label: "Про нас", href: "/about" },
+  { label: "Можливості", href: "/opportunities" },
+  { label: "Для організацій", href: "/organizations" },
   { label: "Контакти", href: "/contacts" },
 ];
 
@@ -101,7 +100,7 @@ export default function Footer() {
 
         <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted">
-            © 2025 Моживо. Зроблено в Україні 🇺🇦
+            © 2026 Моживо. Зроблено в Україні 🇺🇦
           </p>
           <p className="text-xs text-muted">
             Усі права захищено
