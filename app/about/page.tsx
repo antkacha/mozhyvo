@@ -242,7 +242,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── Section 5: CTA banner ───────────────────────────────────── */}
+      {/* ── Section 5: Support banner ───────────────────────────────── */}
       <section className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
           <div className="bg-primary rounded-3xl px-8 py-16 text-center relative overflow-hidden">
@@ -255,18 +255,25 @@ export default function AboutPage() {
               }}
             />
             <div className="relative z-10">
-              <div className="text-4xl mb-5">👋</div>
+              <div className="text-4xl mb-5">🩵</div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-4">
-                Хочеш приєднатись до команди?
+                На розвиток MOЖUВО
               </h2>
-              <p className="text-white/80 mb-8 max-w-lg mx-auto">
-                Ми відкриті до співпраці — пишіть нам
+              <p className="text-white/80 mb-3 max-w-xl mx-auto leading-relaxed">
+                Ми створили цей проєкт безкоштовно — бо хочемо, щоб кожен
+                молодий українець міг знайти свою можливість і розвиватися.
+              </p>
+              <p className="text-white/60 mb-8 max-w-lg mx-auto text-sm leading-relaxed">
+                Якщо ти хочеш підтримати нас — будемо щиро вдячні. Кожна
+                гривня йде на розвиток платформи.
               </p>
               <Link
-                href="mailto:hello@mozhyvo.com"
+                href="https://send.monobank.ua/jar/2aqfexs7AP"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-accent text-foreground font-semibold hover:bg-accent-dark transition-all duration-200 shadow-lg"
               >
-                Написати нам →
+                🔗 Підтримати проєкт →
               </Link>
             </div>
           </div>
