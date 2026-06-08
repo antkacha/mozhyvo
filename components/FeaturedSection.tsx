@@ -50,14 +50,19 @@ export default function FeaturedSection() {
 
   return (
     <section className="bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="flex items-center justify-between mb-10">
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Актуальні можливості
-          </h2>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
+              Актуальні можливості
+            </h2>
+            <p className="text-gray-500 text-base mt-2">
+              Відібрані програми з дедлайнами найближчих місяців
+            </p>
+          </div>
           <Link
             href="/opportunities"
-            className="text-sm font-semibold text-primary hover:underline hidden sm:block"
+            className="text-sm font-semibold text-primary hover:underline hidden sm:block mb-1"
           >
             Переглянути всі →
           </Link>
@@ -68,9 +73,13 @@ export default function FeaturedSection() {
           {/* Large left card — Erasmus, indigo gradient */}
           <div ref={leftRef} className="lg:col-span-3 slide-in-left">
             <div
-              className="h-full min-h-[280px] rounded-2xl p-6 flex flex-col gap-4 overflow-hidden"
+              className="relative h-full min-h-[320px] rounded-2xl p-6 flex flex-col gap-4 overflow-hidden"
               style={{ background: "linear-gradient(135deg, #3B4FE8 0%, #6366F1 100%)" }}
             >
+              {/* Decorative faded circle */}
+              <div className="absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-white/10 pointer-events-none" />
+
+              {/* Top row */}
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white text-primary">
                   🔄 Обмін
@@ -88,15 +97,35 @@ export default function FeaturedSection() {
                 </div>
               </div>
 
-              <div className="flex-1 flex flex-col gap-2">
-                <p className="text-sm text-white/75">Erasmus+</p>
+              {/* Org + title */}
+              <div>
+                <p className="text-sm text-white/75 mb-1">Erasmus+</p>
                 <p className="text-xl font-bold text-white leading-snug">
                   Програма академічної мобільності для студентів університетів
                 </p>
-                <p className="text-sm text-white/70 mt-auto">🇪🇺 Євросоюз</p>
               </div>
 
-              <div className="pt-2">
+              {/* Stat pills */}
+              <div className="flex flex-wrap gap-2">
+                <span className="px-3 py-1 rounded-full bg-white/20 text-sm text-white">
+                  💰 До 1 000€/міс
+                </span>
+                <span className="px-3 py-1 rounded-full bg-white/20 text-sm text-white">
+                  📅 10 місяців
+                </span>
+                <span className="px-3 py-1 rounded-full bg-white/20 text-sm text-white">
+                  🎓 Бакалаври та магістри
+                </span>
+              </div>
+
+              {/* Short description */}
+              <p className="text-sm text-white/80 leading-relaxed">
+                Програма підтримує навчання, стажування та молодіжні обміни в країнах ЄС.
+              </p>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/15">
+                <span className="text-sm text-white/70">🇪🇺 Євросоюз</span>
                 <Link
                   href="/opportunities/erasmus-plus"
                   className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white text-primary font-semibold text-sm hover:bg-primary-light transition-all"

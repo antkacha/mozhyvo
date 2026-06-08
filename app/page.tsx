@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <>
       {/* ── Hero — white ────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden min-h-[80vh] flex items-center bg-white">
+      <section className="relative overflow-hidden bg-white">
         {/* Soft radial glow */}
         <div
           aria-hidden
@@ -26,8 +26,8 @@ export default function Home() {
           }}
         />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 relative z-10 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-8 lg:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-0 relative z-10 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-6 lg:py-10">
 
             {/* Left: content */}
             <div className="flex flex-col gap-7">
@@ -84,7 +84,7 @@ export default function Home() {
             </div>
 
             {/* Right: compact overlapping card stack */}
-            <div className="relative h-[380px] sm:h-[420px] lg:h-[420px] w-full">
+            <div className="relative h-[360px] sm:h-[400px] lg:h-[400px] w-full overflow-hidden">
 
               {/* Card 1 — Erasmus, indigo, float1 */}
               <div
@@ -156,13 +156,13 @@ export default function Home() {
       </section>
 
       {/* ── Why Mozhyvo — white ─────────────────────────────────────── */}
-      <section className="bg-white py-16">
+      <section className="bg-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
               Чому Моживо?
             </h2>
-            <p className="text-muted text-base">
+            <p className="text-gray-500 text-base mt-2 max-w-xl">
               Ми зібрали все для розвитку молоді — в одному місці
             </p>
           </div>
@@ -205,10 +205,15 @@ export default function Home() {
 
       {/* ── Category cards — #F7F8FF ─────────────────────────────────── */}
       <section style={{ backgroundColor: "#F7F8FF" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-10 text-center">
-            Що ти шукаєш?
-          </h2>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+          <div className="mb-10">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
+              Що ти шукаєш?
+            </h2>
+            <p className="text-gray-500 text-base mt-2">
+              Оберіть напрям — і знайдіть можливості саме для вас
+            </p>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {categories.map((cat) => (
               <Link
@@ -240,11 +245,12 @@ export default function Home() {
       </section>
 
       {/* ── Featured opportunities — animated client component ──────── */}
+
       <FeaturedSection />
 
       {/* ── CTA banner — white section, indigo inner ─────────────────── */}
       <section className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
           <div className="bg-primary rounded-3xl px-8 py-16 text-center relative overflow-hidden">
             <div
               aria-hidden
