@@ -59,7 +59,7 @@ export default function Home() {
     <>
       {/* ── Hero ───────────────────────────────────────────────────── */}
       <section
-        className="relative overflow-hidden min-h-screen flex items-center"
+        className="relative overflow-hidden min-h-[80vh] flex items-center"
         style={{ backgroundColor: "#F8F9FF" }}
       >
         {/* Soft radial glow behind cards */}
@@ -72,8 +72,8 @@ export default function Home() {
           }}
         />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-0 relative z-10 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center lg:min-h-screen lg:py-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 relative z-10 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-8 lg:py-16">
 
             {/* ── Left: content ── */}
             <div className="flex flex-col gap-7">
@@ -135,7 +135,7 @@ export default function Home() {
             </div>
 
             {/* ── Right: compact overlapping card stack ── */}
-            <div className="relative h-[420px] sm:h-[480px] lg:h-[500px] w-full">
+            <div className="relative h-[380px] sm:h-[420px] lg:h-[420px] w-full">
 
               {/* Card 1 — Erasmus, large, indigo bg, float1 */}
               <div
@@ -211,6 +211,51 @@ export default function Home() {
                 </div>
               </div>
 
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Why Mozhyvo ────────────────────────────────────────────── */}
+      <section className="bg-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-2xl border border-gray-100 shadow-sm">
+              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mb-4 p-3">
+                🔍
+              </div>
+              <h3 className="font-bold text-foreground text-lg mb-2">
+                Все в одному місці
+              </h3>
+              <p className="text-muted text-sm leading-relaxed">
+                Більше не треба шукати по десятках Telegram-каналів. Гранти,
+                стажування, обміни — тут.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl border border-gray-100 shadow-sm">
+              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mb-4 p-3">
+                🔔
+              </div>
+              <h3 className="font-bold text-foreground text-lg mb-2">
+                Не пропусти дедлайн
+              </h3>
+              <p className="text-muted text-sm leading-relaxed">
+                Зберігай цікаві можливості і отримуй нагадування до закінчення
+                прийому заявок.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl border border-gray-100 shadow-sm">
+              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mb-4 p-3">
+                ✅
+              </div>
+              <h3 className="font-bold text-foreground text-lg mb-2">
+                Тільки перевірені організації
+              </h3>
+              <p className="text-muted text-sm leading-relaxed">
+                Всі партнери верифіковані командою Моживо. Жодного шахрайства.
+              </p>
             </div>
           </div>
         </div>
@@ -358,17 +403,17 @@ export default function Home() {
           <div className="relative z-10">
             <div className="text-4xl mb-5">🏢</div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-4">
-              Є організація чи програма?
+              Ви організація або фонд?
             </h2>
             <p className="text-white/80 mb-8 max-w-lg mx-auto">
-              Розмісти свою можливість безкоштовно і охопи тисячі молодих
-              українців.
+              Розмістіть свою програму безкоштовно і охопіть тисячі молодих
+              українців, які шукають саме такі можливості.
             </p>
             <Link
               href="/organizations"
               className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-accent text-foreground font-semibold hover:bg-accent-dark transition-all duration-200 shadow-lg"
             >
-              Додати організацію
+              Розмістити можливість →
             </Link>
           </div>
         </div>
