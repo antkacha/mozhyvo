@@ -1,0 +1,466 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Opportunity } from "@/lib/data";
+import { useApplications } from "@/hooks/useApplications";
+
+const DEGREES = [
+  "Бакалавр",
+  "Магістр",
+  "Аспірант / PhD",
+  "Спеціаліст",
+  "Незакінчена вища",
+  "Інше",
+];
+
+const LANGUAGES = [
+  "Українська",
+  "Англійська",
+  "Німецька",
+  "Французька",
+  "Польська",
+  "Іспанська",
+  "Італійська",
+  "Португальська",
+  "Інша",
+];
+
+const COUNTRIES = [
+  "Україна",
+  "Польща",
+  "Німеччина",
+  "США",
+  "Велика Британія",
+  "Чехія",
+  "Словаччина",
+  "Австрія",
+  "Нідерланди",
+  "Швеція",
+  "Норвегія",
+  "Фінляндія",
+  "Канада",
+  "Інша",
+];
+
+const YEARS = ["2024", "2025", "2026", "2027", "2028", "2029"];
+
+type FormData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  country: string;
+  institution: string;
+  degree: string;
+  graduationYear: string;
+  languages: string[];
+  motivation: string;
+  cvUrl: string;
+  portfolioUrl: string;
+};
+
+const EMPTY: FormData = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  country: "",
+  institution: "",
+  degree: "",
+  graduationYear: "",
+  languages: [],
+  motivation: "",
+  cvUrl: "",
+  portfolioUrl: "",
+};
+
+const STEPS = [
+  "Особисті дані",
+  "Освіта та мови",
+  "Мотивація",
+  "Огляд заявки",
+];
+
+// ── Helpers ──────────────────────────────────────────────────────
+
+function Field({
+  label,
+  required,
+  error,
+  hint,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-foreground mb-1.5">
+        {label}
+        {required && <span className="text-red-500 ml-0.5">*</span>}
+      </label>
+      {children}
+      {hint && !error && <p className="text-xs text-muted mt-1">{hint}</p>}
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  );
+}
+
+function inputCls(error?: string) {
+  return `w-full px-4 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white ${
+    error ? "border-red-400" : "border-border"
+  }`;
+}
+
+// ── Main component ────────────────────────────────────────────────
+
+export default function ApplyForm({ opp }: { opp: Opportunity }) {
+  const router = useRouter();
+  const { submit, hasApplied, ready } = useApplications();
+
+  const [step, setStep] = useState(0);
+  const [data, setData] = useState<FormData>(EMPTY);
+  const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const set = (field: keyof FormData, value: string | string[]) => {
+    setData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const toggleLang = (lang: string) => {
+    set(
+      "languages",
+      data.languages.includes(lang)
+        ? data.languages.filter((l) => l !== lang)
+        : [...data.languages, lang]
+    );
+  };
+
+  // Per-step validation
+  const validate = (s: number): Partial<FormData> => {
+    const e: Partial<FormData> = {};
+    if (s === 0) {
+      if (!data.firstName.trim()) e.firstName = "Вкажи ім'я";
+      if (!data.lastName.trim()) e.lastName = "Вкажи прізвище";
+      if (!data.email.includes("@")) e.email = "Невірний email";
+      if (!data.country) e.country = "Обери країну";
+    }
+    if (s === 1) {
+      if (!data.institution.trim()) e.institution = "Вкажи заклад";
+      if (!data.degree) e.degree = "Обери ступінь";
+      if (data.languages.length === 0)
+        (e as Record<string, string>).languages = "Додай хоча б одну мову";
+    }
+    if (s === 2) {
+      if (data.motivation.trim().length < 50)
+        e.motivation = "Мотиваційний лист — мінімум 50 символів";
+      if (data.cvUrl && !/^https?:\/\/.+/.test(data.cvUrl))
+        e.cvUrl = "Вкажи повне посилання (https://...)";
+      if (data.portfolioUrl && !/^https?:\/\/.+/.test(data.portfolioUrl))
+        e.portfolioUrl = "Вкажи повне посилання (https://...)";
+    }
+    return e;
+  };
+
+  const next = () => {
+    const e = validate(step);
+    if (Object.keys(e).length > 0) {
+      setErrors(e);
+      return;
+    }
+    setErrors({});
+    setStep((s) => s + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const back = () => {
+    setStep((s) => s - 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    await new Promise((r) => setTimeout(r, 1400));
+    submit({
+      opportunitySlug: opp.slug,
+      opportunityTitle: opp.title,
+      org: opp.org,
+      deadline: opp.deadline,
+      ...data,
+    });
+    setDone(true);
+    setSubmitting(false);
+  };
+
+  // Already applied
+  if (ready && hasApplied(opp.slug)) {
+    return (
+      <div className="text-center py-16">
+        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
+          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-foreground mb-2">Ти вже подав заявку</h2>
+        <p className="text-muted mb-6">
+          Ти вже відгукнувся на цю програму. Переглянути статус можна в профілі.
+        </p>
+        <div className="flex gap-3 justify-center">
+          <Link href="/profile" className="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all">
+            Мій профіль
+          </Link>
+          <Link href="/opportunities" className="px-5 py-2.5 border border-border rounded-xl text-sm font-medium hover:border-primary hover:text-primary transition-all">
+            Інші можливості
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Success state
+  if (done) {
+    return (
+      <div className="text-center py-16">
+        <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+          <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-extrabold text-foreground mb-2">Заявку подано! 🎉</h2>
+        <p className="text-muted max-w-sm mx-auto mb-8 leading-relaxed">
+          Твою заявку на <strong>{opp.title}</strong> надіслано. Координатор розгляне її найближчим часом.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link href="/profile" className="px-6 py-3 bg-primary text-white rounded-2xl font-semibold text-sm hover:bg-primary-dark transition-all shadow-sm shadow-primary/20">
+            Переглянути в профілі
+          </Link>
+          <Link href="/opportunities" className="px-6 py-3 border border-border rounded-2xl text-sm font-semibold hover:border-primary hover:text-primary transition-all">
+            Знайти ще можливості
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Progress */}
+      <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1">
+        {STEPS.map((label, i) => (
+          <div key={i} className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
+                  i < step
+                    ? "bg-primary text-white"
+                    : i === step
+                    ? "bg-primary text-white ring-4 ring-primary/20"
+                    : "bg-muted-bg text-muted border border-border"
+                }`}
+              >
+                {i < step ? (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  i + 1
+                )}
+              </div>
+              <span className={`text-xs font-medium hidden sm:block ${i === step ? "text-foreground" : "text-muted"}`}>
+                {label}
+              </span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div className={`w-8 h-0.5 flex-shrink-0 transition-all ${i < step ? "bg-primary" : "bg-border"}`} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-2xl border border-border shadow-sm p-8">
+        <h2 className="text-lg font-bold text-foreground mb-1">{STEPS[step]}</h2>
+        <p className="text-sm text-muted mb-6">Крок {step + 1} з {STEPS.length}</p>
+
+        {/* ── Step 0: Personal ── */}
+        {step === 0 && (
+          <div className="flex flex-col gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <Field label="Ім'я" required error={errors.firstName}>
+                <input type="text" value={data.firstName} onChange={(e) => set("firstName", e.target.value)} placeholder="Іванна" className={inputCls(errors.firstName)} />
+              </Field>
+              <Field label="Прізвище" required error={errors.lastName}>
+                <input type="text" value={data.lastName} onChange={(e) => set("lastName", e.target.value)} placeholder="Шевченко" className={inputCls(errors.lastName)} />
+              </Field>
+            </div>
+            <Field label="Email" required error={errors.email}>
+              <input type="email" value={data.email} onChange={(e) => set("email", e.target.value)} placeholder="your@email.com" autoComplete="email" className={inputCls(errors.email)} />
+            </Field>
+            <Field label="Номер телефону" hint="Міжнародний формат, наприклад +380501234567">
+              <input type="tel" value={data.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+380 50 123 4567" className={inputCls()} />
+            </Field>
+            <Field label="Країна проживання" required error={errors.country}>
+              <select value={data.country} onChange={(e) => set("country", e.target.value)} className={inputCls(errors.country)}>
+                <option value="">Оберіть країну...</option>
+                {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </Field>
+          </div>
+        )}
+
+        {/* ── Step 1: Education ── */}
+        {step === 1 && (
+          <div className="flex flex-col gap-5">
+            <Field label="Заклад навчання" required error={errors.institution}>
+              <input type="text" value={data.institution} onChange={(e) => set("institution", e.target.value)} placeholder="Київський університет імені Бориса Грінченка" className={inputCls(errors.institution)} />
+            </Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <Field label="Ступінь освіти" required error={errors.degree}>
+                <select value={data.degree} onChange={(e) => set("degree", e.target.value)} className={inputCls(errors.degree)}>
+                  <option value="">Оберіть...</option>
+                  {DEGREES.map((d) => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </Field>
+              <Field label="Рік закінчення">
+                <select value={data.graduationYear} onChange={(e) => set("graduationYear", e.target.value)} className={inputCls()}>
+                  <option value="">Оберіть...</option>
+                  {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </Field>
+            </div>
+            <Field label="Мови" required error={(errors as Record<string, string>).languages}>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => toggleLang(lang)}
+                    className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-all duration-150 ${
+                      data.languages.includes(lang)
+                        ? "bg-primary text-white border-primary"
+                        : "border-border text-muted hover:border-primary hover:text-primary bg-white"
+                    }`}
+                  >
+                    {lang}
+                  </button>
+                ))}
+              </div>
+            </Field>
+          </div>
+        )}
+
+        {/* ── Step 2: Motivation ── */}
+        {step === 2 && (
+          <div className="flex flex-col gap-5">
+            <Field
+              label="Мотиваційний лист"
+              required
+              error={errors.motivation}
+              hint={`${data.motivation.length} / мінімум 50 символів`}
+            >
+              <textarea
+                value={data.motivation}
+                onChange={(e) => set("motivation", e.target.value)}
+                placeholder={`Розкажи, чому ця програма важлива для тебе, які у тебе цілі та чому ти підходиш для участі...\n\nЯк ця можливість допоможе тобі в розвитку?`}
+                rows={8}
+                className={`${inputCls(errors.motivation)} resize-none leading-relaxed`}
+              />
+            </Field>
+            <Field label="Посилання на CV" hint="Google Drive, Dropbox або інший публічний URL (необов'язково)" error={errors.cvUrl}>
+              <input type="url" value={data.cvUrl} onChange={(e) => set("cvUrl", e.target.value)} placeholder="https://drive.google.com/..." className={inputCls(errors.cvUrl)} />
+            </Field>
+            <Field label="Посилання на портфоліо" hint="GitHub, Behance, LinkedIn або особистий сайт (необов'язково)" error={errors.portfolioUrl}>
+              <input type="url" value={data.portfolioUrl} onChange={(e) => set("portfolioUrl", e.target.value)} placeholder="https://github.com/..." className={inputCls(errors.portfolioUrl)} />
+            </Field>
+          </div>
+        )}
+
+        {/* ── Step 3: Review ── */}
+        {step === 3 && (
+          <div className="flex flex-col gap-6">
+            <div className="bg-muted-bg rounded-xl p-5">
+              <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Особисті дані</p>
+              <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
+                <span className="text-muted">Ім'я</span><span className="text-foreground font-medium">{data.firstName} {data.lastName}</span>
+                <span className="text-muted">Email</span><span className="text-foreground font-medium">{data.email}</span>
+                <span className="text-muted">Телефон</span><span className="text-foreground font-medium">{data.phone || "—"}</span>
+                <span className="text-muted">Країна</span><span className="text-foreground font-medium">{data.country}</span>
+              </div>
+            </div>
+            <div className="bg-muted-bg rounded-xl p-5">
+              <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Освіта та мови</p>
+              <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
+                <span className="text-muted">Заклад</span><span className="text-foreground font-medium">{data.institution}</span>
+                <span className="text-muted">Ступінь</span><span className="text-foreground font-medium">{data.degree}</span>
+                <span className="text-muted">Рік</span><span className="text-foreground font-medium">{data.graduationYear || "—"}</span>
+                <span className="text-muted">Мови</span><span className="text-foreground font-medium">{data.languages.join(", ")}</span>
+              </div>
+            </div>
+            <div className="bg-muted-bg rounded-xl p-5">
+              <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Мотивація</p>
+              <p className="text-sm text-foreground leading-relaxed line-clamp-4">{data.motivation}</p>
+              {(data.cvUrl || data.portfolioUrl) && (
+                <div className="mt-3 flex flex-col gap-1">
+                  {data.cvUrl && <a href={data.cvUrl} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">📄 CV</a>}
+                  {data.portfolioUrl && <a href={data.portfolioUrl} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">🔗 Портфоліо</a>}
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-muted text-center">
+              Натискаючи «Відправити заявку», ти підтверджуєш, що всі дані вірні.
+            </p>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
+          {step > 0 ? (
+            <button onClick={back} className="flex items-center gap-2 text-sm font-medium text-muted hover:text-foreground transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Назад
+            </button>
+          ) : (
+            <Link href={`/opportunities/${opp.slug}`} className="text-sm text-muted hover:text-foreground transition-colors">
+              ← До програми
+            </Link>
+          )}
+
+          {step < STEPS.length - 1 ? (
+            <button onClick={next} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all">
+              Далі
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {submitting ? (
+                <>
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Надсилаємо...
+                </>
+              ) : (
+                <>Відправити заявку 🚀</>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
