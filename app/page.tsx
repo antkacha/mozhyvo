@@ -1,15 +1,26 @@
 import Link from "next/link";
 import FeaturedSection from "@/components/FeaturedSection";
 
-const categories = [
-  { emoji: "🎓", name: "Стипендії", count: "340+", slug: "scholarships", bg: "bg-primary-light" },
-  { emoji: "💼", name: "Стажування", count: "210+", slug: "internships", bg: "bg-amber-50" },
-  { emoji: "🌍", name: "Обміни", count: "180+", slug: "exchanges", bg: "bg-green-50" },
-  { emoji: "🤝", name: "Волонтерство", count: "290+", slug: "volunteering", bg: "bg-rose-50" },
-  { emoji: "🏆", name: "Конкурси", count: "95+", slug: "competitions", bg: "bg-purple-50" },
-  { emoji: "🚀", name: "Гранти", count: "120+", slug: "grants", bg: "bg-sky-50" },
+const features = [
+  {
+    num: "01",
+    title: "Все в одному місці",
+    desc: "Більше не треба шукати по десятках Telegram-каналів. Гранти, стажування, обміни — тут.",
+    icon: "🔍",
+  },
+  {
+    num: "02",
+    title: "Не пропусти дедлайн",
+    desc: "Зберігай цікаві можливості і отримуй нагадування до закінчення прийому заявок.",
+    icon: "🔔",
+  },
+  {
+    num: "03",
+    title: "Тільки перевірені організації",
+    desc: "Всі партнери верифіковані командою Моживо. Жодного шахрайства.",
+    icon: "✅",
+  },
 ];
-
 
 export default function Home() {
   return (
@@ -155,97 +166,171 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Why Mozhyvo — white ─────────────────────────────────────── */}
-      <section className="bg-white py-12">
+      {/* ── Why Mozhyvo — editorial 2-col layout ─────────────────────── */}
+      <section className="bg-white py-16 border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-10">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
-              Чому Моживо?
-            </h2>
-            <p className="text-gray-500 text-base mt-2 max-w-xl">
-              Ми зібрали все для розвитку молоді — в одному місці
-            </p>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-2xl border border-gray-100 shadow-sm">
-              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mb-4">
-                🔍
-              </div>
-              <h3 className="font-bold text-foreground text-lg mb-2">Все в одному місці</h3>
-              <p className="text-muted text-sm leading-relaxed">
-                Більше не треба шукати по десятках Telegram-каналів. Гранти,
-                стажування, обміни — тут.
+            {/* Left: bold statement + stats */}
+            <div>
+              <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.05] mb-5">
+                Чому<br />Моживо?
+              </h2>
+              <p className="text-gray-500 text-lg leading-relaxed max-w-xs">
+                Ми зібрали все для розвитку молоді — в одному місці
               </p>
+              <div className="mt-10 flex items-stretch gap-10">
+                <div>
+                  <p className="text-5xl font-black text-primary leading-none">1200+</p>
+                  <p className="text-sm text-gray-500 mt-2">можливостей</p>
+                </div>
+                <div className="w-px bg-gray-100" />
+                <div>
+                  <p className="text-5xl font-black text-primary leading-none">40+</p>
+                  <p className="text-sm text-gray-500 mt-2">країн</p>
+                </div>
+                <div className="w-px bg-gray-100" />
+                <div>
+                  <p className="text-5xl font-black text-primary leading-none">0₴</p>
+                  <p className="text-sm text-gray-500 mt-2">завжди безкоштовно</p>
+                </div>
+              </div>
             </div>
 
-            <div className="p-6 rounded-2xl border border-gray-100 shadow-sm">
-              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mb-4">
-                🔔
-              </div>
-              <h3 className="font-bold text-foreground text-lg mb-2">Не пропусти дедлайн</h3>
-              <p className="text-muted text-sm leading-relaxed">
-                Зберігай цікаві можливості і отримуй нагадування до закінчення
-                прийому заявок.
-              </p>
+            {/* Right: numbered feature list */}
+            <div>
+              {features.map((f) => (
+                <div
+                  key={f.num}
+                  className="flex gap-5 py-6 border-b border-gray-100 last:border-0"
+                >
+                  <span className="text-xs font-mono font-bold text-gray-300 pt-1 w-5 flex-shrink-0">
+                    {f.num}
+                  </span>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-900 text-base mb-1.5">{f.title}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
+                  </div>
+                  <span className="text-2xl flex-shrink-0 self-start">{f.icon}</span>
+                </div>
+              ))}
             </div>
 
-            <div className="p-6 rounded-2xl border border-gray-100 shadow-sm">
-              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mb-4">
-                ✅
-              </div>
-              <h3 className="font-bold text-foreground text-lg mb-2">Тільки перевірені організації</h3>
-              <p className="text-muted text-sm leading-relaxed">
-                Всі партнери верифіковані командою Моживо. Жодного шахрайства.
-              </p>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Category cards — #F7F8FF ─────────────────────────────────── */}
+      {/* ── Category bento grid — #F7F8FF ────────────────────────────── */}
       <section style={{ backgroundColor: "#F7F8FF" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="mb-10">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="mb-12">
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900">
               Що ти шукаєш?
             </h2>
-            <p className="text-gray-500 text-base mt-2">
+            <p className="text-gray-500 text-base mt-3">
               Оберіть напрям — і знайдіть можливості саме для вас
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {categories.map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/opportunities?category=${cat.slug}`}
-                className="group relative flex items-center gap-4 p-5 bg-white rounded-2xl border border-border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
-              >
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-primary rounded-l-2xl transition-colors duration-200" />
-                <div
-                  className={`w-12 h-12 rounded-2xl ${cat.bg} flex items-center justify-center text-2xl flex-shrink-0`}
-                >
-                  {cat.emoji}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-foreground group-hover:text-primary transition-colors duration-200">
-                    {cat.name}
-                  </p>
-                  <span className="inline-block mt-1 text-xs font-medium px-2 py-0.5 bg-muted-bg text-muted rounded-full">
-                    {cat.count} активних
-                  </span>
-                </div>
-                <span className="text-muted group-hover:text-primary transition-colors duration-200 text-lg flex-shrink-0">
-                  →
-                </span>
-              </Link>
-            ))}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+            {/* Wide featured: Стипендії */}
+            <Link
+              href="/opportunities?category=scholarships"
+              className="col-span-1 md:col-span-2 group bg-primary rounded-3xl p-7 text-white hover:bg-primary-dark transition-all duration-200"
+            >
+              <div className="flex items-start justify-between mb-6">
+                <span className="text-4xl">🎓</span>
+                <span className="text-white/40 group-hover:text-white text-xl transition-colors duration-200">→</span>
+              </div>
+              <p className="text-5xl md:text-6xl font-black leading-none mb-2">340+</p>
+              <p className="text-lg font-bold">Стипендії</p>
+              <p className="text-white/55 text-sm mt-1">активних можливостей</p>
+            </Link>
+
+            {/* Normal: Стажування */}
+            <Link
+              href="/opportunities?category=internships"
+              className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-3xl">💼</span>
+                <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
+              </div>
+              <div>
+                <p className="text-4xl font-black text-gray-900 leading-none mb-1.5">210+</p>
+                <p className="font-bold text-gray-700">Стажування</p>
+                <p className="text-xs text-gray-400 mt-1">активних</p>
+              </div>
+            </Link>
+
+            {/* Normal: Обміни */}
+            <Link
+              href="/opportunities?category=exchanges"
+              className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-3xl">🌍</span>
+                <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
+              </div>
+              <div>
+                <p className="text-4xl font-black text-gray-900 leading-none mb-1.5">180+</p>
+                <p className="font-bold text-gray-700">Обміни</p>
+                <p className="text-xs text-gray-400 mt-1">активних</p>
+              </div>
+            </Link>
+
+            {/* Normal: Волонтерство */}
+            <Link
+              href="/opportunities?category=volunteering"
+              className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-3xl">🤝</span>
+                <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
+              </div>
+              <div>
+                <p className="text-4xl font-black text-gray-900 leading-none mb-1.5">290+</p>
+                <p className="font-bold text-gray-700">Волонтерство</p>
+                <p className="text-xs text-gray-400 mt-1">активних</p>
+              </div>
+            </Link>
+
+            {/* Normal: Конкурси */}
+            <Link
+              href="/opportunities?category=competitions"
+              className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-3xl">🏆</span>
+                <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
+              </div>
+              <div>
+                <p className="text-4xl font-black text-gray-900 leading-none mb-1.5">95+</p>
+                <p className="font-bold text-gray-700">Конкурси</p>
+                <p className="text-xs text-gray-400 mt-1">активних</p>
+              </div>
+            </Link>
+
+            {/* Wide featured: Гранти */}
+            <Link
+              href="/opportunities?category=grants"
+              className="col-span-1 md:col-span-2 group bg-primary rounded-3xl p-7 text-white hover:bg-primary-dark transition-all duration-200"
+            >
+              <div className="flex items-start justify-between mb-6">
+                <span className="text-4xl">🚀</span>
+                <span className="text-white/40 group-hover:text-white text-xl transition-colors duration-200">→</span>
+              </div>
+              <p className="text-5xl md:text-6xl font-black leading-none mb-2">120+</p>
+              <p className="text-lg font-bold">Гранти</p>
+              <p className="text-white/55 text-sm mt-1">активних можливостей</p>
+            </Link>
+
           </div>
         </div>
       </section>
 
       {/* ── Featured opportunities — animated client component ──────── */}
-
       <FeaturedSection />
 
       {/* ── CTA banner — white section, indigo inner ─────────────────── */}
