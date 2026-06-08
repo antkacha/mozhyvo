@@ -29,13 +29,13 @@ export default function OpportunityCard({ opp }: { opp: Opportunity }) {
   return (
     <div className={`bg-white rounded-2xl border border-border border-t-4 ${typeBorderColors[opp.type] ?? "border-t-gray-200"} shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col p-6 gap-4 group`}>
       {/* Type badge + save icon + deadline */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center justify-between gap-2 flex-nowrap">
         <span
-          className={`text-xs font-semibold px-2.5 py-1 rounded-full ${typeColors[opp.type]}`}
+          className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${typeColors[opp.type]}`}
         >
           {opp.typeName}
         </span>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={() => toggle(opp.slug)}
             disabled={!ready}

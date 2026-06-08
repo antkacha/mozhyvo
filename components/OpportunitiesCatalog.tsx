@@ -165,6 +165,8 @@ function FilterPanel({
 
 // ── Main catalog component ────────────────────────────────────────
 
+const ITEMS_PER_PAGE = 12;
+
 export default function OpportunitiesCatalog() {
   const searchParams = useSearchParams();
 
@@ -178,15 +180,18 @@ export default function OpportunitiesCatalog() {
   const [selectedFundings, setSelectedFundings] = useState<string[]>([]);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [page, setPage] = useState(1);
 
   const toggle = (
     arr: string[],
     setArr: (v: string[]) => void,
     value: string
-  ) =>
+  ) => {
+    setPage(1);
     setArr(
       arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value]
     );
+  };
 
   const filtered = useMemo(() => {
     let result = [...opportunities];
@@ -225,12 +230,16 @@ export default function OpportunitiesCatalog() {
     selectedFundings.length +
     selectedCountries.length;
 
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
   const clearAll = () => {
     setSelectedTypes([]);
     setSelectedFormats([]);
     setSelectedFundings([]);
     setSelectedCountries([]);
     setSearch("");
+    setPage(1);
   };
 
   const filterProps: FilterPanelProps = {
@@ -266,7 +275,7 @@ export default function OpportunitiesCatalog() {
             type="text"
             placeholder="Пошук за назвою, організацією, тегами..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white"
           />
         </div>
@@ -352,11 +361,47 @@ export default function OpportunitiesCatalog() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-              {filtered.map((opp) => (
-                <OpportunityCard key={opp.slug} opp={opp} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                {paginated.map((opp) => (
+                  <OpportunityCard key={opp.slug} opp={opp} />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-10">
+                  <button
+                    onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    disabled={page === 1}
+                    className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted hover:border-primary hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    ← Назад
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${
+                        p === page
+                          ? "bg-primary text-white shadow-md shadow-primary/25"
+                          : "border border-border text-muted hover:border-primary hover:text-primary"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    disabled={page === totalPages}
+                    className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted hover:border-primary hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    Далі →
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
