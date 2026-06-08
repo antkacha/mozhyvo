@@ -8,8 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 
 const navLinks = [
   { label: "Головна", href: "/" },
-  { label: "Можливості", href: "/opportunities" },
   { label: "Про нас", href: "/about" },
+  { label: "Можливості", href: "/opportunities" },
   { label: "Для організацій", href: "/organizations" },
 ];
 
