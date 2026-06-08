@@ -9,6 +9,65 @@ export const metadata: Metadata = {
     "Знайомся з командою Моживо — платформою, що зібрала гранти, стажування та обміни для молоді України в одному місці.",
 };
 
+const stats = [
+  {
+    icon: "📡",
+    num: "100+",
+    title: "Сотні джерел",
+    desc: "Ми агрегуємо можливості з десятків платформ",
+  },
+  {
+    icon: "⏱️",
+    num: "~5 год",
+    title: "Економія часу",
+    desc: "Не треба шукати — можливості самі знаходять тебе",
+  },
+  {
+    icon: "🔒",
+    num: "100%",
+    title: "Тільки перевірене",
+    desc: "Жодних сумнівних програм — тільки верифіковані організації",
+  },
+];
+
+const founders = [
+  {
+    num: "01",
+    name: "Аня Ткаченко",
+    role: "Co-founder & Product",
+    photo: "/founders/anya.jpg",
+    bio: [
+      "20 років, студентка-айтішниця та просто людина, яка дуже любить можливості.",
+      "Брала участь у 9 міжнародних обмінах, навчалася безкоштовно в Хорватії — і зовсім скоро вирушає на нове навчання у Францію. Official Member of EYP Ukraine 2026.",
+      "Організувала івент «Міжнародні можливості для молоді», який зібрав 100+ учасників. Саме тоді зрозуміла: людям потрібна не лекція, а зручний інструмент. Так з’явилось Моживо.",
+    ],
+  },
+  {
+    num: "02",
+    name: "Лілія Нежельська",
+    role: "Co-founder & Operations",
+    photo: "/founders/lilya.jpg",
+    bio: [
+      "19 років, громадська діячка та людина, яка на власному досвіді переконалася, що міжнародні можливості доступні кожному.",
+      "Перша українка, яка увійшла до топ-10 світового міжнародного бізнес-конкурсу HCGCC’2024. Працюючи над кейсами для таких компаній, як Disney та OURA, вона переконалася, що подібний досвід є реальним і досяжним для кожного, хто готовий до змін.",
+      "Має досвід участі у понад 10+ міжнародних проєктах. Саме тому ціль — допомогти іншим дізнатися про можливості, які ти зможеш використати вже сьогодні.",
+    ],
+  },
+];
+
+const quotes = [
+  {
+    text: "Моживо — це те, що я хотіла мати, коли тільки починала шукати свою першу можливість. Це майданчик для активної молоді, що готова розвиватися та репрезентувати Україну на міжнародному рівні.",
+    name: "Аня Ткаченко",
+    role: "Co-founder & Product",
+  },
+  {
+    text: "Тому що вчора ти годинами шукав серед десятків каналів те, що тобі справді потрібно. А сьогодні «МОЖUВО» знаходить це для тебе.\n\nШукай. Заповнюй. Створюй себе.",
+    name: "Лілія Нежельська",
+    role: "Co-founder & Operations",
+  },
+];
+
 export default function AboutPage() {
   return (
     <>
@@ -46,8 +105,9 @@ export default function AboutPage() {
 
       {/* ── Section 2: Problem we solve ─────────────────────────────── */}
       <section style={{ backgroundColor: "#F7F8FF" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
             {/* Left: bold statement */}
             <div>
               <p className="text-2xl md:text-3xl font-black text-gray-900 leading-snug">
@@ -57,187 +117,105 @@ export default function AboutPage() {
               </p>
             </div>
 
-            {/* Right: 3 stat blocks */}
-            <div className="flex flex-col gap-5">
-              {[
-                {
-                  icon: "📡",
-                  title: "Сотні джерел",
-                  desc: "Ми агрегуємо можливості з десятків платформ",
-                },
-                {
-                  icon: "⏱️",
-                  title: "Економія часу",
-                  desc: "Не треба шукати — можливості самі знаходять тебе",
-                },
-                {
-                  icon: "🔒",
-                  title: "Тільки перевірене",
-                  desc: "Жодних сумнівних програм — тільки верифіковані організації",
-                },
-              ].map((item) => (
-                <div
-                  key={item.title}
-                  className="flex items-start gap-4 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm"
-                >
-                  <span className="text-2xl flex-shrink-0 mt-0.5">{item.icon}</span>
-                  <div>
-                    <p className="font-bold text-gray-900 mb-0.5">{item.title}</p>
-                    <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+            {/* Right: stat rows */}
+            <div className="divide-y divide-gray-200">
+              {stats.map((s) => (
+                <div key={s.title} className="flex items-center gap-4 py-6 first:pt-0 last:pb-0">
+                  <span className="text-2xl flex-shrink-0">{s.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900">{s.title}</p>
+                    <p className="text-gray-500 text-sm mt-0.5">{s.desc}</p>
                   </div>
+                  <p className="text-2xl font-black text-primary flex-shrink-0 ml-4">{s.num}</p>
                 </div>
               ))}
             </div>
+
           </div>
         </div>
       </section>
 
       {/* ── Section 3: Founders ─────────────────────────────────────── */}
       <section className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="mb-10">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="mb-12">
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.05]">
               Хто ми?
             </h2>
-            <p className="text-gray-500 text-base mt-2">
+            <p className="text-gray-500 text-base mt-3">
               Двоє, які вирішили змінити те, що їх самих колись дратувало
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Founder 1 — Аня */}
-            <div className="flex flex-col sm:flex-row gap-6 p-6 rounded-2xl border border-gray-100 shadow-sm">
-              <div className="w-32 h-32 rounded-full bg-indigo-50 flex-shrink-0 overflow-hidden ring-2 ring-indigo-100 self-start">
-                <FounderImage src="/founders/anya.jpg" alt="Аня Ткаченко" />
-              </div>
-              <div>
-                <p className="text-xl font-bold text-gray-900 mb-0.5">
-                  Аня Ткаченко
-                </p>
-                <p className="text-sm font-medium text-primary mb-3">
-                  Co-founder & Product
-                </p>
-                <p className="text-gray-500 text-sm leading-relaxed">
-                  20 років, студентка-айтішниця та просто людина, яка дуже
-                  любить можливості.
-                </p>
-                <p className="text-gray-500 text-sm leading-relaxed mt-2">
-                  Брала участь у 9 міжнародних обмінах, навчалася безкоштовно
-                  в Хорватії — і зовсім скоро вирушає на нове навчання у
-                  Францію. Official Member of EYP Ukraine 2026.
-                </p>
-                <p className="text-gray-500 text-sm leading-relaxed mt-2">
-                  Організувала івент «Міжнародні можливості для молоді», який
-                  зібрав 100+ учасників. Саме тоді зрозуміла: людям
-                  потрібна не лекція, а зручний інструмент. Так з&apos;явилось
-                  Моживо.
-                </p>
-              </div>
-            </div>
+          <div className="divide-y divide-gray-100">
+            {founders.map((f) => (
+              <div key={f.num} className="py-10 first:pt-0 last:pb-0">
+                <div className="flex flex-col sm:flex-row gap-8 items-start">
 
-            {/* Founder 2 — Ліля */}
-            <div className="flex flex-col sm:flex-row gap-6 p-6 rounded-2xl border border-gray-100 shadow-sm">
-              <div className="w-32 h-32 rounded-full bg-indigo-50 flex-shrink-0 overflow-hidden ring-2 ring-indigo-100 self-start">
-                <FounderImage src="/founders/lilya.jpg" alt="Лілія Нежельська" />
+                  {/* Photo */}
+                  <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-3xl overflow-hidden flex-shrink-0 bg-indigo-50">
+                    <FounderImage src={f.photo} alt={f.name} />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-xs font-mono font-bold text-gray-300">{f.num}</span>
+                      <h3 className="text-2xl font-black text-gray-900">{f.name}</h3>
+                    </div>
+                    <p className="text-sm font-semibold text-primary mb-4">{f.role}</p>
+                    <div className="space-y-2">
+                      {f.bio.map((para, i) => (
+                        <p key={i} className="text-gray-500 text-sm leading-relaxed">{para}</p>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
               </div>
-              <div>
-                <p className="text-xl font-bold text-gray-900 mb-0.5">
-                  Лілія Нежельська
-                </p>
-                <p className="text-sm font-medium text-primary mb-3">
-                  Co-founder & Operations
-                </p>
-                <p className="text-gray-500 text-sm leading-relaxed">
-                  19 років, громадська діячка та людина, яка на власному
-                  досвіді переконалася, що міжнародні можливості доступні
-                  кожному.
-                </p>
-                <p className="text-gray-500 text-sm leading-relaxed mt-2">
-                  Перша українка, яка увійшла до топ-10 світового міжнародного
-                  бізнес-конкурсу HCGCC&apos;2024. Працюючи над кейсами для
-                  таких компаній, як Disney та OURA, вона переконалася, що
-                  подібний досвід є реальним і досяжним для кожного, хто
-                  готовий до змін.
-                </p>
-                <p className="text-gray-500 text-sm leading-relaxed mt-2">
-                  Має досвід участі у понад 10+ міжнародних проєктах. Саме тому
-                  ціль — допомогти іншим дізнатися про можливості, які ти
-                  зможеш використати вже сьогодні.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ── Section 4: Quotes ───────────────────────────────────────── */}
       <section style={{ backgroundColor: "#F7F8FF" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="mb-10">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="mb-12">
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.05]">
               Що для нас Моживо?
             </h2>
-            <p className="text-gray-500 text-base mt-2">Особисто від засновниць</p>
+            <p className="text-gray-500 text-base mt-3">Особисто від засновниць</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Аня's quote */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-8 flex flex-col gap-4">
-              <span
-                className="text-6xl leading-none font-serif text-indigo-200 select-none"
-                aria-hidden
+            {quotes.map((q) => (
+              <div
+                key={q.name}
+                className="bg-white rounded-3xl p-8 relative overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
               >
-                &ldquo;
-              </span>
-              <p className="text-gray-700 text-base italic leading-relaxed -mt-4">
-                Моживо — це те, що я хотіла мати, коли тільки починала шукати
-                свою першу можливість. Це майданчик для активної молоді, що
-                готова розвиватися та репрезентувати Україну на міжнародному
-                рівні.
-              </p>
-              <div className="flex items-center gap-2 mt-2">
+                {/* Decorative large quote mark */}
                 <span
-                  className="w-2 h-2 rounded-full bg-primary flex-shrink-0"
+                  className="absolute -top-4 left-4 text-[110px] leading-none font-serif text-indigo-100 select-none pointer-events-none"
                   aria-hidden
-                />
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">
-                    Аня Ткаченко
-                  </p>
-                  <p className="text-xs text-primary">Co-founder & Product</p>
-                </div>
-              </div>
-            </div>
+                >
+                  &ldquo;
+                </span>
 
-            {/* Ліля's quote */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-8 flex flex-col gap-4">
-              <span
-                className="text-6xl leading-none font-serif text-indigo-200 select-none"
-                aria-hidden
-              >
-                &ldquo;
-              </span>
-              <p className="text-gray-700 text-base italic leading-relaxed -mt-4">
-                Тому що вчора ти годинами шукав серед десятків каналів те, що
-                тобі справді потрібно. А сьогодні «МОЖUВО» знаходить це для
-                тебе.
-                <br />
-                <br />
-                Шукай. Заповнюй. Створюй себе.
-              </p>
-              <div className="flex items-center gap-2 mt-2">
-                <span
-                  className="w-2 h-2 rounded-full bg-primary flex-shrink-0"
-                  aria-hidden
-                />
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">
-                    Лілія Нежельська
+                <div className="relative">
+                  <p className="text-gray-700 text-base italic leading-relaxed mt-4 whitespace-pre-line">
+                    {q.text}
                   </p>
-                  <p className="text-xs text-primary">Co-founder & Operations</p>
+                  <div className="flex items-center gap-2 mt-6">
+                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" aria-hidden />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{q.name}</p>
+                      <p className="text-xs text-primary">{q.role}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
