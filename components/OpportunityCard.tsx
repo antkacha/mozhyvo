@@ -28,14 +28,14 @@ export default function OpportunityCard({ opp }: { opp: Opportunity }) {
 
   return (
     <div className={`relative bg-white rounded-2xl border border-border border-t-4 ${typeBorderColors[opp.type] ?? "border-t-gray-200"} shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col p-6 gap-4 group`}>
-      {/* Save button — top-right corner */}
+      {/* Save button — floats outside top-right corner */}
       <button
         onClick={() => toggle(opp.slug)}
         disabled={!ready}
-        className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150 disabled:opacity-40 ${
+        className={`absolute -top-3.5 -right-3.5 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 disabled:opacity-40 shadow-md z-10 ${
           saved
-            ? "bg-primary text-white shadow-md"
-            : "bg-white border border-border text-muted hover:border-primary hover:text-primary shadow-sm"
+            ? "bg-primary text-white"
+            : "bg-white text-muted hover:text-primary border border-border"
         }`}
         aria-label={saved ? "Видалити зі збережених" : "Зберегти"}
       >
