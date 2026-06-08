@@ -117,19 +117,31 @@ export default function AboutPage() {
             {/* Founder 2 — Ліля */}
             <div className="flex flex-col sm:flex-row gap-6 p-6 rounded-2xl border border-gray-100 shadow-sm">
               <div className="w-32 h-32 rounded-full bg-indigo-50 flex-shrink-0 overflow-hidden ring-2 ring-indigo-100 self-start">
-                <FounderImage src="/founders/lilya.jpg" alt="Ліля Коваленко" />
+                <FounderImage src="/founders/lilya.jpg" alt="Лілія Нежельська" />
               </div>
               <div>
                 <p className="text-xl font-bold text-gray-900 mb-0.5">
-                  Ліля Коваленко
+                  Лілія Нежельська
                 </p>
                 <p className="text-sm font-medium text-primary mb-3">
                   Co-founder & Operations
                 </p>
                 <p className="text-gray-500 text-sm leading-relaxed">
-                  Займається партнерствами, комунікаціями та розвитком
-                  спільноти. Вірить, що правильне середовище і правильні люди
-                  можуть змінити траєкторію будь-якого життя.
+                  19 років, громадська діячка та людина, яка на власному
+                  досвіді переконалася, що міжнародні можливості доступні
+                  кожному.
+                </p>
+                <p className="text-gray-500 text-sm leading-relaxed mt-2">
+                  Перша українка, яка увійшла до топ-10 світового міжнародного
+                  бізнес-конкурсу HCGCC&apos;2024. Працюючи над кейсами для
+                  таких компаній, як Disney та OURA, вона переконалася, що
+                  подібний досвід є реальним і досяжним для кожного, хто
+                  готовий до змін.
+                </p>
+                <p className="text-gray-500 text-sm leading-relaxed mt-2">
+                  Має досвід участі у понад 10+ міжнародних проєктах. Саме тому
+                  ціль — допомогти іншим дізнатися про можливості, які ти
+                  зможеш використати вже сьогодні.
                 </p>
               </div>
             </div>
@@ -184,9 +196,12 @@ export default function AboutPage() {
                 &ldquo;
               </span>
               <p className="text-gray-700 text-base italic leading-relaxed -mt-4">
-                Для мене Моживо — це про рівний доступ. Неважливо з якого ти
-                міста чи університету — якщо є бажання розвиватись, платформа
-                знайде можливість саме для тебе.
+                Тому що вчора ти годинами шукав серед десятків каналів те, що
+                тобі справді потрібно. А сьогодні «МОЖUВО» знаходить це для
+                тебе.
+                <br />
+                <br />
+                Шукай. Заповнюй. Створюй себе.
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <span
@@ -195,7 +210,7 @@ export default function AboutPage() {
                 />
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
-                    Ліля Коваленко
+                    Лілія Нежельська
                   </p>
                   <p className="text-xs text-primary">Co-founder & Operations</p>
                 </div>
