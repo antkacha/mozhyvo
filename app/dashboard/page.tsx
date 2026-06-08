@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useApplications, Application } from "@/hooks/useApplications";
 
 // Mock coordinator programs

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Opportunity } from "@/lib/data";
 import { useApplications } from "@/hooks/useApplications";
 
@@ -120,7 +119,6 @@ function inputCls(error?: string) {
 // ── Main component ────────────────────────────────────────────────
 
 export default function ApplyForm({ opp }: { opp: Opportunity }) {
-  const router = useRouter();
   const { submit, hasApplied, ready } = useApplications();
 
   const [step, setStep] = useState(0);
@@ -387,7 +385,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
             <div className="bg-muted-bg rounded-xl p-5">
               <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Особисті дані</p>
               <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
-                <span className="text-muted">Ім'я</span><span className="text-foreground font-medium">{data.firstName} {data.lastName}</span>
+                <span className="text-muted">Ім&apos;я</span><span className="text-foreground font-medium">{data.firstName} {data.lastName}</span>
                 <span className="text-muted">Email</span><span className="text-foreground font-medium">{data.email}</span>
                 <span className="text-muted">Телефон</span><span className="text-foreground font-medium">{data.phone || "—"}</span>
                 <span className="text-muted">Країна</span><span className="text-foreground font-medium">{data.country}</span>

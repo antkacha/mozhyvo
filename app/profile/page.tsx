@@ -31,7 +31,7 @@ type Tab = "applications" | "saved" | "profile";
 export default function ProfilePage() {
   const { applications, ready: appsReady } = useApplications();
   const { profile, save, ready: profileReady } = useProfile();
-  const { saved, toggle, ready: savedReady } = useSaved();
+  const { saved, ready: savedReady } = useSaved();
 
   const [tab, setTab] = useState<Tab>("applications");
   const [form, setForm] = useState<UserProfile>(profile);
