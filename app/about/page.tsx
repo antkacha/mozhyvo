@@ -147,31 +147,29 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="divide-y divide-gray-100">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {founders.map((f) => (
-              <div key={f.num} className="py-10 first:pt-0 last:pb-0">
-                <div className="flex flex-col sm:flex-row gap-8 items-start">
+              <div key={f.num} className="flex flex-col sm:flex-row gap-6 p-6 rounded-2xl border border-gray-100 shadow-sm">
 
-                  {/* Photo */}
-                  <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-3xl overflow-hidden flex-shrink-0 bg-indigo-50">
-                    <FounderImage src={f.photo} alt={f.name} />
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <span className="text-xs font-mono font-bold text-gray-300">{f.num}</span>
-                      <h3 className="text-2xl font-black text-gray-900">{f.name}</h3>
-                    </div>
-                    <p className="text-sm font-semibold text-primary mb-4">{f.role}</p>
-                    <div className="space-y-2">
-                      {f.bio.map((para, i) => (
-                        <p key={i} className="text-gray-500 text-sm leading-relaxed">{para}</p>
-                      ))}
-                    </div>
-                  </div>
-
+                {/* Photo */}
+                <div className="w-32 h-32 rounded-3xl overflow-hidden flex-shrink-0 bg-indigo-50 self-start">
+                  <FounderImage src={f.photo} alt={f.name} />
                 </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-xs font-mono font-bold text-gray-300">{f.num}</span>
+                    <h3 className="text-xl font-bold text-gray-900">{f.name}</h3>
+                  </div>
+                  <p className="text-sm font-semibold text-primary mb-3">{f.role}</p>
+                  <div className="space-y-2">
+                    {f.bio.map((para, i) => (
+                      <p key={i} className="text-gray-500 text-sm leading-relaxed">{para}</p>
+                    ))}
+                  </div>
+                </div>
+
               </div>
             ))}
           </div>
