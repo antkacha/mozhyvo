@@ -50,7 +50,7 @@ export const typeNames: Record<OpportunityType, string> = {
 };
 
 export const typeColors: Record<OpportunityType, string> = {
-  scholarship: "bg-violet-100 text-violet-700",
+  scholarship: "bg-primary-light text-primary",
   internship: "bg-blue-100 text-blue-700",
   exchange: "bg-green-100 text-green-700",
   volunteering: "bg-teal-100 text-teal-700",

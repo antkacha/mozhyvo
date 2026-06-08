@@ -11,7 +11,7 @@ const categories = [
 
 const badgeColors: Record<string, string> = {
   exchange: "bg-green-100 text-green-700",
-  scholarship: "bg-violet-100 text-violet-700",
+  scholarship: "bg-primary-light text-primary",
   grant: "bg-yellow-100 text-yellow-700",
 };
 
@@ -34,7 +34,7 @@ const featuredOpportunities = [
     deadline: "1 серп",
     flag: "🇩🇪",
     location: "Німеччина",
-    href: "/opportunities/daad",
+    href: "/opportunities/daad-research",
   },
   {
     type: "grant",
@@ -51,59 +51,166 @@ const featuredOpportunities = [
 export default function Home() {
   return (
     <>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-white">
+      {/* ── Hero ───────────────────────────────────────────────────── */}
+      <section
+        className="relative overflow-hidden min-h-screen flex items-center"
+        style={{ backgroundColor: "#F8F9FF" }}
+      >
+        {/* Soft radial glow behind cards */}
         <div
           aria-hidden
-          className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full opacity-[0.07] bg-primary pointer-events-none"
-          style={{ filter: "blur(80px)" }}
+          className="absolute -top-20 right-0 w-[700px] h-[700px] rounded-full pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(59,79,232,0.07) 0%, transparent 65%)",
+          }}
         />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-light text-primary text-xs font-semibold mb-6 tracking-wide uppercase">
-            🇺🇦 Платформа для молоді України
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-tight text-balance mb-6">
-            Знайди свою{" "}
-            <span className="text-primary">можливість</span>
-          </h1>
-          <p className="text-lg sm:text-xl text-muted max-w-2xl mx-auto mb-10 leading-relaxed text-balance">
-            Гранти, стажування, обміни, волонтерство — все в одному місці для
-            молоді України
-          </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-10">
-            <Link
-              href="/opportunities"
-              className="px-6 py-3 rounded-2xl bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-all duration-200 shadow-md shadow-primary/20 w-full sm:w-auto text-center"
-            >
-              Переглянути можливості
-            </Link>
-            <Link
-              href="/organizations"
-              className="px-6 py-3 rounded-2xl border border-border text-foreground font-semibold text-sm hover:border-primary hover:text-primary transition-all duration-200 w-full sm:w-auto text-center"
-            >
-              Додати організацію
-            </Link>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-0 relative z-10 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center lg:min-h-screen lg:py-28">
 
-          <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
-              1 200+ можливостей
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
-              300+ організацій
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
-              Верифіковані партнери
-            </span>
+            {/* ── Left: content ── */}
+            <div className="flex flex-col gap-7">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 self-start px-4 py-1.5 rounded-full border border-primary/25 bg-white text-primary text-xs font-semibold shadow-sm">
+                <span>✦</span>
+                Платформа можливостей для молоді
+              </div>
+
+              {/* Headline */}
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-foreground tracking-tight leading-[1.04]">
+                Знайди свою
+                <br />
+                можливість
+                <br />
+                <span className="text-primary">у світі</span>
+              </h1>
+
+              {/* Subheadline */}
+              <p className="text-lg text-muted leading-relaxed max-w-[440px]">
+                Гранти, стажування, обміни та волонтерство — все в одному місці
+                для молоді України
+              </p>
+
+              {/* CTAs */}
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/opportunities"
+                  className="px-6 py-3 rounded-full bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-all shadow-lg shadow-primary/25 hover:-translate-y-0.5"
+                >
+                  Переглянути можливості →
+                </Link>
+                <Link
+                  href="/organizations"
+                  className="px-6 py-3 rounded-full border-2 border-primary/20 text-primary font-semibold text-sm hover:border-primary/50 hover:bg-primary-light transition-all"
+                >
+                  Для організацій
+                </Link>
+              </div>
+
+              {/* Stats */}
+              <div className="flex items-center gap-6 pt-1">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">🌍</span>
+                  <div>
+                    <p className="text-sm font-bold text-foreground leading-tight">40+</p>
+                    <p className="text-xs text-muted">країн</p>
+                  </div>
+                </div>
+                <div className="w-px h-8 bg-border" />
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">📋</span>
+                  <div>
+                    <p className="text-sm font-bold text-foreground leading-tight">1 200+</p>
+                    <p className="text-xs text-muted">можливостей</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Right: floating UI cards ── */}
+            <div className="relative h-[420px] sm:h-[480px] lg:h-[520px] w-full">
+
+              {/* Card 1 — Erasmus, large, indigo bg, float1 (-2deg) */}
+              <div
+                className="absolute animate-float1"
+                style={{ top: "8%", left: "0", width: "290px" }}
+              >
+                <div className="bg-primary rounded-2xl p-5 shadow-2xl shadow-primary/30 text-white">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/15">
+                      🎓 Стипендія
+                    </span>
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-accent text-foreground">
+                      1 лип
+                    </span>
+                  </div>
+                  <p className="font-extrabold text-lg leading-tight mb-1">
+                    Erasmus+ 2025
+                  </p>
+                  <p className="text-white/65 text-sm mb-4">
+                    Навчання в ЄС · До 1 000€/міс
+                  </p>
+                  <div className="flex items-center justify-between pt-3 border-t border-white/15">
+                    <span className="text-xs text-white/60">🇪🇺 Євросоюз</span>
+                    <span className="text-xs font-semibold text-white/85">
+                      Детальніше →
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2 — DAAD, medium, white, float2 (+3deg) */}
+              <div
+                className="absolute animate-float2"
+                style={{ bottom: "6%", right: "0", width: "248px" }}
+              >
+                <div className="bg-white rounded-2xl p-5 shadow-xl border border-border">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-bold text-foreground text-sm">DAAD</span>
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">
+                      Відкрито
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted mb-1.5">🌍 Німеччина</p>
+                  <p className="font-semibold text-foreground text-sm leading-snug mb-3">
+                    Літня школа · Берлін
+                  </p>
+                  <div className="bg-muted-bg rounded-full h-1.5 mb-1.5">
+                    <div className="bg-primary h-1.5 rounded-full w-[65%]" />
+                  </div>
+                  <p className="text-xs text-muted">65% місць зайнято</p>
+                </div>
+              </div>
+
+              {/* Card 3 — Notification, small, white, float3 (-1deg) */}
+              <div
+                className="absolute animate-float3"
+                style={{ top: "3%", right: "6%", width: "186px" }}
+              >
+                <div className="bg-white rounded-2xl p-4 shadow-lg border border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0 text-base">
+                      🔔
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-foreground leading-tight">
+                        Новий дедлайн
+                      </p>
+                      <p className="text-xs text-muted mt-0.5">
+                        FLEX Program · 3 дні
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Category cards */}
+      {/* ── Category cards ─────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-10 text-center">
           Що ти шукаєш?
@@ -130,7 +237,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured opportunities */}
+      {/* ── Featured opportunities ──────────────────────────────────── */}
       <section className="bg-muted-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex items-center justify-between mb-10">
@@ -197,7 +304,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA banner */}
+      {/* ── CTA banner ─────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="bg-primary rounded-3xl px-8 py-14 text-center relative overflow-hidden">
           <div

@@ -9,9 +9,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#6C3BFF",
-        "primary-dark": "#5528E8",
-        "primary-light": "#EDE8FF",
+        primary: "#3B4FE8",
+        "primary-dark": "#2D3DD6",
+        "primary-light": "#EEF0FD",
         accent: "#FFD600",
         "accent-dark": "#E6C000",
         background: "#FAFAFA",
@@ -26,6 +26,25 @@ const config: Config = {
       borderRadius: {
         "2xl": "1rem",
         "3xl": "1.5rem",
+      },
+      keyframes: {
+        float1: {
+          "0%, 100%": { transform: "translateY(0px) rotate(-2deg)" },
+          "50%": { transform: "translateY(-14px) rotate(-2deg)" },
+        },
+        float2: {
+          "0%, 100%": { transform: "translateY(0px) rotate(3deg)" },
+          "50%": { transform: "translateY(-10px) rotate(3deg)" },
+        },
+        float3: {
+          "0%, 100%": { transform: "translateY(0px) rotate(-1deg)" },
+          "50%": { transform: "translateY(-7px) rotate(-1deg)" },
+        },
+      },
+      animation: {
+        float1: "float1 4s ease-in-out infinite",
+        float2: "float2 3.6s ease-in-out infinite 0.8s",
+        float3: "float3 3.2s ease-in-out infinite 1.6s",
       },
     },
   },
