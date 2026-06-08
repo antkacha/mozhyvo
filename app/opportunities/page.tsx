@@ -1,7 +1,17 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import OpportunitiesCatalog from "@/components/OpportunitiesCatalog";
 import GuestBanner from "@/components/GuestBanner";
+
+const quickFilters = [
+  { emoji: "🎓", label: "Стипендії", slug: "scholarships", color: "bg-primary-light text-primary hover:bg-primary hover:text-white" },
+  { emoji: "💼", label: "Стажування", slug: "internships", color: "bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white" },
+  { emoji: "🌍", label: "Обміни", slug: "exchanges", color: "bg-green-50 text-green-700 hover:bg-green-600 hover:text-white" },
+  { emoji: "🤝", label: "Волонтерство", slug: "volunteering", color: "bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white" },
+  { emoji: "🏆", label: "Конкурси", slug: "competitions", color: "bg-orange-50 text-orange-700 hover:bg-orange-500 hover:text-white" },
+  { emoji: "🚀", label: "Гранти", slug: "grants", color: "bg-yellow-50 text-yellow-700 hover:bg-yellow-500 hover:text-white" },
+];
 
 export const metadata: Metadata = {
   title: "Можливості — Моживо",
@@ -46,7 +56,7 @@ export default function OpportunitiesPage() {
             Гранти, стипендії, стажування, обміни та більше — для молоді України.
           </p>
 
-          <div className="flex items-stretch gap-8 mt-8">
+          <div className="flex items-stretch gap-8 mt-8 mb-10">
             <div>
               <p className="text-3xl font-black text-primary leading-none">1200+</p>
               <p className="text-sm text-gray-500 mt-1.5">можливостей</p>
@@ -61,6 +71,20 @@ export default function OpportunitiesPage() {
               <p className="text-3xl font-black text-primary leading-none">0₴</p>
               <p className="text-sm text-gray-500 mt-1.5">завжди безкоштовно</p>
             </div>
+          </div>
+
+          {/* Quick-filter category chips */}
+          <div className="flex flex-wrap gap-2.5">
+            {quickFilters.map((f) => (
+              <Link
+                key={f.slug}
+                href={`/opportunities?category=${f.slug}`}
+                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${f.color}`}
+              >
+                <span>{f.emoji}</span>
+                {f.label}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
