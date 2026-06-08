@@ -20,39 +20,35 @@ const slides = [
 
 export default function HeroSlider() {
   const [current, setCurrent] = useState(0);
-  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setCurrent((prev) => (prev + 1) % slides.length);
-        setVisible(true);
-      }, 600);
+      setCurrent((prev) => (prev + 1) % slides.length);
     }, 5000);
-
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="relative rounded-2xl overflow-hidden shadow-2xl max-h-[480px] aspect-[3/4] w-full">
-      {/* Photo */}
-      <div
-        className="absolute inset-0 transition-opacity duration-[600ms]"
-        style={{ opacity: visible ? 1 : 0 }}
-      >
-        <Image
-          src={slides[current].src}
-          alt={slides[current].caption}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 0px, 50vw"
-          priority={current === 0}
-        />
-      </div>
+      {slides.map((slide, i) => (
+        <div
+          key={slide.src}
+          className="absolute inset-0 transition-opacity duration-[800ms] ease-in-out"
+          style={{ opacity: i === current ? 1 : 0 }}
+        >
+          <Image
+            src={slide.src}
+            alt={slide.caption}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 0px, 50vw"
+            priority={i === 0}
+          />
+        </div>
+      ))}
 
       {/* Dot indicators */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10">
         {slides.map((_, i) => (
           <span
             key={i}
