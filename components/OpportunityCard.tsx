@@ -4,6 +4,17 @@ import Link from "next/link";
 import { Opportunity, typeColors, formatLabels } from "@/lib/data";
 import { useSaved } from "@/hooks/useSaved";
 
+const typeBorderColors: Record<string, string> = {
+  scholarship: "border-t-primary",
+  internship: "border-t-blue-500",
+  exchange: "border-t-green-500",
+  volunteering: "border-t-teal-500",
+  competition: "border-t-orange-500",
+  grant: "border-t-yellow-400",
+  conference: "border-t-pink-500",
+  hackathon: "border-t-red-500",
+};
+
 function isExpiringSoon(deadline: string): boolean {
   const diff =
     (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
@@ -16,7 +27,7 @@ export default function OpportunityCard({ opp }: { opp: Opportunity }) {
   const saved = isSaved(opp.slug);
 
   return (
-    <div className="bg-white rounded-2xl border border-border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col p-6 gap-4 group">
+    <div className={`bg-white rounded-2xl border border-border border-t-4 ${typeBorderColors[opp.type] ?? "border-t-gray-200"} shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col p-6 gap-4 group`}>
       {/* Type badge + save icon + deadline */}
       <div className="flex items-center gap-2 flex-wrap">
         <span
@@ -57,9 +68,9 @@ export default function OpportunityCard({ opp }: { opp: Opportunity }) {
 
       {/* Org + title + description */}
       <div className="flex-1">
-        <p className="text-xs font-medium text-muted mb-1">{opp.org}</p>
+        <p className="text-xs font-semibold text-muted mb-1.5 uppercase tracking-wide">{opp.org}</p>
         <Link href={`/opportunities/${opp.slug}`}>
-          <h3 className="font-semibold text-foreground leading-snug group-hover:text-primary transition-colors duration-200 line-clamp-2">
+          <h3 className="font-bold text-foreground leading-snug group-hover:text-primary transition-colors duration-200 line-clamp-2">
             {opp.title}
           </h3>
         </Link>
