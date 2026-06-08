@@ -30,15 +30,15 @@ const config: Config = {
       keyframes: {
         float1: {
           "0%, 100%": { transform: "translateY(0px) rotate(-2deg)" },
-          "50%": { transform: "translateY(-14px) rotate(-2deg)" },
+          "50%": { transform: "translateY(-6px) rotate(-2deg)" },
         },
         float2: {
           "0%, 100%": { transform: "translateY(0px) rotate(3deg)" },
-          "50%": { transform: "translateY(-10px) rotate(3deg)" },
+          "50%": { transform: "translateY(-6px) rotate(3deg)" },
         },
         float3: {
           "0%, 100%": { transform: "translateY(0px) rotate(-1deg)" },
-          "50%": { transform: "translateY(-7px) rotate(-1deg)" },
+          "50%": { transform: "translateY(-4px) rotate(-1deg)" },
         },
       },
       animation: {

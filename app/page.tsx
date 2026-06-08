@@ -1,18 +1,24 @@
 import Link from "next/link";
 
 const categories = [
-  { emoji: "🎓", name: "Стипендії", count: "340+", slug: "scholarships" },
-  { emoji: "💼", name: "Стажування", count: "210+", slug: "internships" },
-  { emoji: "🌍", name: "Обміни", count: "180+", slug: "exchanges" },
-  { emoji: "🤝", name: "Волонтерство", count: "290+", slug: "volunteering" },
-  { emoji: "🏆", name: "Конкурси", count: "95+", slug: "competitions" },
-  { emoji: "🚀", name: "Гранти", count: "120+", slug: "grants" },
+  { emoji: "🎓", name: "Стипендії", count: "340+", slug: "scholarships", bg: "bg-primary-light" },
+  { emoji: "💼", name: "Стажування", count: "210+", slug: "internships", bg: "bg-amber-50" },
+  { emoji: "🌍", name: "Обміни", count: "180+", slug: "exchanges", bg: "bg-green-50" },
+  { emoji: "🤝", name: "Волонтерство", count: "290+", slug: "volunteering", bg: "bg-rose-50" },
+  { emoji: "🏆", name: "Конкурси", count: "95+", slug: "competitions", bg: "bg-purple-50" },
+  { emoji: "🚀", name: "Гранти", count: "120+", slug: "grants", bg: "bg-sky-50" },
 ];
 
 const badgeColors: Record<string, string> = {
   exchange: "bg-green-100 text-green-700",
   scholarship: "bg-primary-light text-primary",
   grant: "bg-yellow-100 text-yellow-700",
+};
+
+const typeBorderColors: Record<string, string> = {
+  exchange: "border-t-green-500",
+  scholarship: "border-t-primary",
+  grant: "border-t-yellow-400",
 };
 
 const featuredOpportunities = [
@@ -98,7 +104,7 @@ export default function Home() {
                   href="/opportunities"
                   className="px-6 py-3 rounded-full bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-all shadow-lg shadow-primary/25 hover:-translate-y-0.5"
                 >
-                  Переглянути можливості →
+                  Знайти свою можливість →
                 </Link>
                 <Link
                   href="/organizations"
@@ -128,13 +134,13 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ── Right: floating UI cards ── */}
-            <div className="relative h-[420px] sm:h-[480px] lg:h-[520px] w-full">
+            {/* ── Right: compact overlapping card stack ── */}
+            <div className="relative h-[420px] sm:h-[480px] lg:h-[500px] w-full">
 
-              {/* Card 1 — Erasmus, large, indigo bg, float1 (-2deg) */}
+              {/* Card 1 — Erasmus, large, indigo bg, float1 */}
               <div
-                className="absolute animate-float1"
-                style={{ top: "8%", left: "0", width: "290px" }}
+                className="absolute z-0 animate-float1"
+                style={{ top: "80px", left: "10px", width: "278px" }}
               >
                 <div className="bg-primary rounded-2xl p-5 shadow-2xl shadow-primary/30 text-white">
                   <div className="flex items-center justify-between mb-4">
@@ -160,10 +166,10 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Card 2 — DAAD, medium, white, float2 (+3deg) */}
+              {/* Card 2 — DAAD, medium, white, float2 — overlaps bottom of Card 1 */}
               <div
-                className="absolute animate-float2"
-                style={{ bottom: "6%", right: "0", width: "248px" }}
+                className="absolute z-10 animate-float2"
+                style={{ top: "205px", left: "50px", width: "240px" }}
               >
                 <div className="bg-white rounded-2xl p-5 shadow-xl border border-border">
                   <div className="flex items-center justify-between mb-3">
@@ -183,10 +189,10 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Card 3 — Notification, small, white, float3 (-1deg) */}
+              {/* Card 3 — Notification, small, white, float3 — top-right corner */}
               <div
-                className="absolute animate-float3"
-                style={{ top: "3%", right: "6%", width: "186px" }}
+                className="absolute z-20 animate-float3"
+                style={{ top: "15px", right: "10px", width: "178px" }}
               >
                 <div className="bg-white rounded-2xl p-4 shadow-lg border border-border">
                   <div className="flex items-center gap-3">
@@ -220,16 +226,28 @@ export default function Home() {
             <Link
               key={cat.slug}
               href={`/opportunities?category=${cat.slug}`}
-              className="group flex items-center gap-4 p-5 bg-white rounded-2xl border border-border shadow-sm hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-200"
+              className="group relative flex items-center gap-4 p-5 bg-white rounded-2xl border border-border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
             >
-              <span className="text-3xl">{cat.emoji}</span>
-              <div>
-                <p className="font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
+              {/* Indigo left accent bar on hover */}
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-primary rounded-l-2xl transition-colors duration-200" />
+
+              {/* Colored icon background */}
+              <div
+                className={`w-12 h-12 rounded-2xl ${cat.bg} flex items-center justify-center text-2xl flex-shrink-0`}
+              >
+                {cat.emoji}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-foreground group-hover:text-primary transition-colors duration-200">
                   {cat.name}
                 </p>
-                <p className="text-sm text-muted mt-0.5">{cat.count} активних</p>
+                <span className="inline-block mt-1 text-xs font-medium px-2 py-0.5 bg-muted-bg text-muted rounded-full">
+                  {cat.count} активних
+                </span>
               </div>
-              <span className="ml-auto text-muted group-hover:text-primary transition-colors duration-200 text-lg">
+
+              <span className="text-muted group-hover:text-primary transition-colors duration-200 text-lg flex-shrink-0">
                 →
               </span>
             </Link>
@@ -238,7 +256,7 @@ export default function Home() {
       </section>
 
       {/* ── Featured opportunities ──────────────────────────────────── */}
-      <section className="bg-muted-bg">
+      <section style={{ backgroundColor: "#F8F9FF" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex items-center justify-between mb-10">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
@@ -256,8 +274,9 @@ export default function Home() {
             {featuredOpportunities.map((opp) => (
               <div
                 key={opp.href}
-                className="bg-white rounded-2xl border border-border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col p-6 gap-4"
+                className={`bg-white rounded-2xl border border-border border-t-4 ${typeBorderColors[opp.type] ?? ""} shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col p-6 gap-3`}
               >
+                {/* Type badge + deadline + heart */}
                 <div className="flex items-center justify-between gap-2">
                   <span
                     className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
@@ -266,19 +285,39 @@ export default function Home() {
                   >
                     {opp.typeName}
                   </span>
-                  <span className="text-xs text-muted bg-muted-bg px-2.5 py-1 rounded-full font-medium">
-                    Дедлайн: {opp.deadline}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted bg-muted-bg px-2.5 py-1 rounded-full font-medium">
+                      {opp.deadline}
+                    </span>
+                    <span
+                      className="text-muted hover:text-rose-500 transition-colors duration-200 cursor-pointer"
+                      aria-label="Зберегти"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                      </svg>
+                    </span>
+                  </div>
                 </div>
 
+                {/* Org name in indigo + title */}
                 <div>
-                  <p className="text-xs font-medium text-muted mb-1">{opp.org}</p>
-                  <p className="font-semibold text-foreground leading-snug">
-                    {opp.title}
-                  </p>
+                  <p className="text-sm font-semibold text-primary mb-1">{opp.org}</p>
+                  <p className="font-semibold text-foreground leading-snug">{opp.title}</p>
                 </div>
 
-                <div className="flex items-center justify-between mt-auto pt-2 border-t border-border">
+                {/* Location + link */}
+                <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
                   <span className="text-sm text-muted flex items-center gap-1.5">
                     {opp.flag} {opp.location}
                   </span>
@@ -306,16 +345,18 @@ export default function Home() {
 
       {/* ── CTA banner ─────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="bg-primary rounded-3xl px-8 py-14 text-center relative overflow-hidden">
+        <div className="bg-primary rounded-3xl px-8 py-16 text-center relative overflow-hidden">
+          {/* Decorative faded circles */}
           <div
             aria-hidden
-            className="absolute inset-0 opacity-10"
+            className="absolute inset-0 pointer-events-none"
             style={{
               backgroundImage:
-                "radial-gradient(circle at 20% 50%, #FFD600 0%, transparent 50%), radial-gradient(circle at 80% 20%, #ffffff 0%, transparent 40%)",
+                "radial-gradient(circle at 15% 50%, rgba(255,214,0,0.15) 0%, transparent 45%), radial-gradient(circle at 85% 20%, rgba(255,255,255,0.10) 0%, transparent 40%), radial-gradient(circle at 75% 80%, rgba(255,255,255,0.07) 0%, transparent 35%)",
             }}
           />
           <div className="relative z-10">
+            <div className="text-4xl mb-5">🏢</div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-4">
               Є організація чи програма?
             </h2>
@@ -325,7 +366,7 @@ export default function Home() {
             </p>
             <Link
               href="/organizations"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-accent text-foreground font-semibold text-sm hover:bg-accent-dark transition-all duration-200 shadow-lg"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-accent text-foreground font-semibold hover:bg-accent-dark transition-all duration-200 shadow-lg"
             >
               Додати організацію
             </Link>
