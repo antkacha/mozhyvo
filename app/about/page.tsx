@@ -259,13 +259,11 @@ export default function AboutPage() {
               <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-4">
                 На розвиток MOЖUВО
               </h2>
-              <p className="text-white/80 mb-3 max-w-xl mx-auto leading-relaxed">
+              <p className="text-white/80 mb-8 max-w-xl mx-auto leading-relaxed">
                 Ми створили цей проєкт безкоштовно — бо хочемо, щоб кожен
-                молодий українець міг знайти свою можливість і розвиватися.
-              </p>
-              <p className="text-white/60 mb-8 max-w-lg mx-auto text-sm leading-relaxed">
-                Якщо ти хочеш підтримати нас — будемо щиро вдячні. Кожна
-                гривня йде на розвиток платформи.
+                молодий українець та українка могли знайти свою можливість і
+                розвиватися. Якщо ти хочеш підтримати нас — будемо щиро
+                вдячні. Кожна гривня йде на розвиток платформи.
               </p>
               <Link
                 href="https://send.monobank.ua/jar/2aqfexs7AP"
