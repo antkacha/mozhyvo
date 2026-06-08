@@ -29,7 +29,7 @@ export default function HeroSlider() {
         setCurrent((prev) => (prev + 1) % slides.length);
         setVisible(true);
       }, 600);
-    }, 3500);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, []);
@@ -51,13 +51,8 @@ export default function HeroSlider() {
         />
       </div>
 
-      {/* Caption overlay */}
-      <div className="absolute bottom-0 left-0 right-0 bg-black/40 backdrop-blur-sm px-4 py-2.5">
-        <p className="text-white text-sm font-medium">{slides[current].caption}</p>
-      </div>
-
       {/* Dot indicators */}
-      <div className="absolute bottom-10 left-0 right-0 flex justify-center gap-1.5">
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
         {slides.map((_, i) => (
           <span
             key={i}
