@@ -4,6 +4,7 @@ import { useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { DEMO_ORG_EMAIL, DEMO_ORG_PASSWORD, DEMO_ORG_PROFILE } from "@/lib/demo-org";
 
 function LoginContent() {
   const router = useRouter();
@@ -24,6 +25,14 @@ function LoginContent() {
     if (!canSubmit) return;
     setStatus("loading");
     setErrorMsg("");
+
+    // Demo org account — works without Supabase
+    if (email === DEMO_ORG_EMAIL && password === DEMO_ORG_PASSWORD) {
+      localStorage.setItem("mozhyvo_org_profile", JSON.stringify(DEMO_ORG_PROFILE));
+      setStatus("success");
+      setTimeout(() => router.push("/dashboard"), 800);
+      return;
+    }
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
