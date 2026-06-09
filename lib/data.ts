@@ -36,6 +36,7 @@ export interface Opportunity {
   applyUrl: string;
   featured?: boolean;
   duration?: string;
+  photos?: string[];
 }
 
 export const typeNames: Record<OpportunityType, string> = {
