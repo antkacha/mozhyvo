@@ -36,7 +36,7 @@ export interface Opportunity {
   applyUrl: string;
   featured?: boolean;
   duration?: string;
-  photos?: string[];
+  photo?: string;
 }
 
 export const typeNames: Record<OpportunityType, string> = {
@@ -123,11 +123,7 @@ Erasmus+ сприяє міжкультурному діалогу, покращ�
     applyUrl: "#",
     featured: true,
     duration: "1–2 семестри",
-    photos: [
-      "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1627556704302-624286467c65?w=400&h=600&fit=crop",
-    ],
+    photo: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&h=800&fit=crop",
   },
   {
     slug: "daad-research",

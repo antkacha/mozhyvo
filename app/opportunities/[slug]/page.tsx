@@ -86,82 +86,90 @@ export default function OpportunityDetailPage({
             Назад до можливостей
           </Link>
 
-          {/* Badges */}
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${typeColors[opp.type]}`}>
-              {opp.typeName}
-            </span>
-            {opp.funding === "fully-funded" && (
-              <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-green-100 text-green-700">
-                ✓ Повне фінансування
-              </span>
-            )}
-            {opp.funding === "partially-funded" && (
-              <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-700">
-                Часткове фінансування
-              </span>
+          {/* Split: text left + photo right */}
+          <div className="flex items-start gap-10">
+            <div className="flex-1 min-w-0">
+
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${typeColors[opp.type]}`}>
+                  {opp.typeName}
+                </span>
+                {opp.funding === "fully-funded" && (
+                  <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-green-100 text-green-700">
+                    ✓ Повне фінансування
+                  </span>
+                )}
+                {opp.funding === "partially-funded" && (
+                  <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-700">
+                    Часткове фінансування
+                  </span>
+                )}
+              </div>
+
+              {/* Org */}
+              <p className="text-sm font-semibold text-primary/60 uppercase tracking-widest mb-3">
+                {opp.org}
+              </p>
+
+              {/* Title */}
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 leading-[1.05] mb-6">
+                {opp.title}
+              </h1>
+
+              {/* Info chips */}
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center gap-1.5 text-sm text-gray-600 bg-white px-4 py-2 rounded-full border border-primary/15 shadow-sm">
+                  {opp.flag} {opp.location}
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-sm text-gray-600 bg-white px-4 py-2 rounded-full border border-primary/15 shadow-sm">
+                  {formatLabels[opp.format]}
+                </span>
+                {opp.duration && (
+                  <span className="inline-flex items-center gap-1.5 text-sm text-gray-600 bg-white px-4 py-2 rounded-full border border-primary/15 shadow-sm">
+                    ⏱ {opp.duration}
+                  </span>
+                )}
+                <span
+                    className={`inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full border shadow-sm ${
+                      expiring
+                        ? "bg-red-50 text-red-600 border-red-200"
+                        : "bg-white text-gray-600 border-primary/15"
+                    }`}
+                  >
+                    {expiring ? "⏰" : "📅"} Дедлайн: {opp.deadlineDisplay}
+                  </span>
+                </div>
+            </div>
+
+            {/* Photo — desktop only, inside hero */}
+            {opp.photo && (
+              <div className="hidden lg:block flex-shrink-0 w-56 h-72 rounded-2xl overflow-hidden shadow-lg">
+                <Image
+                  src={opp.photo}
+                  alt={opp.title}
+                  width={224}
+                  height={288}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             )}
           </div>
 
-          {/* Org */}
-          <p className="text-sm font-semibold text-primary/60 uppercase tracking-widest mb-3">
-            {opp.org}
-          </p>
-
-          {/* Title */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 leading-[1.05] mb-6 max-w-3xl">
-            {opp.title}
-          </h1>
-
-          {/* Info chips */}
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 text-sm text-gray-600 bg-white px-4 py-2 rounded-full border border-primary/15 shadow-sm">
-              {opp.flag} {opp.location}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-sm text-gray-600 bg-white px-4 py-2 rounded-full border border-primary/15 shadow-sm">
-              {formatLabels[opp.format]}
-            </span>
-            {opp.duration && (
-              <span className="inline-flex items-center gap-1.5 text-sm text-gray-600 bg-white px-4 py-2 rounded-full border border-primary/15 shadow-sm">
-                ⏱ {opp.duration}
-              </span>
-            )}
-            <span
-              className={`inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full border shadow-sm ${
-                expiring
-                  ? "bg-red-50 text-red-600 border-red-200"
-                  : "bg-white text-gray-600 border-primary/15"
-              }`}
-            >
-              {expiring ? "⏰" : "📅"} Дедлайн: {opp.deadlineDisplay}
-            </span>
-          </div>
+          {/* Photo — mobile only, below chips */}
+          {opp.photo && (
+            <div className="lg:hidden mt-6 h-52 rounded-2xl overflow-hidden shadow-md">
+              <Image
+                src={opp.photo}
+                alt={opp.title}
+                width={600}
+                height={208}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
         </div>
       </section>
-
-      {/* ── Photos strip ────────────────────────────────────────── */}
-      {opp.photos && opp.photos.length > 0 && (
-        <section className="bg-white border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
-              {opp.photos.map((src, i) => (
-                <div
-                  key={i}
-                  className="flex-shrink-0 w-40 sm:w-48 h-64 sm:h-72 rounded-2xl overflow-hidden snap-start shadow-sm"
-                >
-                  <Image
-                    src={src}
-                    alt=""
-                    width={192}
-                    height={288}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* ── Main content ─────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
