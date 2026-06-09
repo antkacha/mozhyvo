@@ -9,13 +9,58 @@ import { useOrgProjects } from "@/hooks/useOrgProjects";
 import { useOrgApplications } from "@/hooks/useOrgApplications";
 import { DEMO_ORG_EMAIL } from "@/lib/demo-org";
 
+// ── Icons ───────────────────────────────────────────────────────────
+function IconGrid(p: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+    </svg>
+  );
+}
+function IconFolder(p: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+    </svg>
+  );
+}
+function IconInbox(p: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-5.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-1.414 0l-2.414-2.414A1 1 0 006.586 13H2" />
+    </svg>
+  );
+}
+function IconUser(p: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+  );
+}
+function IconLogout(p: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    </svg>
+  );
+}
+function IconPlus(p: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+  );
+}
+
 const NAV = [
-  { href: "/dashboard", label: "Огляд", icon: "🏠", exact: true },
-  { href: "/dashboard/projects", label: "Проекти", icon: "📋" },
-  { href: "/dashboard/applications", label: "Заявки", icon: "📩" },
-  { href: "/dashboard/profile", label: "Профіль", icon: "👤" },
+  { href: "/dashboard", label: "Огляд", Icon: IconGrid, exact: true },
+  { href: "/dashboard/projects", label: "Проекти", Icon: IconFolder },
+  { href: "/dashboard/applications", label: "Заявки", Icon: IconInbox },
+  { href: "/dashboard/profile", label: "Профіль", Icon: IconUser },
 ];
 
+// ── Sidebar ─────────────────────────────────────────────────────────
 function Sidebar() {
   const pathname = usePathname();
   const { org, update, logout } = useOrgSession();
@@ -24,108 +69,129 @@ function Sidebar() {
 
   if (!org) return null;
 
-  const initials = org.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  const initials = org.name
+    .split(" ")
+    .filter((w) => w.length > 0)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+
   const newApps = applications.filter((a) => a.status === "new").length;
-  const publishedProjects = projects.filter((p) => p.status === "published").length;
+  const publishedCount = projects.filter((p) => p.status === "published").length;
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <aside className="hidden lg:flex flex-col w-60 flex-shrink-0 bg-white border-r border-gray-100 sticky top-16 self-start min-h-[calc(100vh-64px)]">
-      {/* Org header */}
-      <div className="p-5 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden bg-primary-light flex items-center justify-center flex-shrink-0">
+    <aside className="hidden lg:flex flex-col w-[240px] flex-shrink-0 bg-white border-r border-border sticky top-16 self-start h-[calc(100vh-64px)] overflow-y-auto">
+
+      {/* Org identity */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0 bg-primary-light flex items-center justify-center border border-border">
             {org.logo ? (
-              <Image src={org.logo} alt={org.name} width={40} height={40} className="w-full h-full object-cover" />
+              <Image src={org.logo} alt={org.name} width={36} height={36} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-sm font-black text-primary">{initials}</span>
+              <span className="text-xs font-black text-primary">{initials}</span>
             )}
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-900 leading-tight truncate">{org.name}</p>
-            <span className={`inline-flex items-center text-xs font-medium mt-0.5 ${
-              org.status === "verified" ? "text-green-600" : "text-yellow-600"
-            }`}>
-              {org.status === "verified" ? "✅ Верифіковано" : "⏳ На перевірці"}
-            </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground truncate leading-tight">{org.name}</p>
+            <div className="flex items-center gap-1 mt-0.5">
+              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${org.status === "verified" ? "bg-green-500" : "bg-amber-400"}`} />
+              <span className={`text-[11px] font-medium ${org.status === "verified" ? "text-green-600" : "text-amber-600"}`}>
+                {org.status === "verified" ? "Верифіковано" : "На перевірці"}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-3">
+      {/* Nav */}
+      <nav className="flex-1 p-2">
         <div className="flex flex-col gap-0.5">
-          {NAV.map((item) => {
-            const active = isActive(item.href, item.exact);
-            const count = item.href === "/dashboard/projects"
-              ? publishedProjects || undefined
-              : item.href === "/dashboard/applications"
-              ? newApps || undefined
-              : undefined;
+          {NAV.map(({ href, label, Icon, exact }) => {
+            const active = isActive(href, exact);
+            const badge =
+              href === "/dashboard/applications" && newApps > 0
+                ? newApps
+                : href === "/dashboard/projects" && publishedCount > 0
+                ? publishedCount
+                : undefined;
 
             return (
               <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                key={href}
+                href={href}
+                className={`flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-all ${
                   active
-                    ? "bg-primary text-white"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-primary-light text-primary font-semibold"
+                    : "text-muted hover:text-foreground hover:bg-muted-bg font-medium"
                 }`}
               >
                 <span className="flex items-center gap-2.5">
-                  <span>{item.icon}</span>
-                  {item.label}
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  {label}
                 </span>
-                {count !== undefined && count > 0 && (
-                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                    active ? "bg-white/20 text-white" : "bg-primary-light text-primary"
+                {badge !== undefined && (
+                  <span className={`text-[11px] font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center ${
+                    active ? "bg-primary text-white" : "bg-border text-muted"
                   }`}>
-                    {count}
+                    {badge}
                   </span>
                 )}
               </Link>
             );
           })}
         </div>
+
+        {/* Quick action */}
+        <div className="mt-4 pt-4 border-t border-border">
+          <Link
+            href="/dashboard/projects/new"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-primary bg-primary-light hover:bg-primary/10 transition-all w-full"
+          >
+            <IconPlus className="w-4 h-4" />
+            Новий проект
+          </Link>
+        </div>
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-gray-100">
-        {/* Dev toggle */}
+      <div className="p-2 border-t border-border">
         {org.contactEmail === DEMO_ORG_EMAIL && (
-          <div className="mb-2 p-2 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-            <p className="text-[10px] text-gray-400 font-mono mb-1.5">🛠 demo mode</p>
+          <div className="mb-2 px-3 py-2.5 rounded-xl bg-muted-bg border border-dashed border-border">
+            <p className="text-[10px] text-muted font-mono mb-2 uppercase tracking-wider">Demo режим</p>
             <div className="flex gap-1.5">
               <button
                 onClick={() => update({ status: "pending" })}
-                className={`flex-1 text-xs font-semibold py-1 rounded-lg transition-all ${
-                  org.status === "pending" ? "bg-yellow-100 text-yellow-700" : "bg-gray-100 text-gray-400 hover:bg-yellow-50"
+                className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-all ${
+                  org.status === "pending"
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-white text-muted border border-border hover:border-amber-300 hover:text-amber-600"
                 }`}
               >
-                ⏳
+                На перевірці
               </button>
               <button
                 onClick={() => update({ status: "verified" })}
-                className={`flex-1 text-xs font-semibold py-1 rounded-lg transition-all ${
-                  org.status === "verified" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400 hover:bg-green-50"
+                className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-all ${
+                  org.status === "verified"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-white text-muted border border-border hover:border-green-300 hover:text-green-600"
                 }`}
               >
-                ✅
+                Верифіковано
               </button>
             </div>
           </div>
         )}
-
         <button
           onClick={logout}
-          className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all"
+          className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-red-600 hover:bg-red-50 transition-all"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
+          <IconLogout className="w-4 h-4" />
           Вийти
         </button>
       </div>
@@ -133,30 +199,33 @@ function Sidebar() {
   );
 }
 
+// ── Mobile top nav ───────────────────────────────────────────────────
 function MobileNav() {
   const pathname = usePathname();
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <div className="lg:hidden flex items-center gap-1 px-4 py-2 bg-white border-b border-gray-100 overflow-x-auto">
-      {NAV.map((item) => (
+    <div className="lg:hidden flex items-center gap-1 px-3 py-2 bg-white border-b border-border overflow-x-auto">
+      {NAV.map(({ href, label, Icon, exact }) => (
         <Link
-          key={item.href}
-          href={item.href}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-            isActive(item.href, item.exact)
+          key={href}
+          href={href}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+            isActive(href, exact)
               ? "bg-primary text-white"
-              : "text-gray-600 hover:bg-gray-50"
+              : "text-muted hover:bg-muted-bg hover:text-foreground"
           }`}
         >
-          {item.icon} {item.label}
+          <Icon className="w-3.5 h-3.5" />
+          {label}
         </Link>
       ))}
     </div>
   );
 }
 
+// ── Shell ────────────────────────────────────────────────────────────
 export default function OrgShell({ children }: { children: React.ReactNode }) {
   const { org, ready } = useOrgSession();
   const router = useRouter();
@@ -168,7 +237,7 @@ export default function OrgShell({ children }: { children: React.ReactNode }) {
   if (!ready || !org) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <div className="w-7 h-7 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
@@ -176,10 +245,12 @@ export default function OrgShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <MobileNav />
-      <div className="flex">
+      <div className="flex min-h-[calc(100vh-64px)]">
         <Sidebar />
-        <main className="flex-1 min-w-0 min-h-[calc(100vh-64px)] bg-gray-50 p-6 lg:p-8">
-          {children}
+        <main className="flex-1 min-w-0 bg-background">
+          <div className="max-w-5xl mx-auto px-5 sm:px-7 py-7 lg:py-8">
+            {children}
+          </div>
         </main>
       </div>
     </>

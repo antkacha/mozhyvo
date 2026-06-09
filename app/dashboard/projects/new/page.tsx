@@ -6,15 +6,33 @@ import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgProjects, OrgProject } from "@/hooks/useOrgProjects";
 import OrgShell from "@/components/OrgShell";
 
+const TYPE_OPTIONS = [
+  { value: "exchange", label: "Обмін", desc: "Молодіжний чи академічний обмін" },
+  { value: "grant", label: "Грант", desc: "Фінансова підтримка проектів" },
+  { value: "internship", label: "Стажування", desc: "Практика в організації" },
+  { value: "volunteer", label: "Волонтерство", desc: "Волонтерські програми" },
+  { value: "conference", label: "Конференція / Школа", desc: "Навчальні та наукові заходи" },
+  { value: "competition", label: "Конкурс", desc: "Змагання та відбори" },
+  { value: "hackathon", label: "Хакатон", desc: "Інтенсивні проектні заходи" },
+  { value: "training", label: "Тренінг", desc: "Навчання та воркшопи" },
+];
+
+const FLAG_OPTIONS = [
+  "🇺🇦 Україна", "🇵🇱 Польща", "🇩🇪 Німеччина", "🇫🇷 Франція",
+  "🇳🇱 Нідерланди", "🇦🇹 Австрія", "🇨🇿 Чехія", "🇸🇰 Словаччина",
+  "🇱🇹 Литва", "🇱🇻 Латвія", "🇪🇪 Естонія", "🇬🇧 Великобританія",
+  "🇺🇸 США", "🌍 Онлайн / міжнародний", "🇪🇺 Євросоюз",
+];
+
 type FormData = {
   title: string;
-  type: OrgProject["type"];
+  type: string;
   typeName: string;
   shortDescription: string;
   fullDescription: string;
+  flag: string;
   country: string;
   city: string;
-  flag: string;
   format: OrgProject["format"];
   funding: OrgProject["funding"];
   fundingDetails: string;
@@ -22,47 +40,26 @@ type FormData = {
   duration: string;
   ageMin: string;
   ageMax: string;
-  languagesInput: string;
-  tagsInput: string;
-  requirementsInput: string;
-  benefitsInput: string;
-  status: OrgProject["status"];
+  languages: string;
+  tags: string;
+  requirements: string;
+  benefits: string;
 };
 
-const TYPE_OPTIONS = [
-  { value: "exchange", label: "Обмін" },
-  { value: "grant", label: "Грант" },
-  { value: "internship", label: "Стажування" },
-  { value: "volunteer", label: "Волонтерство" },
-  { value: "conference", label: "Конференція / Школа" },
-  { value: "competition", label: "Конкурс" },
-  { value: "hackathon", label: "Хакатон" },
-  { value: "training", label: "Тренінг" },
-];
+const INITIAL: FormData = {
+  title: "", type: "exchange", typeName: "Обмін",
+  shortDescription: "", fullDescription: "",
+  flag: "🇺🇦", country: "", city: "",
+  format: "offline", funding: "fully-funded", fundingDetails: "",
+  deadline: "", duration: "",
+  ageMin: "", ageMax: "", languages: "", tags: "",
+  requirements: "", benefits: "",
+};
 
-const FLAG_OPTIONS = [
-  { value: "🇺🇦", label: "🇺🇦 Україна" },
-  { value: "🇵🇱", label: "🇵🇱 Польща" },
-  { value: "🇩🇪", label: "🇩🇪 Німеччина" },
-  { value: "🇫🇷", label: "🇫🇷 Франція" },
-  { value: "🇳🇱", label: "🇳🇱 Нідерланди" },
-  { value: "🇦🇹", label: "🇦🇹 Австрія" },
-  { value: "🇨🇿", label: "🇨🇿 Чехія" },
-  { value: "🇸🇰", label: "🇸🇰 Словаччина" },
-  { value: "🇱🇹", label: "🇱🇹 Литва" },
-  { value: "🇱🇻", label: "🇱🇻 Латвія" },
-  { value: "🇪🇪", label: "🇪🇪 Естонія" },
-  { value: "🇬🇧", label: "🇬🇧 Великобританія" },
-  { value: "🇺🇸", label: "🇺🇸 США" },
-  { value: "🌍", label: "🌍 Онлайн / міжнародний" },
-  { value: "🇪🇺", label: "🇪🇺 Євросоюз" },
-];
+const STEPS = ["Основна", "Місце і час", "Учасники", "Опис"];
 
-function listToArray(text: string): string[] {
-  return text
-    .split("\n")
-    .map((s) => s.trim())
-    .filter(Boolean);
+function splitLines(s: string) {
+  return s.split("\n").map((x) => x.trim()).filter(Boolean);
 }
 
 function NewProjectContent() {
@@ -70,63 +67,52 @@ function NewProjectContent() {
   const { org } = useOrgSession();
   const { create } = useOrgProjects(org?.id);
 
-  const [form, setForm] = useState<FormData>({
-    title: "",
-    type: "exchange",
-    typeName: "Обмін",
-    shortDescription: "",
-    fullDescription: "",
-    country: "",
-    city: "",
-    flag: "🇺🇦",
-    format: "offline",
-    funding: "fully-funded",
-    fundingDetails: "",
-    deadline: "",
-    duration: "",
-    ageMin: "",
-    ageMax: "",
-    languagesInput: "",
-    tagsInput: "",
-    requirementsInput: "",
-    benefitsInput: "",
-    status: "draft",
-  });
-
-  const [saving, setSaving] = useState(false);
+  const [step, setStep] = useState(0);
+  const [form, setForm] = useState<FormData>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [saving, setSaving] = useState(false);
 
   function set(field: keyof FormData, value: string) {
-    setForm((prev) => {
-      const next = { ...prev, [field]: value };
+    setForm((p) => {
+      const n = { ...p, [field]: value };
       if (field === "type") {
-        const opt = TYPE_OPTIONS.find((o) => o.value === value);
-        next.typeName = opt?.label ?? value;
+        n.typeName = TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value;
       }
-      return next;
+      return n;
     });
     if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
   }
 
-  function validate(): boolean {
+  function validateStep(s: number): boolean {
     const e: Partial<Record<keyof FormData, string>> = {};
-    if (!form.title.trim()) e.title = "Вкажіть назву";
-    if (!form.shortDescription.trim()) e.shortDescription = "Вкажіть короткий опис";
-    if (!form.country.trim()) e.country = "Вкажіть країну";
-    if (!form.deadline) e.deadline = "Вкажіть дедлайн";
+    if (s === 0) {
+      if (!form.title.trim()) e.title = "Обов'язкове поле";
+      if (!form.shortDescription.trim()) e.shortDescription = "Обов'язкове поле";
+    }
+    if (s === 1) {
+      if (!form.country.trim()) e.country = "Обов'язкове поле";
+      if (!form.deadline) e.deadline = "Обов'язкове поле";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
+  function next() {
+    if (validateStep(step)) setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  }
+
   function handleSubmit(status: OrgProject["status"]) {
-    if (!validate() || !org) return;
+    if (!validateStep(step) || !org) return;
     setSaving(true);
 
     const deadline = form.deadline;
-    const deadlineDate = new Date(deadline);
-    const deadlineDisplay = deadlineDate.toLocaleDateString("uk-UA", { day: "numeric", month: "short", year: "numeric" });
-
-    const location = form.city ? `${form.city}, ${form.country}` : form.country;
+    const deadlineDisplay = new Date(deadline).toLocaleDateString("uk-UA", {
+      day: "numeric", month: "short", year: "numeric",
+    });
+    const flagEmoji = form.flag.split(" ")[0];
+    const location = form.city.trim()
+      ? `${form.city.trim()}, ${form.country.trim()}`
+      : form.country.trim();
 
     create({
       orgId: org.id,
@@ -138,289 +124,356 @@ function NewProjectContent() {
       country: form.country.trim(),
       city: form.city.trim(),
       location,
-      flag: form.flag,
+      flag: flagEmoji,
       format: form.format,
       funding: form.funding,
       fundingDetails: form.fundingDetails.trim(),
       deadline,
       deadlineDisplay,
       duration: form.duration.trim(),
-      languages: listToArray(form.languagesInput),
-      tags: form.tagsInput.split(",").map((s) => s.trim()).filter(Boolean),
-      requirements: listToArray(form.requirementsInput),
-      benefits: listToArray(form.benefitsInput),
+      languages: form.languages.split(",").map((s) => s.trim()).filter(Boolean),
+      tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
+      requirements: splitLines(form.requirements),
+      benefits: splitLines(form.benefits),
       ageMin: form.ageMin ? Number(form.ageMin) : undefined,
       ageMax: form.ageMax ? Number(form.ageMax) : undefined,
       status,
     });
-
     router.push("/dashboard/projects");
   }
 
-  const inputBase = "w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white";
-  const errorClass = "border-red-300 focus:ring-red-200 focus:border-red-400";
-  const labelClass = "block text-sm font-semibold text-gray-700 mb-1.5";
+  const input = "w-full px-3.5 py-2.5 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted/50";
+  const err = "border-red-300 focus:ring-red-200 focus:border-red-400";
+  const label = "block text-sm font-medium text-foreground mb-1.5";
+  const hint = "text-xs text-muted mt-1";
 
   return (
-    <div className="max-w-2xl">
-      <div className="flex items-center gap-3 mb-8">
-        <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-gray-100 transition-all text-gray-500">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+    <div className="page-transition max-w-2xl">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm mb-6">
+        <button onClick={() => router.push("/dashboard/projects")} className="text-muted hover:text-foreground transition-colors">
+          Проекти
         </button>
-        <div>
-          <h1 className="text-2xl font-black text-gray-900">Новий проект</h1>
-          <p className="text-sm text-gray-500">Заповніть інформацію про вашу можливість</p>
-        </div>
+        <svg className="w-3.5 h-3.5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+        <span className="text-foreground font-semibold">Новий проект</span>
       </div>
 
-      <div className="flex flex-col gap-6">
-        {/* Основна інформація */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-black">1</span>
-            Основна інформація
-          </h2>
-          <div className="flex flex-col gap-4">
-            <div>
-              <label className={labelClass}>Назва проекту *</label>
-              <input
-                value={form.title}
-                onChange={(e) => set("title", e.target.value)}
-                placeholder="Наприклад: Молодіжний обмін «Разом до змін»"
-                className={`${inputBase} ${errors.title ? errorClass : ""}`}
-              />
-              {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
-            </div>
+      <h1 className="text-2xl font-black text-foreground mb-7">Новий проект</h1>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Тип можливості</label>
-                <select value={form.type} onChange={(e) => set("type", e.target.value)} className={inputBase}>
-                  {TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Формат</label>
-                <select value={form.format} onChange={(e) => set("format", e.target.value)} className={inputBase}>
-                  <option value="offline">Офлайн</option>
-                  <option value="online">Онлайн</option>
-                  <option value="hybrid">Гібрид</option>
-                </select>
-              </div>
+      {/* Step indicator */}
+      <div className="flex items-center gap-0 mb-8">
+        {STEPS.map((s, i) => (
+          <div key={i} className="flex items-center flex-1 last:flex-none">
+            <div className="flex flex-col items-center gap-1.5">
+              <button
+                onClick={() => i < step && setStep(i)}
+                className={`w-7 h-7 rounded-full text-xs font-bold transition-all flex items-center justify-center ${
+                  i < step
+                    ? "bg-primary text-white cursor-pointer"
+                    : i === step
+                    ? "bg-primary text-white ring-4 ring-primary/20"
+                    : "bg-muted-bg text-muted cursor-default"
+                }`}
+              >
+                {i < step ? (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  i + 1
+                )}
+              </button>
+              <span className={`text-[11px] font-semibold whitespace-nowrap ${i === step ? "text-primary" : "text-muted"}`}>
+                {s}
+              </span>
             </div>
+            {i < STEPS.length - 1 && (
+              <div className={`flex-1 h-px mx-2 mb-5 transition-all ${i < step ? "bg-primary" : "bg-border"}`} />
+            )}
+          </div>
+        ))}
+      </div>
 
-            <div>
-              <label className={labelClass}>Короткий опис (1–2 речення) *</label>
-              <input
-                value={form.shortDescription}
-                onChange={(e) => set("shortDescription", e.target.value)}
-                placeholder="Стислий опис, який бачать у каталозі"
-                className={`${inputBase} ${errors.shortDescription ? errorClass : ""}`}
-              />
-              {errors.shortDescription && <p className="text-xs text-red-500 mt-1">{errors.shortDescription}</p>}
-            </div>
+      {/* Step 0: Основна інформація */}
+      {step === 0 && (
+        <div className="bg-white rounded-2xl border border-border p-6 flex flex-col gap-5">
+          <div>
+            <label className={label}>Назва проекту *</label>
+            <input
+              value={form.title}
+              onChange={(e) => set("title", e.target.value)}
+              placeholder="Наприклад: Молодіжний обмін «Разом до змін»"
+              className={`${input} ${errors.title ? err : ""}`}
+            />
+            {errors.title && <p className={`${hint} text-red-500`}>{errors.title}</p>}
+          </div>
 
-            <div>
-              <label className={labelClass}>Повний опис</label>
-              <textarea
-                value={form.fullDescription}
-                onChange={(e) => set("fullDescription", e.target.value)}
-                rows={5}
-                placeholder="Детальний опис програми, цілі, що отримають учасники..."
-                className={`${inputBase} resize-none`}
-              />
+          <div>
+            <label className={label}>Тип можливості</label>
+            <div className="grid grid-cols-2 gap-2">
+              {TYPE_OPTIONS.map((o) => (
+                <button
+                  key={o.value}
+                  onClick={() => set("type", o.value)}
+                  className={`text-left px-3.5 py-3 rounded-xl border text-sm transition-all ${
+                    form.type === o.value
+                      ? "border-primary bg-primary-light text-primary font-semibold"
+                      : "border-border hover:border-primary/40 text-foreground"
+                  }`}
+                >
+                  <p className="font-semibold leading-tight">{o.label}</p>
+                  <p className={`text-xs mt-0.5 ${form.type === o.value ? "text-primary/70" : "text-muted"}`}>{o.desc}</p>
+                </button>
+              ))}
             </div>
           </div>
-        </section>
 
-        {/* Місце і час */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-black">2</span>
-            Місце і терміни
-          </h2>
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className={label}>Короткий опис *</label>
+            <input
+              value={form.shortDescription}
+              onChange={(e) => set("shortDescription", e.target.value)}
+              placeholder="1–2 речення, які бачать у каталозі"
+              maxLength={200}
+              className={`${input} ${errors.shortDescription ? err : ""}`}
+            />
+            <div className="flex items-center justify-between">
+              {errors.shortDescription ? <p className={`${hint} text-red-500`}>{errors.shortDescription}</p> : <span />}
+              <p className={hint}>{form.shortDescription.length}/200</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 1: Місце і терміни */}
+      {step === 1 && (
+        <div className="bg-white rounded-2xl border border-border p-6 flex flex-col gap-5">
+          <div>
+            <label className={label}>Країна *</label>
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelClass}>Прапор</label>
-                <select value={form.flag} onChange={(e) => set("flag", e.target.value)} className={inputBase}>
-                  {FLAG_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                <select
+                  value={form.flag}
+                  onChange={(e) => {
+                    const parts = e.target.value.split(" ");
+                    set("flag", e.target.value);
+                    const country = parts.slice(1).join(" ");
+                    if (country && country !== "Онлайн" && country !== "міжнародний" && country !== "Євросоюз") {
+                      set("country", country);
+                    }
+                  }}
+                  className={input}
+                >
+                  {FLAG_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
               </div>
               <div>
-                <label className={labelClass}>Країна *</label>
                 <input
                   value={form.country}
                   onChange={(e) => set("country", e.target.value)}
-                  placeholder="Польща"
-                  className={`${inputBase} ${errors.country ? errorClass : ""}`}
+                  placeholder="Країна"
+                  className={`${input} ${errors.country ? err : ""}`}
                 />
-                {errors.country && <p className="text-xs text-red-500 mt-1">{errors.country}</p>}
-              </div>
-              <div>
-                <label className={labelClass}>Місто</label>
-                <input
-                  value={form.city}
-                  onChange={(e) => set("city", e.target.value)}
-                  placeholder="Варшава"
-                  className={inputBase}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Дедлайн подачі заявок *</label>
-                <input
-                  type="date"
-                  value={form.deadline}
-                  onChange={(e) => set("deadline", e.target.value)}
-                  className={`${inputBase} ${errors.deadline ? errorClass : ""}`}
-                />
-                {errors.deadline && <p className="text-xs text-red-500 mt-1">{errors.deadline}</p>}
-              </div>
-              <div>
-                <label className={labelClass}>Тривалість</label>
-                <input
-                  value={form.duration}
-                  onChange={(e) => set("duration", e.target.value)}
-                  placeholder="14 днів"
-                  className={inputBase}
-                />
+                {errors.country && <p className={`${hint} text-red-500`}>{errors.country}</p>}
               </div>
             </div>
           </div>
-        </section>
 
-        {/* Фінансування і вимоги */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-black">3</span>
-            Фінансування та учасники
-          </h2>
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Фінансування</label>
-                <select value={form.funding} onChange={(e) => set("funding", e.target.value)} className={inputBase}>
-                  <option value="fully-funded">Повне фінансування</option>
-                  <option value="partially-funded">Часткове фінансування</option>
-                  <option value="self-funded">Без фінансування</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Деталі фінансування</label>
-                <input
-                  value={form.fundingDetails}
-                  onChange={(e) => set("fundingDetails", e.target.value)}
-                  placeholder="Переліт, проживання, харчування"
-                  className={inputBase}
-                />
-              </div>
-            </div>
+          <div>
+            <label className={label}>Місто</label>
+            <input
+              value={form.city}
+              onChange={(e) => set("city", e.target.value)}
+              placeholder="Варшава, Берлін, Онлайн..."
+              className={input}
+            />
+          </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className={labelClass}>Вік від</label>
-                <input
-                  type="number"
-                  value={form.ageMin}
-                  onChange={(e) => set("ageMin", e.target.value)}
-                  placeholder="18"
-                  className={inputBase}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Вік до</label>
-                <input
-                  type="number"
-                  value={form.ageMax}
-                  onChange={(e) => set("ageMax", e.target.value)}
-                  placeholder="30"
-                  className={inputBase}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Мови (через кому)</label>
-                <input
-                  value={form.languagesInput}
-                  onChange={(e) => set("languagesInput", e.target.value)}
-                  placeholder="Англійська, Польська"
-                  className={inputBase}
-                />
-              </div>
-            </div>
-
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Теги (через кому)</label>
+              <label className={label}>Дедлайн подачі *</label>
               <input
-                value={form.tagsInput}
-                onChange={(e) => set("tagsInput", e.target.value)}
-                placeholder="Молодь, Обмін, ЄС"
-                className={inputBase}
+                type="date"
+                value={form.deadline}
+                onChange={(e) => set("deadline", e.target.value)}
+                className={`${input} ${errors.deadline ? err : ""}`}
               />
-            </div>
-          </div>
-        </section>
-
-        {/* Вимоги та переваги */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-black">4</span>
-            Вимоги та переваги
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className={labelClass}>Вимоги до учасників</label>
-              <p className="text-xs text-gray-400 mb-2">Кожна вимога — з нового рядка</p>
-              <textarea
-                value={form.requirementsInput}
-                onChange={(e) => set("requirementsInput", e.target.value)}
-                rows={5}
-                placeholder={"Вік 18–28 років\nРівень англійської B1+\nДосвід волонтерства"}
-                className={`${inputBase} resize-none font-mono text-xs`}
-              />
+              {errors.deadline && <p className={`${hint} text-red-500`}>{errors.deadline}</p>}
             </div>
             <div>
-              <label className={labelClass}>Що отримають учасники</label>
-              <p className="text-xs text-gray-400 mb-2">Кожна перевага — з нового рядка</p>
-              <textarea
-                value={form.benefitsInput}
-                onChange={(e) => set("benefitsInput", e.target.value)}
-                rows={5}
-                placeholder={"Повне фінансування\nСертифікат Erasmus+\nНетворкінг з 8 країн"}
-                className={`${inputBase} resize-none font-mono text-xs`}
+              <label className={label}>Тривалість</label>
+              <input
+                value={form.duration}
+                onChange={(e) => set("duration", e.target.value)}
+                placeholder="14 днів, 1 місяць..."
+                className={input}
               />
             </div>
           </div>
-        </section>
 
-        {/* Actions */}
-        <div className="flex items-center justify-between gap-3 pb-8">
-          <button
-            onClick={() => router.back()}
-            className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
-          >
-            Скасувати
-          </button>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => handleSubmit("draft")}
-              disabled={saving}
-              className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all disabled:opacity-50"
-            >
-              Зберегти як чернетку
-            </button>
-            <button
-              onClick={() => handleSubmit("published")}
-              disabled={saving}
-              className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/25 disabled:opacity-50"
-            >
-              Опублікувати
-            </button>
+          <div>
+            <label className={label}>Формат</label>
+            <div className="grid grid-cols-3 gap-2">
+              {([ ["offline", "Офлайн"], ["online", "Онлайн"], ["hybrid", "Гібрид"] ] as const).map(([val, lbl]) => (
+                <button
+                  key={val}
+                  onClick={() => set("format", val)}
+                  className={`py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                    form.format === val
+                      ? "border-primary bg-primary-light text-primary"
+                      : "border-border hover:border-primary/40 text-muted"
+                  }`}
+                >
+                  {lbl}
+                </button>
+              ))}
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* Step 2: Учасники та фінансування */}
+      {step === 2 && (
+        <div className="bg-white rounded-2xl border border-border p-6 flex flex-col gap-5">
+          <div>
+            <label className={label}>Фінансування</label>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                ["fully-funded", "Повне"],
+                ["partially-funded", "Часткове"],
+                ["self-funded", "Без фінансування"],
+              ] as const).map(([val, lbl]) => (
+                <button
+                  key={val}
+                  onClick={() => set("funding", val)}
+                  className={`py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all text-center ${
+                    form.funding === val
+                      ? "border-primary bg-primary-light text-primary"
+                      : "border-border hover:border-primary/40 text-muted"
+                  }`}
+                >
+                  {lbl}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className={label}>Деталі фінансування</label>
+            <input
+              value={form.fundingDetails}
+              onChange={(e) => set("fundingDetails", e.target.value)}
+              placeholder="Перельоти, проживання, харчування..."
+              className={input}
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className={label}>Вік від</label>
+              <input type="number" value={form.ageMin} onChange={(e) => set("ageMin", e.target.value)} placeholder="18" className={input} />
+            </div>
+            <div>
+              <label className={label}>Вік до</label>
+              <input type="number" value={form.ageMax} onChange={(e) => set("ageMax", e.target.value)} placeholder="30" className={input} />
+            </div>
+            <div>
+              <label className={label}>Мови</label>
+              <input value={form.languages} onChange={(e) => set("languages", e.target.value)} placeholder="Англ, Польська" className={input} />
+            </div>
+          </div>
+
+          <div>
+            <label className={label}>Теги (через кому)</label>
+            <input value={form.tags} onChange={(e) => set("tags", e.target.value)} placeholder="Молодь, ЄС, Лідерство" className={input} />
+            <p className={hint}>Допомагають знаходити проект у пошуку</p>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Повний опис */}
+      {step === 3 && (
+        <div className="bg-white rounded-2xl border border-border p-6 flex flex-col gap-5">
+          <div>
+            <label className={label}>Повний опис програми</label>
+            <textarea
+              value={form.fullDescription}
+              onChange={(e) => set("fullDescription", e.target.value)}
+              rows={5}
+              placeholder="Детальний опис: цілі, формат, учасники, особливості..."
+              className={`${input} resize-none`}
+            />
+          </div>
+
+          <div>
+            <label className={label}>Вимоги до учасників</label>
+            <p className={hint + " mb-1.5"}>Кожна вимога — з нового рядка</p>
+            <textarea
+              value={form.requirements}
+              onChange={(e) => set("requirements", e.target.value)}
+              rows={4}
+              placeholder={"Вік 18–28 років\nРівень англійської B1+\nДосвід волонтерства"}
+              className={`${input} resize-none font-mono text-xs`}
+            />
+          </div>
+
+          <div>
+            <label className={label}>Що отримають учасники</label>
+            <p className={hint + " mb-1.5"}>Кожна перевага — з нового рядка</p>
+            <textarea
+              value={form.benefits}
+              onChange={(e) => set("benefits", e.target.value)}
+              rows={4}
+              placeholder={"Повне фінансування\nСертифікат Erasmus+\nНетворкінг з 8 країн"}
+              className={`${input} resize-none font-mono text-xs`}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <div className="flex items-center justify-between gap-3 mt-6 pb-8">
+        <button
+          onClick={() => step > 0 ? setStep(step - 1) : router.push("/dashboard/projects")}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-muted-bg transition-all"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          {step === 0 ? "Скасувати" : "Назад"}
+        </button>
+
+        <div className="flex items-center gap-3">
+          {step === STEPS.length - 1 ? (
+            <>
+              <button
+                onClick={() => handleSubmit("draft")}
+                disabled={saving}
+                className="px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-muted-bg transition-all disabled:opacity-50"
+              >
+                Зберегти як чернетку
+              </button>
+              <button
+                onClick={() => handleSubmit("published")}
+                disabled={saving}
+                className="px-5 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 disabled:opacity-50"
+              >
+                Опублікувати
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={next}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20"
+            >
+              Далі
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
     </div>

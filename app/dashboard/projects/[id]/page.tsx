@@ -18,43 +18,33 @@ const TYPE_OPTIONS = [
 ];
 
 const FLAG_OPTIONS = [
-  { value: "🇺🇦", label: "🇺🇦 Україна" },
-  { value: "🇵🇱", label: "🇵🇱 Польща" },
-  { value: "🇩🇪", label: "🇩🇪 Німеччина" },
-  { value: "🇫🇷", label: "🇫🇷 Франція" },
-  { value: "🇳🇱", label: "🇳🇱 Нідерланди" },
-  { value: "🇦🇹", label: "🇦🇹 Австрія" },
-  { value: "🇨🇿", label: "🇨🇿 Чехія" },
-  { value: "🇸🇰", label: "🇸🇰 Словаччина" },
-  { value: "🇱🇹", label: "🇱🇹 Литва" },
-  { value: "🇱🇻", label: "🇱🇻 Латвія" },
-  { value: "🇪🇪", label: "🇪🇪 Естонія" },
-  { value: "🇬🇧", label: "🇬🇧 Великобританія" },
-  { value: "🇺🇸", label: "🇺🇸 США" },
-  { value: "🌍", label: "🌍 Онлайн / міжнародний" },
-  { value: "🇪🇺", label: "🇪🇺 Євросоюз" },
+  "🇺🇦 Україна", "🇵🇱 Польща", "🇩🇪 Німеччина", "🇫🇷 Франція",
+  "🇳🇱 Нідерланди", "🇦🇹 Австрія", "🇨🇿 Чехія", "🇸🇰 Словаччина",
+  "🇱🇹 Литва", "🇱🇻 Латвія", "🇪🇪 Естонія", "🇬🇧 Великобританія",
+  "🇺🇸 США", "🌍 Онлайн / міжнародний", "🇪🇺 Євросоюз",
 ];
+
+type FormState = OrgProject & { requirementsText: string; benefitsText: string; languagesText: string; tagsText: string };
 
 function EditProjectContent() {
   const router = useRouter();
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const { org } = useOrgSession();
   const { projects, update } = useOrgProjects(org?.id);
-
   const project = projects.find((p) => p.id === params.id);
 
-  const [form, setForm] = useState<Partial<OrgProject> & { requirementsInput: string; benefitsInput: string; languagesInput: string; tagsInput: string } | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<FormState | null>(null);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (project && !form) {
       setForm({
         ...project,
-        requirementsInput: project.requirements.join("\n"),
-        benefitsInput: project.benefits.join("\n"),
-        languagesInput: project.languages.join(", "),
-        tagsInput: project.tags.join(", "),
+        requirementsText: project.requirements.join("\n"),
+        benefitsText: project.benefits.join("\n"),
+        languagesText: project.languages.join(", "),
+        tagsText: project.tags.join(", "),
       });
     }
   }, [project, form]);
@@ -62,250 +52,249 @@ function EditProjectContent() {
   if (!project || !form) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <div className="w-7 h-7 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
 
-  function set(field: string, value: string | number) {
-    setForm((prev) => {
-      if (!prev) return prev;
-      const next = { ...prev, [field]: value };
+  function set(field: keyof FormState, value: string | number) {
+    setForm((p) => {
+      if (!p) return p;
+      const n = { ...p, [field]: value };
       if (field === "type") {
-        const opt = TYPE_OPTIONS.find((o) => o.value === value);
-        next.typeName = opt?.label ?? String(value);
+        n.typeName = TYPE_OPTIONS.find((o) => o.value === value)?.label ?? String(value);
       }
-      return next;
+      return n;
     });
     setSaved(false);
   }
 
-  function listToArray(text: string): string[] {
-    return text.split("\n").map((s) => s.trim()).filter(Boolean);
-  }
-
-  function handleSave(status?: OrgProject["status"]) {
+  function handleSave(statusOverride?: OrgProject["status"]) {
     if (!form || !project) return;
     setSaving(true);
 
-    const deadline = form.deadline ?? project.deadline;
-    const deadlineDate = new Date(deadline);
-    const deadlineDisplay = deadlineDate.toLocaleDateString("uk-UA", { day: "numeric", month: "short", year: "numeric" });
-
-    const country = (form.country ?? project.country).trim();
-    const city = (form.city ?? project.city).trim();
+    const deadline = form.deadline;
+    const deadlineDisplay = new Date(deadline).toLocaleDateString("uk-UA", {
+      day: "numeric", month: "short", year: "numeric",
+    });
+    const flagEmoji = form.flag.includes(" ") ? form.flag.split(" ")[0] : form.flag;
+    const city = form.city.trim();
+    const country = form.country.trim();
     const location = city ? `${city}, ${country}` : country;
 
     update(project.id, {
-      title: (form.title ?? project.title).trim(),
-      type: form.type ?? project.type,
-      typeName: form.typeName ?? project.typeName,
-      shortDescription: (form.shortDescription ?? project.shortDescription).trim(),
-      fullDescription: (form.fullDescription ?? project.fullDescription).trim(),
+      title: form.title.trim(),
+      type: form.type,
+      typeName: form.typeName,
+      shortDescription: form.shortDescription.trim(),
+      fullDescription: form.fullDescription.trim(),
       country,
       city,
       location,
-      flag: form.flag ?? project.flag,
-      format: form.format ?? project.format,
-      funding: form.funding ?? project.funding,
-      fundingDetails: (form.fundingDetails ?? project.fundingDetails ?? "").trim(),
+      flag: flagEmoji,
+      format: form.format,
+      funding: form.funding,
+      fundingDetails: form.fundingDetails?.trim() ?? "",
       deadline,
       deadlineDisplay,
-      duration: (form.duration ?? project.duration ?? "").trim(),
-      languages: listToArray(form.languagesInput ?? project.languages.join("\n")),
-      tags: (form.tagsInput ?? project.tags.join(", ")).split(",").map((s) => s.trim()).filter(Boolean),
-      requirements: listToArray(form.requirementsInput ?? project.requirements.join("\n")),
-      benefits: listToArray(form.benefitsInput ?? project.benefits.join("\n")),
-      ageMin: form.ageMin ?? project.ageMin,
-      ageMax: form.ageMax ?? project.ageMax,
-      status: status ?? form.status ?? project.status,
+      duration: form.duration?.trim() ?? "",
+      languages: form.languagesText.split(",").map((s) => s.trim()).filter(Boolean),
+      tags: form.tagsText.split(",").map((s) => s.trim()).filter(Boolean),
+      requirements: form.requirementsText.split("\n").map((s) => s.trim()).filter(Boolean),
+      benefits: form.benefitsText.split("\n").map((s) => s.trim()).filter(Boolean),
+      ageMin: form.ageMin,
+      ageMax: form.ageMax,
+      status: statusOverride ?? form.status,
     });
 
     setSaving(false);
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setTimeout(() => setSaved(false), 2500);
   }
 
-  const inputBase = "w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white";
-  const labelClass = "block text-sm font-semibold text-gray-700 mb-1.5";
+  const input = "w-full px-3.5 py-2.5 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all";
+  const label = "block text-sm font-medium text-foreground mb-1.5";
+  const section = "bg-white rounded-2xl border border-border p-6 flex flex-col gap-5";
 
   return (
-    <div className="max-w-2xl">
-      <div className="flex items-center gap-3 mb-8">
-        <button onClick={() => router.push("/dashboard/projects")} className="p-2 rounded-xl hover:bg-gray-100 transition-all text-gray-500">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+    <div className="page-transition max-w-2xl">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm mb-6">
+        <button onClick={() => router.push("/dashboard/projects")} className="text-muted hover:text-foreground transition-colors">
+          Проекти
         </button>
-        <div>
-          <h1 className="text-2xl font-black text-gray-900">Редагування проекту</h1>
-          <p className="text-sm text-gray-500 line-clamp-1">{project.title}</p>
+        <svg className="w-3.5 h-3.5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+        <span className="text-foreground font-semibold truncate max-w-[200px]">{project.title}</span>
+      </div>
+
+      <div className="flex items-center justify-between gap-4 mb-7">
+        <h1 className="text-2xl font-black text-foreground">Редагування</h1>
+        <div className="flex items-center gap-3">
+          {saved && (
+            <span className="flex items-center gap-1.5 text-xs text-green-600 font-semibold">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+              Збережено
+            </span>
+          )}
+          {project.status === "published" ? (
+            <button onClick={() => handleSave("draft")} className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 transition-all">
+              Зняти з публікації
+            </button>
+          ) : (
+            <button onClick={() => handleSave("published")} className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-green-50 text-green-700 hover:bg-green-100 transition-all">
+              Опублікувати
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="flex flex-col gap-6">
-        {/* Основна інформація */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-black">1</span>
-            Основна інформація
-          </h2>
-          <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
+        {/* Основна */}
+        <section className={section}>
+          <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Основна інформація</h2>
+          <div>
+            <label className={label}>Назва проекту</label>
+            <input value={form.title} onChange={(e) => set("title", e.target.value)} className={input} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Назва проекту</label>
-              <input value={form.title ?? ""} onChange={(e) => set("title", e.target.value)} className={inputBase} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Тип можливості</label>
-                <select value={form.type ?? "exchange"} onChange={(e) => set("type", e.target.value)} className={inputBase}>
-                  {TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Формат</label>
-                <select value={form.format ?? "offline"} onChange={(e) => set("format", e.target.value)} className={inputBase}>
-                  <option value="offline">Офлайн</option>
-                  <option value="online">Онлайн</option>
-                  <option value="hybrid">Гібрид</option>
-                </select>
-              </div>
+              <label className={label}>Тип</label>
+              <select value={form.type} onChange={(e) => set("type", e.target.value)} className={input}>
+                {TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
             </div>
             <div>
-              <label className={labelClass}>Короткий опис</label>
-              <input value={form.shortDescription ?? ""} onChange={(e) => set("shortDescription", e.target.value)} className={inputBase} />
+              <label className={label}>Формат</label>
+              <select value={form.format} onChange={(e) => set("format", e.target.value)} className={input}>
+                <option value="offline">Офлайн</option>
+                <option value="online">Онлайн</option>
+                <option value="hybrid">Гібрид</option>
+              </select>
             </div>
-            <div>
-              <label className={labelClass}>Повний опис</label>
-              <textarea value={form.fullDescription ?? ""} onChange={(e) => set("fullDescription", e.target.value)} rows={5} className={`${inputBase} resize-none`} />
-            </div>
+          </div>
+          <div>
+            <label className={label}>Короткий опис</label>
+            <input value={form.shortDescription} onChange={(e) => set("shortDescription", e.target.value)} className={input} maxLength={200} />
+          </div>
+          <div>
+            <label className={label}>Повний опис</label>
+            <textarea value={form.fullDescription} onChange={(e) => set("fullDescription", e.target.value)} rows={4} className={`${input} resize-none`} />
           </div>
         </section>
 
         {/* Місце і час */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-black">2</span>
-            Місце і терміни
-          </h2>
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className={labelClass}>Прапор</label>
-                <select value={form.flag ?? "🇺🇦"} onChange={(e) => set("flag", e.target.value)} className={inputBase}>
-                  {FLAG_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Країна</label>
-                <input value={form.country ?? ""} onChange={(e) => set("country", e.target.value)} className={inputBase} />
-              </div>
-              <div>
-                <label className={labelClass}>Місто</label>
-                <input value={form.city ?? ""} onChange={(e) => set("city", e.target.value)} className={inputBase} />
-              </div>
+        <section className={section}>
+          <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Місце і терміни</h2>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className={label}>Прапор</label>
+              <select
+                value={FLAG_OPTIONS.find((f) => f.startsWith(form.flag)) ?? FLAG_OPTIONS[0]}
+                onChange={(e) => set("flag", e.target.value.split(" ")[0])}
+                className={input}
+              >
+                {FLAG_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Дедлайн</label>
-                <input type="date" value={form.deadline ?? ""} onChange={(e) => set("deadline", e.target.value)} className={inputBase} />
-              </div>
-              <div>
-                <label className={labelClass}>Тривалість</label>
-                <input value={form.duration ?? ""} onChange={(e) => set("duration", e.target.value)} placeholder="14 днів" className={inputBase} />
-              </div>
+            <div>
+              <label className={label}>Країна</label>
+              <input value={form.country} onChange={(e) => set("country", e.target.value)} className={input} />
+            </div>
+            <div>
+              <label className={label}>Місто</label>
+              <input value={form.city} onChange={(e) => set("city", e.target.value)} className={input} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={label}>Дедлайн</label>
+              <input type="date" value={form.deadline} onChange={(e) => set("deadline", e.target.value)} className={input} />
+            </div>
+            <div>
+              <label className={label}>Тривалість</label>
+              <input value={form.duration ?? ""} onChange={(e) => set("duration", e.target.value)} className={input} placeholder="14 днів" />
             </div>
           </div>
         </section>
 
-        {/* Фінансування та учасники */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-black">3</span>
-            Фінансування та учасники
-          </h2>
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Фінансування</label>
-                <select value={form.funding ?? "fully-funded"} onChange={(e) => set("funding", e.target.value)} className={inputBase}>
-                  <option value="fully-funded">Повне фінансування</option>
-                  <option value="partially-funded">Часткове фінансування</option>
-                  <option value="self-funded">Без фінансування</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Деталі фінансування</label>
-                <input value={form.fundingDetails ?? ""} onChange={(e) => set("fundingDetails", e.target.value)} className={inputBase} />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className={labelClass}>Вік від</label>
-                <input type="number" value={form.ageMin ?? ""} onChange={(e) => set("ageMin", Number(e.target.value))} placeholder="18" className={inputBase} />
-              </div>
-              <div>
-                <label className={labelClass}>Вік до</label>
-                <input type="number" value={form.ageMax ?? ""} onChange={(e) => set("ageMax", Number(e.target.value))} placeholder="30" className={inputBase} />
-              </div>
-              <div>
-                <label className={labelClass}>Мови (через кому)</label>
-                <input value={form.languagesInput ?? ""} onChange={(e) => set("languagesInput", e.target.value)} className={inputBase} />
-              </div>
+        {/* Учасники */}
+        <section className={section}>
+          <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Учасники та фінансування</h2>
+          <div className="grid grid-cols-3 gap-2">
+            {([["fully-funded", "Повне"], ["partially-funded", "Часткове"], ["self-funded", "Без"]] as const).map(([val, lbl]) => (
+              <button
+                key={val}
+                onClick={() => set("funding", val)}
+                className={`py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all text-center ${
+                  form.funding === val
+                    ? "border-primary bg-primary-light text-primary"
+                    : "border-border hover:border-primary/40 text-muted"
+                }`}
+              >
+                {lbl}
+              </button>
+            ))}
+          </div>
+          <div>
+            <label className={label}>Деталі фінансування</label>
+            <input value={form.fundingDetails ?? ""} onChange={(e) => set("fundingDetails", e.target.value)} className={input} />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className={label}>Вік від</label>
+              <input type="number" value={form.ageMin ?? ""} onChange={(e) => set("ageMin", Number(e.target.value))} placeholder="18" className={input} />
             </div>
             <div>
-              <label className={labelClass}>Теги (через кому)</label>
-              <input value={form.tagsInput ?? ""} onChange={(e) => set("tagsInput", e.target.value)} className={inputBase} />
+              <label className={label}>Вік до</label>
+              <input type="number" value={form.ageMax ?? ""} onChange={(e) => set("ageMax", Number(e.target.value))} placeholder="30" className={input} />
             </div>
+            <div>
+              <label className={label}>Мови</label>
+              <input value={form.languagesText} onChange={(e) => set("languagesText", e.target.value)} className={input} placeholder="Англ, Польська" />
+            </div>
+          </div>
+          <div>
+            <label className={label}>Теги (через кому)</label>
+            <input value={form.tagsText} onChange={(e) => set("tagsText", e.target.value)} className={input} />
           </div>
         </section>
 
-        {/* Вимоги та переваги */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-black">4</span>
-            Вимоги та переваги
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {/* Вимоги і переваги */}
+        <section className={section}>
+          <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Вимоги та переваги</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className={labelClass}>Вимоги до учасників</label>
-              <p className="text-xs text-gray-400 mb-2">Кожна вимога — з нового рядка</p>
-              <textarea value={form.requirementsInput ?? ""} onChange={(e) => set("requirementsInput", e.target.value)} rows={5} className={`${inputBase} resize-none font-mono text-xs`} />
+              <label className={label}>Вимоги</label>
+              <p className="text-xs text-muted mb-1.5">Кожна — з нового рядка</p>
+              <textarea value={form.requirementsText} onChange={(e) => set("requirementsText", e.target.value)} rows={5} className={`${input} resize-none font-mono text-xs`} />
             </div>
             <div>
-              <label className={labelClass}>Що отримають учасники</label>
-              <p className="text-xs text-gray-400 mb-2">Кожна перевага — з нового рядка</p>
-              <textarea value={form.benefitsInput ?? ""} onChange={(e) => set("benefitsInput", e.target.value)} rows={5} className={`${inputBase} resize-none font-mono text-xs`} />
+              <label className={label}>Переваги</label>
+              <p className="text-xs text-muted mb-1.5">Кожна — з нового рядка</p>
+              <textarea value={form.benefitsText} onChange={(e) => set("benefitsText", e.target.value)} rows={5} className={`${input} resize-none font-mono text-xs`} />
             </div>
           </div>
         </section>
 
         {/* Actions */}
         <div className="flex items-center justify-between gap-3 pb-8">
-          <div className="flex items-center gap-2">
-            {project.status === "published" ? (
-              <button onClick={() => handleSave("draft")} className="px-4 py-2.5 rounded-xl border border-yellow-200 text-sm font-semibold text-yellow-700 hover:bg-yellow-50 transition-all">
-                Зняти з публікації
-              </button>
-            ) : (
-              <button onClick={() => handleSave("published")} className="px-4 py-2.5 rounded-xl border border-green-200 text-sm font-semibold text-green-700 hover:bg-green-50 transition-all">
-                Опублікувати
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            {saved && <span className="text-xs text-green-600 font-semibold">✓ Збережено</span>}
-            <button onClick={() => router.push("/dashboard/projects")} className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">
-              Скасувати
-            </button>
-            <button
-              onClick={() => handleSave()}
-              disabled={saving}
-              className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/25 disabled:opacity-50"
-            >
-              {saving ? "Зберігаємо..." : "Зберегти зміни"}
-            </button>
-          </div>
+          <button
+            onClick={() => router.push("/dashboard/projects")}
+            className="px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-muted-bg transition-all"
+          >
+            Скасувати
+          </button>
+          <button
+            onClick={() => handleSave()}
+            disabled={saving}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 disabled:opacity-50"
+          >
+            {saving ? "Зберігаємо..." : "Зберегти зміни"}
+          </button>
         </div>
       </div>
     </div>
