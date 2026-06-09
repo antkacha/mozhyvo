@@ -88,11 +88,11 @@ const orgTypes = [
 export default function OrganizationsPage() {
   return (
     <>
-      {/* ── Hero — dark ──────────────────────────────────────────── */}
-      <section className="bg-gray-900 text-white">
+      {/* ── Hero — primary blue ──────────────────────────────────── */}
+      <section className="bg-primary text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/15 text-white/60 text-xs font-semibold mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 text-white/70 text-xs font-semibold mb-8">
               <span>✦</span>
               Для організацій-партнерів
             </div>
@@ -100,22 +100,22 @@ export default function OrganizationsPage() {
               Розміщуй там,
               <br />
               де молодь{" "}
-              <span className="text-accent">справді шукає</span>
+              <span className="underline decoration-white/40 decoration-wavy">справді шукає</span>
             </h1>
-            <p className="text-white/55 text-xl leading-relaxed max-w-xl mb-10">
+            <p className="text-white/70 text-xl leading-relaxed max-w-xl mb-10">
               Тисячі молодих українців щодня шукають гранти, стажування та
               обміни. Моживо — єдина платформа, де вони це роблять.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/register"
-                className="px-8 py-4 rounded-full bg-accent text-gray-900 font-bold hover:bg-yellow-400 transition-all duration-200 shadow-lg"
+                className="px-8 py-4 rounded-full bg-white text-primary font-bold hover:bg-primary-light transition-all duration-200 shadow-lg"
               >
                 Зареєструвати організацію →
               </Link>
               <Link
                 href="/opportunities"
-                className="px-8 py-4 rounded-full border border-white/20 text-white font-semibold hover:bg-white/10 transition-all duration-200"
+                className="px-8 py-4 rounded-full border border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-200"
               >
                 Переглянути приклади
               </Link>
@@ -123,18 +123,18 @@ export default function OrganizationsPage() {
           </div>
 
           {/* Stats strip */}
-          <div className="mt-16 pt-8 border-t border-white/10 flex flex-wrap gap-12">
+          <div className="mt-16 pt-8 border-t border-white/15 flex flex-wrap gap-12">
             {[
               { num: "1 200+", label: "можливостей" },
               { num: "300+", label: "організацій-партнерів" },
               { num: "5 000+", label: "активних користувачів" },
-              { num: "0₴", label: "безкоштовно", accent: true },
+              { num: "0₴", label: "безкоштовно" },
             ].map((s) => (
               <div key={s.label}>
-                <p className={`text-4xl font-black leading-none ${s.accent ? "text-accent" : "text-white"}`}>
+                <p className="text-4xl font-black leading-none text-white">
                   {s.num}
                 </p>
-                <p className="text-white/45 text-sm mt-1.5">{s.label}</p>
+                <p className="text-white/50 text-sm mt-1.5">{s.label}</p>
               </div>
             ))}
           </div>
@@ -236,27 +236,27 @@ export default function OrganizationsPage() {
               </div>
             </div>
 
-            <div className="bg-gray-900 rounded-3xl p-8 text-white relative overflow-hidden">
+            <div className="bg-primary rounded-3xl p-8 text-white relative overflow-hidden">
               <div
                 aria-hidden
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   backgroundImage:
-                    "radial-gradient(circle at 85% 15%, rgba(255,214,0,0.15) 0%, transparent 45%)",
+                    "radial-gradient(circle at 85% 15%, rgba(255,255,255,0.12) 0%, transparent 50%)",
                 }}
               />
-              <div className="relative z-10 divide-y divide-white/10">
+              <div className="relative z-10 divide-y divide-white/15">
                 <div className="pb-6">
                   <p className="text-5xl font-black leading-none mb-1">1 200+</p>
-                  <p className="text-white/50 text-sm">можливостей на платформі</p>
+                  <p className="text-white/55 text-sm">можливостей на платформі</p>
                 </div>
                 <div className="py-6">
                   <p className="text-5xl font-black leading-none mb-1">300+</p>
-                  <p className="text-white/50 text-sm">верифікованих організацій</p>
+                  <p className="text-white/55 text-sm">верифікованих організацій</p>
                 </div>
                 <div className="pt-6">
-                  <p className="text-5xl font-black text-accent leading-none mb-1">5 000+</p>
-                  <p className="text-white/50 text-sm">активних користувачів щомісяця</p>
+                  <p className="text-5xl font-black leading-none mb-1">5 000+</p>
+                  <p className="text-white/55 text-sm">активних користувачів щомісяця</p>
                 </div>
               </div>
             </div>
