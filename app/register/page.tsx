@@ -388,7 +388,7 @@ export default function RegisterPage() {
                       >
                         {logoPreview ? "Змінити фото" : "Завантажити логотип"}
                       </button>
-                      <p className="text-xs text-muted mt-0.5">PNG або JPG, до 2 МБ. Необов'язково.</p>
+                      <p className="text-xs text-muted mt-0.5">PNG або JPG, до 2 МБ. Необов&apos;язково.</p>
                     </div>
                   </div>
                   <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />

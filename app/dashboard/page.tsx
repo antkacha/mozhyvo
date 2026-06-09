@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useApplications, Application } from "@/hooks/useApplications";
-import { opportunities } from "@/lib/data";
 
 // ── Coordinator mock data (original dashboard) ─────────────────────
 const MOCK_PROGRAMS = [
