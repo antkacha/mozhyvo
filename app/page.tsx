@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import FeaturedSection from "@/components/FeaturedSection";
 import HomeRecommendations from "@/components/HomeRecommendations";
+import NewsletterSubscribe from "@/components/NewsletterSubscribe";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "https://mozhyvo.ua" },
+};
 
 const features = [
   {
@@ -365,6 +371,56 @@ export default function Home() {
                 Розмістити можливість →
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Telegram bot ─────────────────────────────────────────── */}
+      <section className="bg-primary-light border-t border-primary/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-[#2AABEE] flex items-center justify-center flex-shrink-0 shadow-md">
+                <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.01 9.473c-.148.664-.537.826-1.088.514l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.462c.537-.194 1.006.13.877.743z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-black text-foreground text-lg">Telegram-бот Моживо</p>
+                <p className="text-sm text-muted mt-0.5">Отримуй нові можливості та нагадування прямо в Telegram</p>
+              </div>
+            </div>
+            <a
+              href="https://t.me/mozhyvo_bot"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#2AABEE] text-white font-semibold text-sm hover:bg-[#229ED9] transition-all shadow-md flex-shrink-0"
+            >
+              Відкрити бота →
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Newsletter section ───────────────────────────────────── */}
+      <section id="newsletter" className="bg-white border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary-light text-primary mb-5 text-2xl">
+              📬
+            </div>
+            <h2 className="text-3xl font-black text-foreground mb-3">
+              Нові можливості щотижня
+            </h2>
+            <p className="text-muted text-base mb-8 leading-relaxed">
+              Підписуйся та отримуй добірку найкращих грантів, стипендій та програм обміну прямо на пошту. Без спаму — тільки корисне.
+            </p>
+            <div className="flex justify-center">
+              <NewsletterSubscribe />
+            </div>
+            <p className="text-xs text-muted mt-4">
+              Понад 3 000 підписників · Відписатись можна в будь-який момент
+            </p>
           </div>
         </div>
       </section>

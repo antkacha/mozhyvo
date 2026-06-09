@@ -14,9 +14,20 @@ const quickFilters = [
 ];
 
 export const metadata: Metadata = {
-  title: "Можливості — Моживо",
+  title: "Можливості для молоді України — гранти, стипендії, обміни",
   description:
-    "Гранти, стипендії, стажування, обміни та більше — для молоді України. Фільтруй за типом, країною та форматом.",
+    "Понад 1200 грантів, стипендій, стажувань та програм обміну для молоді України. Erasmus+, DAAD, Фулбрайт та сотні інших — в одному місці.",
+  keywords: [
+    "гранти молодь Україна", "стипендії для студентів", "Erasmus+ Україна",
+    "програми обміну студентів", "стажування за кордоном", "волонтерство Україна",
+  ],
+  alternates: { canonical: "https://mozhyvo.ua/opportunities" },
+  openGraph: {
+    title: "Можливості для молоді України",
+    description: "Понад 1200 грантів, стипендій та обмінів в одному місці",
+    url: "https://mozhyvo.ua/opportunities",
+    images: [{ url: "https://mozhyvo.ua/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 function CatalogSkeleton() {

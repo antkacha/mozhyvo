@@ -177,7 +177,7 @@ export default function RegisterPage() {
       setStatus("error");
     } else {
       setStatus("success");
-      setTimeout(() => router.push("/"), 2000);
+      setTimeout(() => router.push("/onboarding"), 2000);
     }
   };
 

@@ -9,10 +9,40 @@ export function generateStaticParams() {
   return opportunities.map((o) => ({ slug: o.slug }));
 }
 
+const BASE = "https://mozhyvo.ua";
+
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const opp = opportunities.find((o) => o.slug === params.slug);
   if (!opp) return {};
-  return { title: `${opp.title} — Моживо`, description: opp.shortDescription };
+  const url = `${BASE}/opportunities/${opp.slug}`;
+  return {
+    title:       opp.title,
+    description: opp.shortDescription,
+    keywords:    [opp.typeName, opp.org, opp.country, opp.location, ...opp.tags],
+    alternates:  { canonical: url },
+    openGraph: {
+      type:        "article",
+      url,
+      title:       opp.title,
+      description: opp.shortDescription,
+      siteName:    "Моживо",
+      locale:      "uk_UA",
+      images: [
+        {
+          url:    `${BASE}/opportunities/${opp.slug}/opengraph-image`,
+          width:  1200,
+          height: 630,
+          alt:    opp.title,
+        },
+      ],
+    },
+    twitter: {
+      card:        "summary_large_image",
+      title:       opp.title,
+      description: opp.shortDescription,
+      images:      [`${BASE}/opportunities/${opp.slug}/opengraph-image`],
+    },
+  };
 }
 
 export default function OpportunityDetailPage({ params }: { params: { slug: string } }) {
@@ -26,8 +56,33 @@ export default function OpportunityDetailPage({ params }: { params: { slug: stri
     .filter((o) => o.slug !== opp.slug && (o.type === opp.type || o.country === opp.country))
     .slice(0, 3);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: opp.title,
+    description: opp.shortDescription,
+    organizer: { "@type": "Organization", name: opp.org },
+    location: { "@type": "Place", name: opp.location, address: { "@type": "PostalAddress", addressCountry: opp.country } },
+    eventStatus: "https://schema.org/EventScheduled",
+    endDate: opp.deadline,
+    url: `${BASE}/opportunities/${opp.slug}`,
+    image: `${BASE}/opportunities/${opp.slug}/opengraph-image`,
+    offers: {
+      "@type": "Offer",
+      price: opp.funding === "fully-funded" ? "0" : undefined,
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+      url: `${BASE}/opportunities/${opp.slug}`,
+    },
+    keywords: opp.tags.join(", "),
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero */}
       <section className="bg-primary-light border-b border-primary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
