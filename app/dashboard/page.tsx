@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useApplications, Application } from "@/hooks/useApplications";
+import { DEMO_ORG_EMAIL } from "@/lib/demo-org";
 
 // ── Coordinator mock data (original dashboard) ─────────────────────
 const MOCK_PROGRAMS = [
@@ -154,6 +155,26 @@ function OrgDashboard() {
                 </Link>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Dev toggle — demo account only */}
+        {org.contactEmail === DEMO_ORG_EMAIL && (
+          <div className="mt-4 flex items-center gap-3 p-3 bg-gray-50 border border-dashed border-gray-300 rounded-xl">
+            <span className="text-xs text-gray-400 font-mono">🛠 demo</span>
+            <span className="text-xs text-gray-500">Симулювати верифікацію:</span>
+            <button
+              onClick={() => update({ status: "pending" })}
+              className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-all ${org.status === "pending" ? "bg-yellow-100 text-yellow-700 ring-1 ring-yellow-400" : "bg-gray-100 text-gray-500 hover:bg-yellow-50"}`}
+            >
+              ⏳ Pending
+            </button>
+            <button
+              onClick={() => update({ status: "verified" })}
+              className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-all ${org.status === "verified" ? "bg-green-100 text-green-700 ring-1 ring-green-400" : "bg-gray-100 text-gray-500 hover:bg-green-50"}`}
+            >
+              ✅ Verified
+            </button>
           </div>
         )}
 
