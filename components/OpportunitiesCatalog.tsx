@@ -1,310 +1,324 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   opportunities,
   typeNames,
   fundingLabels,
   formatLabels,
   categorySlugToType,
-  OpportunityType,
-  FundingType,
-  FormatType,
+  type OpportunityType,
+  type FundingType,
+  type FormatType,
 } from "@/lib/data";
+import { getDaysUntilDeadline } from "@/lib/recommendations";
 import OpportunityCard from "@/components/OpportunityCard";
+import { SkeletonGrid } from "@/components/SkeletonCard";
 
-const ALL_TYPES: OpportunityType[] = [
-  "scholarship",
-  "internship",
-  "exchange",
-  "volunteering",
-  "competition",
-  "grant",
-  "conference",
-  "hackathon",
-];
+const PER_PAGE = 12;
+const SORT_OPTIONS = [
+  { value: "newest",   label: "Найновіші" },
+  { value: "deadline", label: "За дедлайном" },
+  { value: "popular",  label: "Популярні" },
+] as const;
+type SortValue = typeof SORT_OPTIONS[number]["value"];
 
-const ALL_FORMATS: FormatType[] = ["online", "offline", "hybrid"];
-const ALL_FUNDINGS: FundingType[] = [
-  "fully-funded",
-  "partially-funded",
-  "self-funded",
-];
-
-const allCountries = Array.from(
-  new Set(opportunities.map((o) => o.country))
+const ALL_TYPES    = Object.keys(typeNames) as OpportunityType[];
+const ALL_FORMATS  = ["online", "offline", "hybrid"] as FormatType[];
+const ALL_FUNDINGS = ["fully-funded", "partially-funded", "self-funded"] as FundingType[];
+const ALL_COUNTRIES = Array.from(new Set(opportunities.map((o) => o.country))).sort();
+const ALL_LANGUAGES = Array.from(
+  new Set(opportunities.flatMap((o) => o.languages.map((l) => l.split(" ")[0])))
 ).sort();
 
-const typeCounts = ALL_TYPES.reduce(
-  (acc, type) => {
-    acc[type] = opportunities.filter((o) => o.type === type).length;
-    return acc;
-  },
-  {} as Record<string, number>
-);
-
-// ── Sub-components ───────────────────────────────────────────────
-
-function FilterSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+// ── Checkbox row ────────────────────────────────────────────────────
+function CheckRow({
+  label, count, checked, onChange,
+}: { label: string; count?: number; checked: boolean; onChange: () => void }) {
   return (
-    <div className="border-b border-border pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
-      <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">
-        {title}
-      </p>
-      <div className="flex flex-col gap-2">{children}</div>
-    </div>
-  );
-}
-
-function CheckItem({
-  label,
-  count,
-  checked,
-  onChange,
-}: {
-  label: string;
-  count?: number;
-  checked: boolean;
-  onChange: () => void;
-}) {
-  return (
-    <label className="flex items-center gap-2.5 cursor-pointer group">
+    <label className="flex items-center gap-2.5 cursor-pointer group py-0.5">
       <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
+        type="checkbox" checked={checked} onChange={onChange}
         className="w-4 h-4 rounded border-border accent-primary cursor-pointer flex-shrink-0"
       />
-      <span className="text-sm text-muted group-hover:text-foreground transition-colors duration-150 leading-tight">
-        {label}
-      </span>
-      {count !== undefined && (
-        <span className="ml-auto text-xs text-muted tabular-nums">{count}</span>
-      )}
+      <span className="text-sm text-muted group-hover:text-foreground transition-colors leading-tight flex-1">{label}</span>
+      {count !== undefined && <span className="text-xs text-muted tabular-nums">{count}</span>}
     </label>
   );
 }
 
-interface FilterPanelProps {
-  selectedTypes: string[];
-  selectedFormats: string[];
-  selectedFundings: string[];
-  selectedCountries: string[];
-  onToggleType: (v: string) => void;
-  onToggleFormat: (v: string) => void;
-  onToggleFunding: (v: string) => void;
-  onToggleCountry: (v: string) => void;
-}
-
-function FilterPanel({
-  selectedTypes,
-  selectedFormats,
-  selectedFundings,
-  selectedCountries,
-  onToggleType,
-  onToggleFormat,
-  onToggleFunding,
-  onToggleCountry,
-}: FilterPanelProps) {
+// ── Collapsible filter section ──────────────────────────────────────
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true);
   return (
-    <>
-      <FilterSection title="Тип можливості">
-        {ALL_TYPES.map((type) => (
-          <CheckItem
-            key={type}
-            label={typeNames[type]}
-            count={typeCounts[type]}
-            checked={selectedTypes.includes(type)}
-            onChange={() => onToggleType(type)}
-          />
-        ))}
-      </FilterSection>
-
-      <FilterSection title="Формат">
-        {ALL_FORMATS.map((fmt) => (
-          <CheckItem
-            key={fmt}
-            label={formatLabels[fmt]}
-            checked={selectedFormats.includes(fmt)}
-            onChange={() => onToggleFormat(fmt)}
-          />
-        ))}
-      </FilterSection>
-
-      <FilterSection title="Фінансування">
-        {ALL_FUNDINGS.map((fund) => (
-          <CheckItem
-            key={fund}
-            label={fundingLabels[fund]}
-            checked={selectedFundings.includes(fund)}
-            onChange={() => onToggleFunding(fund)}
-          />
-        ))}
-      </FilterSection>
-
-      <FilterSection title="Країна">
-        {allCountries.map((country) => (
-          <CheckItem
-            key={country}
-            label={country}
-            checked={selectedCountries.includes(country)}
-            onChange={() => onToggleCountry(country)}
-          />
-        ))}
-      </FilterSection>
-    </>
+    <div className="border-b border-border pb-4 mb-4 last:border-0">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between w-full text-left mb-2"
+      >
+        <span className="text-xs font-semibold text-foreground uppercase tracking-wider">{title}</span>
+        <svg className={`w-3.5 h-3.5 text-muted transition-transform ${open ? "" : "-rotate-90"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && <div className="flex flex-col gap-1.5">{children}</div>}
+    </div>
   );
 }
 
-// ── Main catalog component ────────────────────────────────────────
+// ── Urgent deadline banner ───────────────────────────────────────────
+function UrgentRow({ items }: { items: typeof opportunities }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mb-7">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-sm font-bold text-red-600">⏰ Спливає скоро</span>
+        <span className="text-xs text-muted">— дедлайн до 7 днів</span>
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
+        {items.map((opp) => {
+          const days = getDaysUntilDeadline(opp.deadline);
+          return (
+            <a
+              key={opp.slug}
+              href={`/opportunities/${opp.slug}`}
+              className="flex-shrink-0 w-60 bg-white border border-red-200 border-t-4 border-t-red-500 rounded-2xl p-4 hover:shadow-md transition-all group"
+            >
+              <p className="text-[11px] font-semibold text-red-600 mb-1">
+                {days === 0 ? "Сьогодні!" : `${days} ${days === 1 ? "день" : "дні"} залишилось`}
+              </p>
+              <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">{opp.title}</p>
+              <p className="text-xs text-muted mt-1 truncate">{opp.org}</p>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
-const ITEMS_PER_PAGE = 12;
-
+// ── Main catalog component ───────────────────────────────────────────
 export default function OpportunitiesCatalog() {
-  const searchParams = useSearchParams();
+  const router = useRouter();
+  const params = useSearchParams();
+  const [loading, setLoading] = useState(true);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [search, setSearch] = useState("");
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(() => {
-    const cat = searchParams.get("category");
-    if (cat && categorySlugToType[cat]) return [categorySlugToType[cat]];
-    return [];
-  });
-  const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
-  const [selectedFundings, setSelectedFundings] = useState<string[]>([]);
-  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [page, setPage] = useState(1);
+  // Initialise from URL
+  const initCat    = params.get("category");
+  const initTypes  = (initCat && categorySlugToType[initCat]) ? [categorySlugToType[initCat]] : [] as OpportunityType[];
 
-  const toggle = (
-    arr: string[],
-    setArr: (v: string[]) => void,
-    value: string
-  ) => {
-    setPage(1);
-    setArr(
-      arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value]
-    );
-  };
+  const [rawSearch, setRawSearch] = useState(params.get("q") ?? "");
+  const [search,    setSearch]    = useState(params.get("q") ?? "");
+  const [types,     setTypes]     = useState<OpportunityType[]>(initTypes);
+  const [formats,   setFormats]   = useState<FormatType[]>([]);
+  const [fundings,  setFundings]  = useState<FundingType[]>([]);
+  const [countries, setCountries] = useState<string[]>(params.get("country") ? [params.get("country")!] : []);
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [sort,      setSort]      = useState<SortValue>((params.get("sort") as SortValue) ?? "newest");
+  const [page,      setPage]      = useState(parseInt(params.get("page") ?? "1") || 1);
+  const [gridKey,   setGridKey]   = useState(0);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 300);
+    return () => clearTimeout(t);
+  }, []);
+
+  // 300ms debounce on search
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => { setSearch(rawSearch); setPage(1); }, 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [rawSearch]);
+
+  // Sync filters → URL (shallow replace)
+  const syncUrl = useCallback(() => {
+    const p = new URLSearchParams();
+    if (search) p.set("q", search);
+    if (types.length === 1) {
+      const slug = Object.entries(categorySlugToType).find(([, v]) => v === types[0])?.[0];
+      if (slug) p.set("category", slug);
+    }
+    if (sort !== "newest") p.set("sort", sort);
+    if (page > 1) p.set("page", String(page));
+    if (countries.length === 1) p.set("country", countries[0]);
+    const qs = p.toString();
+    router.replace(qs ? `/opportunities?${qs}` : "/opportunities", { scroll: false });
+  }, [search, types, sort, page, countries, router]);
+
+  useEffect(() => { syncUrl(); }, [syncUrl]);
+
+  const resetPage = useCallback(() => { setPage(1); setGridKey((k) => k + 1); }, []);
+
+  function toggle<T>(arr: T[], setArr: (v: T[]) => void, val: T) {
+    setArr(arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val]);
+    resetPage();
+  }
+
+  function clearAll() {
+    setRawSearch(""); setSearch("");
+    setTypes([]); setFormats([]); setFundings([]);
+    setCountries([]); setLanguages([]);
+    setSort("newest"); setPage(1); setGridKey((k) => k + 1);
+  }
+
+  // Filtered + sorted list
   const filtered = useMemo(() => {
-    let result = [...opportunities];
-
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (o) =>
+    let result = opportunities.filter((o) => {
+      if (types.length > 0    && !types.includes(o.type))      return false;
+      if (formats.length > 0  && !formats.includes(o.format))  return false;
+      if (fundings.length > 0 && !fundings.includes(o.funding)) return false;
+      if (countries.length > 0 && !countries.includes(o.country)) return false;
+      if (languages.length > 0 && !languages.some((l) =>
+        o.languages.some((ol) => ol.toLowerCase().startsWith(l.toLowerCase()))
+      )) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        return (
           o.title.toLowerCase().includes(q) ||
           o.org.toLowerCase().includes(q) ||
           o.shortDescription.toLowerCase().includes(q) ||
           o.tags.some((t) => t.toLowerCase().includes(q))
-      );
+        );
+      }
+      return true;
+    });
+
+    if (sort === "deadline") {
+      result = [...result].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+    } else if (sort === "popular") {
+      result = [...result].sort((a) => (a.featured ? -1 : 1));
     }
-
-    if (selectedTypes.length > 0)
-      result = result.filter((o) => selectedTypes.includes(o.type));
-    if (selectedFormats.length > 0)
-      result = result.filter((o) => selectedFormats.includes(o.format));
-    if (selectedFundings.length > 0)
-      result = result.filter((o) => selectedFundings.includes(o.funding));
-    if (selectedCountries.length > 0)
-      result = result.filter((o) => selectedCountries.includes(o.country));
-
-    result.sort(
-      (a, b) =>
-        new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-    );
-
     return result;
-  }, [search, selectedTypes, selectedFormats, selectedFundings, selectedCountries]);
+  }, [types, formats, fundings, countries, languages, search, sort]);
 
-  const activeCount =
-    selectedTypes.length +
-    selectedFormats.length +
-    selectedFundings.length +
-    selectedCountries.length;
+  const urgent = useMemo(() =>
+    opportunities.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d >= 0 && d <= 7; }).slice(0, 8),
+  []);
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-  const gridKey = paginated.map((o) => o.slug).join("-");
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  const clearAll = () => {
-    setSelectedTypes([]);
-    setSelectedFormats([]);
-    setSelectedFundings([]);
-    setSelectedCountries([]);
-    setSearch("");
-    setPage(1);
-  };
+  const activeChips: { label: string; remove: () => void }[] = [
+    ...types.map((t)     => ({ label: typeNames[t],     remove: () => toggle(types, setTypes, t) })),
+    ...formats.map((f)   => ({ label: formatLabels[f],  remove: () => toggle(formats, setFormats, f) })),
+    ...fundings.map((f)  => ({ label: fundingLabels[f], remove: () => toggle(fundings, setFundings, f) })),
+    ...countries.map((c) => ({ label: c,                remove: () => toggle(countries, setCountries, c) })),
+    ...languages.map((l) => ({ label: `Мова: ${l}`,     remove: () => toggle(languages, setLanguages, l) })),
+  ];
+  const activeCount = activeChips.length;
 
-  const filterProps: FilterPanelProps = {
-    selectedTypes,
-    selectedFormats,
-    selectedFundings,
-    selectedCountries,
-    onToggleType: (v) => toggle(selectedTypes, setSelectedTypes, v),
-    onToggleFormat: (v) => toggle(selectedFormats, setSelectedFormats, v),
-    onToggleFunding: (v) => toggle(selectedFundings, setSelectedFundings, v),
-    onToggleCountry: (v) => toggle(selectedCountries, setSelectedCountries, v),
-  };
+  function FilterPanel() {
+    return (
+      <div>
+        <Section title="Тип">
+          {ALL_TYPES.map((t) => (
+            <CheckRow key={t} label={typeNames[t]}
+              count={opportunities.filter((o) => o.type === t).length}
+              checked={types.includes(t)}
+              onChange={() => toggle(types, setTypes, t)} />
+          ))}
+        </Section>
+        <Section title="Формат">
+          {ALL_FORMATS.map((f) => (
+            <CheckRow key={f} label={formatLabels[f]}
+              count={filtered.filter((o) => o.format === f).length}
+              checked={formats.includes(f)}
+              onChange={() => toggle(formats, setFormats, f)} />
+          ))}
+        </Section>
+        <Section title="Фінансування">
+          {ALL_FUNDINGS.map((f) => (
+            <CheckRow key={f} label={fundingLabels[f]}
+              checked={fundings.includes(f)}
+              onChange={() => toggle(fundings, setFundings, f)} />
+          ))}
+        </Section>
+        <Section title="Країна">
+          <div className="max-h-44 overflow-y-auto flex flex-col gap-1.5 pr-1">
+            {ALL_COUNTRIES.map((c) => (
+              <CheckRow key={c} label={c}
+                count={filtered.filter((o) => o.country === c).length}
+                checked={countries.includes(c)}
+                onChange={() => toggle(countries, setCountries, c)} />
+            ))}
+          </div>
+        </Section>
+        <Section title="Мова">
+          <div className="flex flex-wrap gap-1.5">
+            {ALL_LANGUAGES.map((l) => (
+              <button
+                key={l}
+                onClick={() => toggle(languages, setLanguages, l)}
+                className={`text-xs font-semibold px-2.5 py-1 rounded-xl border transition-all ${
+                  languages.includes(l)
+                    ? "bg-primary text-white border-primary"
+                    : "border-border text-muted hover:border-primary/30 hover:text-foreground"
+                }`}
+              >{l}</button>
+            ))}
+          </div>
+        </Section>
+      </div>
+    );
+  }
+
+  if (loading) return <SkeletonGrid />;
 
   return (
     <div>
-      {/* Search bar + mobile filter button */}
-      <div className="flex gap-3 mb-6">
-        <div className="relative flex-1">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
+      <UrgentRow items={urgent} />
+
+      {/* Search + sort */}
+      <div className="flex items-center gap-3 mb-5 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
-            type="text"
+            type="text" value={rawSearch}
+            onChange={(e) => setRawSearch(e.target.value)}
             placeholder="Пошук за назвою, організацією, тегами..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white"
+            className="w-full pl-10 pr-10 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white"
           />
+          {rawSearch && (
+            <button onClick={() => { setRawSearch(""); setSearch(""); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          )}
         </div>
+        <select
+          value={sort} onChange={(e) => { setSort(e.target.value as SortValue); resetPage(); }}
+          className="text-sm border border-border rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground flex-shrink-0"
+        >
+          {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
         <button
-          onClick={() => setShowMobileFilters(true)}
+          onClick={() => setMobileOpen(true)}
           className="lg:hidden flex items-center gap-2 px-4 py-2.5 border border-border rounded-xl text-sm font-medium hover:border-primary hover:text-primary transition-all bg-white flex-shrink-0"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 4h18M7 8h10M11 12h4"
-            />
-          </svg>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 8h10M11 12h4" /></svg>
           Фільтри
-          {activeCount > 0 && (
-            <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-              {activeCount}
-            </span>
-          )}
+          {activeCount > 0 && <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">{activeCount}</span>}
         </button>
       </div>
+
+      {/* Active chips */}
+      {activeChips.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap mb-5">
+          {activeChips.map((chip) => (
+            <button key={chip.label} onClick={chip.remove}
+              className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 bg-primary-light text-primary rounded-xl hover:bg-red-50 hover:text-red-500 transition-all"
+            >
+              {chip.label}
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          ))}
+          <button onClick={clearAll} className="text-xs text-muted hover:text-red-500 transition-colors font-medium px-1">Скинути всі</button>
+        </div>
+      )}
 
       <div className="flex gap-8">
         {/* Desktop sidebar */}
@@ -312,94 +326,50 @@ export default function OpportunitiesCatalog() {
           <div className="sticky top-24">
             <div className="flex items-center justify-between mb-4">
               <p className="font-semibold text-sm text-foreground">Фільтри</p>
-              {activeCount > 0 && (
-                <button
-                  onClick={clearAll}
-                  className="text-xs text-primary hover:underline"
-                >
-                  Очистити
-                </button>
-              )}
+              {activeCount > 0 && <button onClick={clearAll} className="text-xs text-primary hover:underline">Очистити</button>}
             </div>
-            <FilterPanel {...filterProps} />
+            <FilterPanel />
           </div>
         </aside>
 
-        {/* Cards area */}
+        {/* Results */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-5">
-            <p className="text-sm text-muted">
-              Знайдено:{" "}
-              <span className="font-semibold text-foreground">
-                {filtered.length}
-              </span>{" "}
-              можливостей
-            </p>
-            {activeCount > 0 && (
-              <button
-                onClick={clearAll}
-                className="text-xs text-primary hover:underline lg:hidden"
-              >
-                Очистити ({activeCount})
-              </button>
-            )}
+          <div className="flex items-center justify-between mb-5 gap-3">
+            <p className="text-sm text-muted">Знайдено: <span className="font-semibold text-foreground">{filtered.length}</span> можливостей</p>
+            {activeCount > 0 && <button onClick={clearAll} className="text-xs text-primary hover:underline lg:hidden">Очистити ({activeCount})</button>}
           </div>
 
           {filtered.length === 0 ? (
-            <div className="text-center py-24">
+            <div className="bg-white rounded-2xl border border-border p-16 text-center">
               <p className="text-5xl mb-4">🔍</p>
-              <p className="font-semibold text-foreground mb-2">
-                Нічого не знайдено
-              </p>
-              <p className="text-sm text-muted mb-5">
-                Спробуй змінити фільтри або пошуковий запит
-              </p>
-              <button
-                onClick={clearAll}
-                className="text-sm font-semibold text-primary hover:underline"
-              >
-                Очистити всі фільтри
-              </button>
+              <p className="font-semibold text-foreground mb-2">Нічого не знайдено</p>
+              <p className="text-sm text-muted mb-5">Спробуй змінити фільтри або пошуковий запит</p>
+              <button onClick={clearAll} className="text-sm font-semibold text-primary hover:underline">Очистити всі фільтри</button>
             </div>
           ) : (
             <>
               <div key={gridKey} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                {paginated.map((opp, i) => (
-                  <OpportunityCard key={opp.slug} opp={opp} index={i} />
-                ))}
+                {paginated.map((opp, i) => <OpportunityCard key={opp.slug} opp={opp} index={i} />)}
               </div>
 
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-10">
-                  <button
-                    onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                <div className="flex items-center justify-center gap-2 mt-10 flex-wrap">
+                  <button onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     disabled={page === 1}
                     className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted hover:border-primary hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
-                  >
-                    ← Назад
-                  </button>
-
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                    <button
-                      key={p}
+                  >← Назад</button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).slice(
+                    Math.max(0, page - 3), Math.min(totalPages, page + 2)
+                  ).map((p) => (
+                    <button key={p}
                       onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                      className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${
-                        p === page
-                          ? "bg-primary text-white shadow-md shadow-primary/25"
-                          : "border border-border text-muted hover:border-primary hover:text-primary"
-                      }`}
-                    >
-                      {p}
-                    </button>
+                      className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${p === page ? "bg-primary text-white shadow-md shadow-primary/25" : "border border-border text-muted hover:border-primary hover:text-primary"}`}
+                    >{p}</button>
                   ))}
-
-                  <button
-                    onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  <button onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     disabled={page === totalPages}
                     className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted hover:border-primary hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
-                  >
-                    Далі →
-                  </button>
+                  >Далі →</button>
                 </div>
               )}
             </>
@@ -407,55 +377,25 @@ export default function OpportunitiesCatalog() {
         </div>
       </div>
 
-      {/* Mobile filter drawer */}
-      {showMobileFilters && (
+      {/* Mobile drawer */}
+      {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setShowMobileFilters(false)}
-          />
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
           <div className="absolute right-0 top-0 bottom-0 w-80 max-w-full bg-white shadow-xl flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-border">
               <p className="font-semibold text-foreground">Фільтри</p>
               <div className="flex items-center gap-3">
-                {activeCount > 0 && (
-                  <button
-                    onClick={clearAll}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    Очистити
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowMobileFilters(false)}
-                  className="p-1.5 hover:bg-muted-bg rounded-lg transition-colors"
-                >
-                  <svg
-                    className="w-5 h-5 text-foreground"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                {activeCount > 0 && <button onClick={clearAll} className="text-xs text-primary hover:underline">Очистити</button>}
+                <button onClick={() => setMobileOpen(false)} className="p-1.5 hover:bg-muted-bg rounded-lg transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              <FilterPanel {...filterProps} />
-            </div>
+            <div className="flex-1 overflow-y-auto p-4"><FilterPanel /></div>
             <div className="p-4 border-t border-border">
-              <button
-                onClick={() => setShowMobileFilters(false)}
+              <button onClick={() => setMobileOpen(false)}
                 className="w-full py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all"
-              >
-                Показати {filtered.length} результатів
-              </button>
+              >Показати {filtered.length} результатів</button>
             </div>
           </div>
         </div>

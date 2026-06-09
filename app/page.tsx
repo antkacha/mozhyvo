@@ -1,5 +1,6 @@
 import Link from "next/link";
 import FeaturedSection from "@/components/FeaturedSection";
+import HomeRecommendations from "@/components/HomeRecommendations";
 
 const features = [
   {
@@ -329,6 +330,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── Personalized recommendations (shown when logged in) ─────── */}
+      <HomeRecommendations />
 
       {/* ── Featured opportunities — animated client component ──────── */}
       <FeaturedSection />
