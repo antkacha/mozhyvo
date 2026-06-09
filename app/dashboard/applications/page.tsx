@@ -1,518 +1,601 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgApplications, OrgApplication } from "@/hooks/useOrgApplications";
-import { useOrgProjects, OrgProject } from "@/hooks/useOrgProjects";
+import { useOrgProjects } from "@/hooks/useOrgProjects";
 import OrgShell from "@/components/OrgShell";
 
-// ── Constants ────────────────────────────────────────────────────────
+// ── Status config ─────────────────────────────────────────────────────
 const STATUSES: OrgApplication["status"][] = ["new", "reviewing", "selected", "rejected"];
+const STATUS_LABEL: Record<OrgApplication["status"], string> = { new: "Нова", reviewing: "Розглядається", selected: "Відібрано", rejected: "Відхилено" };
+const STATUS_CHIP: Record<OrgApplication["status"], string> = { new: "bg-blue-50 text-blue-600", reviewing: "bg-amber-50 text-amber-600", selected: "bg-green-50 text-green-700", rejected: "bg-red-50 text-red-500" };
+const STATUS_ACTIVE: Record<OrgApplication["status"], string> = { new: "bg-blue-500 text-white border-blue-500", reviewing: "bg-amber-400 text-white border-amber-400", selected: "bg-green-500 text-white border-green-500", rejected: "bg-red-400 text-white border-red-400" };
+const STATUS_DOT: Record<OrgApplication["status"], string> = { new: "bg-blue-500", reviewing: "bg-amber-400", selected: "bg-green-500", rejected: "bg-red-400" };
 
-const STATUS_LABEL: Record<OrgApplication["status"], string> = {
-  new: "Нова",
-  reviewing: "Розглядається",
-  selected: "Відібрано",
-  rejected: "Відхилено",
-};
-const STATUS_CHIP: Record<OrgApplication["status"], string> = {
-  new: "bg-blue-50 text-blue-600",
-  reviewing: "bg-amber-50 text-amber-600",
-  selected: "bg-green-50 text-green-700",
-  rejected: "bg-red-50 text-red-500",
-};
-const STATUS_ACTIVE: Record<OrgApplication["status"], string> = {
-  new: "bg-blue-500 text-white border-blue-500",
-  reviewing: "bg-amber-400 text-white border-amber-400",
-  selected: "bg-green-500 text-white border-green-500",
-  rejected: "bg-red-400 text-white border-red-400",
-};
-const STATUS_DOT: Record<OrgApplication["status"], string> = {
-  new: "bg-blue-500",
-  reviewing: "bg-amber-400",
-  selected: "bg-green-500",
-  rejected: "bg-red-400",
-};
+// ── Export helpers ────────────────────────────────────────────────────
+function exportCSV(apps: OrgApplication[], filename = "applications") {
+  const headers = ["Ім'я", "Прізвище", "Email", "Телефон", "Країна", "Заклад", "Ступінь", "Мови", "Проєкт", "Статус", "Дата подачі"];
+  const rows = apps.map((a) => [
+    a.firstName, a.lastName, a.email, a.phone ?? "", a.country,
+    a.institution, a.degree, a.languages.join("; "),
+    a.projectTitle, STATUS_LABEL[a.status],
+    new Date(a.submittedAt).toLocaleDateString("uk-UA"),
+  ]);
+  const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `${filename}-${new Date().toISOString().split("T")[0]}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
 
-// ── Application Detail ───────────────────────────────────────────────
-function AppDetail({
-  app,
-  onClose,
-  onUpdate,
+async function exportXLSX(apps: OrgApplication[], filename = "applications") {
+  const XLSX = await import("xlsx");
+  const data = [
+    ["Ім'я", "Прізвище", "Email", "Телефон", "Країна", "Заклад", "Ступінь", "Мови", "Проєкт", "Статус", "Дата подачі"],
+    ...apps.map((a) => [
+      a.firstName, a.lastName, a.email, a.phone ?? "", a.country,
+      a.institution, a.degree, a.languages.join("; "),
+      a.projectTitle, STATUS_LABEL[a.status],
+      new Date(a.submittedAt).toLocaleDateString("uk-UA"),
+    ]),
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws["!cols"] = [10, 12, 24, 14, 14, 22, 16, 20, 28, 16, 14].map((w) => ({ wch: w }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Заявки");
+  XLSX.writeFile(wb, `${filename}-${new Date().toISOString().split("T")[0]}.xlsx`);
+}
+
+// ── Filter state type ─────────────────────────────────────────────────
+interface Filters {
+  statuses: Set<OrgApplication["status"]>;
+  country: string;
+  institution: string;
+  languages: Set<string>;
+  dateFrom: string;
+  dateTo: string;
+}
+const EMPTY_FILTERS: Filters = { statuses: new Set(), country: "", institution: "", languages: new Set(), dateFrom: "", dateTo: "" };
+
+// ── Sort indicator ────────────────────────────────────────────────────
+function SortIcon({ field, current, dir }: { field: string; current: string; dir: "asc" | "desc" }) {
+  const active = field === current;
+  return (
+    <svg className={`w-3 h-3 ml-1 inline transition-all ${active ? "text-primary" : "text-muted/40"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {dir === "asc" || !active
+        ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+        : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+      }
+    </svg>
+  );
+}
+
+// ── Filter panel ──────────────────────────────────────────────────────
+function FilterPanel({
+  filters,
+  onChange,
+  allCountries,
+  allLanguages,
 }: {
-  app: OrgApplication;
-  onClose: () => void;
-  onUpdate: (id: string, data: Partial<OrgApplication>) => void;
+  filters: Filters;
+  onChange: (f: Partial<Filters>) => void;
+  allCountries: string[];
+  allLanguages: string[];
 }) {
-  const [status, setStatus] = useState<OrgApplication["status"]>(app.status);
-  const [note, setNote] = useState(app.internalNote ?? "");
-  const [saved, setSaved] = useState(false);
+  const input = "w-full px-3 py-2 text-sm rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all";
 
-  useEffect(() => {
-    setStatus(app.status);
-    setNote(app.internalNote ?? "");
-    setSaved(false);
-  }, [app.id, app.status, app.internalNote]);
-
-  function save() {
-    onUpdate(app.id, { status, internalNote: note.trim() || undefined });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  function toggleStatus(s: OrgApplication["status"]) {
+    const next = new Set(filters.statuses);
+    if (next.has(s)) { next.delete(s); } else { next.add(s); }
+    onChange({ statuses: next });
+  }
+  function toggleLanguage(l: string) {
+    const next = new Set(filters.languages);
+    if (next.has(l)) { next.delete(l); } else { next.add(l); }
+    onChange({ languages: next });
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-start gap-4 p-5 border-b border-border flex-shrink-0">
-        {/* Gradient avatar */}
-        <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-black text-base shadow-sm"
-          style={{ background: "linear-gradient(135deg, #3B4FE8 0%, #7C3AED 100%)" }}
-        >
-          {app.firstName[0]}{app.lastName[0]}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h2 className="font-black text-foreground text-lg leading-tight">
-            {app.firstName} {app.lastName}
-          </h2>
-          <p className="text-sm text-muted truncate mt-0.5">{app.country} · {app.institution}</p>
-        </div>
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-xl text-muted hover:text-foreground hover:bg-muted-bg transition-all flex-shrink-0 mt-0.5"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto">
-
-        {/* Status selector */}
-        <div className="px-5 py-4 border-b border-border">
-          <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-3">Статус заявки</p>
-          <div className="flex gap-2 flex-wrap">
+    <div className="bg-white rounded-2xl border border-border p-5 flex flex-col gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* Статус */}
+        <div>
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2.5">Статус</p>
+          <div className="flex flex-wrap gap-1.5">
             {STATUSES.map((s) => (
               <button
                 key={s}
-                onClick={() => setStatus(s)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
-                  status === s
+                onClick={() => toggleStatus(s)}
+                className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl border transition-all ${
+                  filters.statuses.has(s)
                     ? STATUS_ACTIVE[s]
-                    : "border-border bg-white text-muted hover:border-primary/30 hover:text-foreground"
+                    : "border-border text-muted hover:border-primary/30 hover:text-foreground"
                 }`}
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${status === s ? "bg-white/80" : STATUS_DOT[s]}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${filters.statuses.has(s) ? "bg-white/70" : STATUS_DOT[s]}`} />
                 {STATUS_LABEL[s]}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="p-5 flex flex-col gap-5">
-          {/* Contact info */}
-          <div>
-            <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-3">Контакти</p>
-            <div className="bg-muted-bg rounded-xl overflow-hidden">
-              {[
-                ["Email", <a key="e" href={`mailto:${app.email}`} className="text-primary hover:underline font-medium text-sm">{app.email}</a>],
-                app.phone ? ["Телефон", <span key="p" className="font-medium text-sm">{app.phone}</span>] : null,
-                ["Країна", <span key="c" className="font-medium text-sm">{app.country}</span>],
-                ["Заклад", <span key="i" className="font-medium text-sm">{app.institution}</span>],
-                ["Ступінь", <span key="d" className="font-medium text-sm">{app.degree}</span>],
-                ["Мови", <span key="l" className="font-medium text-sm">{app.languages.join(", ")}</span>],
-              ]
-                .filter(Boolean)
-                .map((row, i, arr) => (
-                  <div
-                    key={i}
-                    className={`flex items-center justify-between gap-4 px-4 py-2.5 ${i < arr.length - 1 ? "border-b border-border/50" : ""}`}
-                  >
-                    <span className="text-xs text-muted flex-shrink-0 w-16">{(row as [string, React.ReactNode])[0]}</span>
-                    <span className="text-right min-w-0 truncate">{(row as [string, React.ReactNode])[1]}</span>
-                  </div>
-                ))}
-            </div>
-          </div>
-
-          {/* Documents */}
-          {(app.cvUrl || app.portfolioUrl) && (
-            <div>
-              <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-3">Документи</p>
-              <div className="flex gap-2 flex-wrap">
-                {app.cvUrl && (
-                  <a
-                    href={app.cvUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3.5 py-2 bg-primary-light text-primary text-xs font-semibold rounded-xl hover:bg-primary/10 transition-all"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                    CV / Резюме
-                  </a>
-                )}
-                {app.portfolioUrl && (
-                  <a
-                    href={app.portfolioUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3.5 py-2 bg-muted-bg text-foreground text-xs font-semibold rounded-xl hover:bg-border transition-all"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    Портфоліо
-                  </a>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Motivation */}
-          <div>
-            <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-3">Мотиваційний лист</p>
-            <div className="border-l-2 border-primary pl-4">
-              <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{app.motivation}</p>
-            </div>
-          </div>
-
-          {/* Internal note */}
-          <div>
-            <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-3">Внутрішня нотатка</p>
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={3}
-              placeholder="Нотатки для команди (кандидат не бачить)..."
-              className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-border bg-muted-bg focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none placeholder:text-muted/40"
-            />
-          </div>
-
-          <p className="text-xs text-muted/60 text-right">
-            Подано{" "}
-            {new Date(app.submittedAt).toLocaleDateString("uk-UA", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </p>
+        {/* Країна */}
+        <div>
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2.5">Країна</p>
+          <select value={filters.country} onChange={(e) => onChange({ country: e.target.value })} className={input}>
+            <option value="">Всі країни</option>
+            {allCountries.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
         </div>
-      </div>
 
-      {/* Sticky footer */}
-      <div className="flex-shrink-0 px-5 py-4 border-t border-border bg-white flex items-center justify-between gap-3">
-        {saved ? (
-          <span className="flex items-center gap-1.5 text-xs text-green-600 font-semibold">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-            </svg>
-            Збережено
-          </span>
-        ) : (
-          <span className="text-xs text-muted">Зміни ще не збережено</span>
-        )}
-        <button
-          onClick={save}
-          className="px-5 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20"
-        >
-          Зберегти
-        </button>
+        {/* Заклад */}
+        <div>
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2.5">Заклад</p>
+          <input
+            value={filters.institution}
+            onChange={(e) => onChange({ institution: e.target.value })}
+            placeholder="Назва закладу..."
+            className={input}
+          />
+        </div>
+
+        {/* Мова */}
+        <div>
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2.5">Мова</p>
+          <div className="flex flex-wrap gap-1.5">
+            {allLanguages.slice(0, 6).map((l) => (
+              <button
+                key={l}
+                onClick={() => toggleLanguage(l)}
+                className={`text-xs font-semibold px-2.5 py-1.5 rounded-xl border transition-all ${
+                  filters.languages.has(l)
+                    ? "bg-primary text-white border-primary"
+                    : "border-border text-muted hover:border-primary/30 hover:text-foreground"
+                }`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Дата від */}
+        <div>
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2.5">Дата подачі від</p>
+          <input type="date" value={filters.dateFrom} onChange={(e) => onChange({ dateFrom: e.target.value })} className={input} />
+        </div>
+
+        {/* Дата до */}
+        <div>
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2.5">Дата подачі до</p>
+          <input type="date" value={filters.dateTo} onChange={(e) => onChange({ dateTo: e.target.value })} className={input} />
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Project sidebar item ─────────────────────────────────────────────
-function ProjectItem({
-  project,
-  apps,
-  selected,
-  onClick,
+// ── Bulk toolbar ──────────────────────────────────────────────────────
+function BulkToolbar({
+  count,
+  onStatusChange,
+  onExport,
+  onClear,
 }: {
-  project: OrgProject | { id: "all"; title: string };
-  apps: OrgApplication[];
-  selected: boolean;
-  onClick: () => void;
+  count: number;
+  onStatusChange: (s: OrgApplication["status"]) => void;
+  onExport: () => void;
+  onClear: () => void;
 }) {
-  const newCount = apps.filter((a) => a.status === "new").length;
-  const isAll = project.id === "all";
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handler(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   return (
-    <button
-      onClick={onClick}
-      className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center justify-between gap-2 ${
-        selected
-          ? "bg-primary-light text-primary"
-          : "text-muted hover:bg-muted-bg hover:text-foreground"
-      }`}
-    >
-      <div className="flex items-center gap-2.5 min-w-0">
-        {isAll ? (
-          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+    <div className="flex items-center gap-3 px-4 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/20">
+      <span className="text-sm font-semibold">Обрано {count}</span>
+      <div className="w-px h-4 bg-white/20" />
+
+      {/* Status dropdown */}
+      <div className="relative" ref={ref}>
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex items-center gap-1.5 text-sm font-semibold bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-xl transition-all"
+        >
+          Змінити статус
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
-        ) : (
-          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
-          </svg>
+        </button>
+        {open && (
+          <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-border overflow-hidden z-50 min-w-[160px]">
+            {STATUSES.map((s) => (
+              <button
+                key={s}
+                onClick={() => { onStatusChange(s); setOpen(false); }}
+                className="w-full text-left flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted-bg transition-colors first:pt-3 last:pb-3"
+              >
+                <span className={`w-2 h-2 rounded-full ${STATUS_DOT[s]}`} />
+                <span className="font-medium text-foreground">{STATUS_LABEL[s]}</span>
+              </button>
+            ))}
+          </div>
         )}
-        <span className="text-sm font-medium truncate leading-tight">{project.title}</span>
       </div>
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        {newCount > 0 && (
-          <span className="w-4 h-4 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-            {newCount}
-          </span>
-        )}
-        <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
-          selected ? "bg-primary/15 text-primary" : "bg-border/60 text-muted"
-        }`}>
-          {apps.length}
-        </span>
-      </div>
-    </button>
+
+      <button
+        onClick={onExport}
+        className="flex items-center gap-1.5 text-sm font-semibold bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-xl transition-all"
+      >
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        Експортувати
+      </button>
+
+      <div className="flex-1" />
+      <button onClick={onClear} className="text-white/60 hover:text-white text-sm transition-colors">
+        Скасувати
+      </button>
+    </div>
   );
 }
 
-// ── Application row ───────────────────────────────────────────────────
-function AppRow({
-  app,
-  selected,
-  onClick,
-  showProject,
-}: {
-  app: OrgApplication;
-  selected: boolean;
-  onClick: () => void;
-  showProject: boolean;
-}) {
+// ── Export dropdown ───────────────────────────────────────────────────
+function ExportDropdown({ onCSV, onXLSX }: { onCSV: () => void; onXLSX: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
   return (
-    <button
-      onClick={onClick}
-      className={`w-full text-left flex items-center gap-3.5 px-4 py-3.5 transition-all border-b border-border last:border-0 ${
-        selected ? "bg-primary-light" : "hover:bg-muted-bg"
-      }`}
-    >
-      {/* Avatar */}
-      <div
-        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
-        style={
-          selected
-            ? { background: "linear-gradient(135deg, #3B4FE8 0%, #7C3AED 100%)", color: "#fff" }
-            : { background: "#EEF0FD", color: "#3B4FE8" }
-        }
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-white text-sm font-semibold text-foreground hover:border-primary/30 hover:text-primary transition-all"
       >
-        {app.firstName[0]}{app.lastName[0]}
-      </div>
-
-      {/* Main info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-sm font-semibold ${selected ? "text-primary" : "text-foreground"}`}>
-            {app.firstName} {app.lastName}
-          </span>
-          {app.internalNote && (
-            <svg className="w-3 h-3 text-amber-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-            </svg>
-          )}
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        Експорт
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-border overflow-hidden z-50 min-w-[180px]">
+          <button
+            onClick={() => { onCSV(); setOpen(false); }}
+            className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm hover:bg-muted-bg transition-colors"
+          >
+            <span className="text-base">📄</span>
+            <div>
+              <p className="font-semibold text-foreground">Експорт CSV</p>
+              <p className="text-xs text-muted">Відкривається в Excel</p>
+            </div>
+          </button>
+          <button
+            onClick={() => { onXLSX(); setOpen(false); }}
+            className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm hover:bg-muted-bg transition-colors border-t border-border"
+          >
+            <span className="text-base">📊</span>
+            <div>
+              <p className="font-semibold text-foreground">Експорт Excel (.xlsx)</p>
+              <p className="text-xs text-muted">З форматуванням</p>
+            </div>
+          </button>
         </div>
-        <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted truncate">
-          <span>{app.country}</span>
-          {showProject && (
-            <>
-              <span className="text-border">·</span>
-              <span className="truncate">{app.projectTitle}</span>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Right side */}
-      <div className="flex flex-col items-end gap-1 flex-shrink-0">
-        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_CHIP[app.status]}`}>
-          {STATUS_LABEL[app.status]}
-        </span>
-        <span className="text-[11px] text-muted">
-          {new Date(app.submittedAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}
-        </span>
-      </div>
-    </button>
+      )}
+    </div>
   );
 }
 
 // ── Main page ─────────────────────────────────────────────────────────
 function ApplicationsContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { org } = useOrgSession();
   const { applications, ready, updateApp } = useOrgApplications();
   const { projects } = useOrgProjects(org?.id);
 
-  const [projectId, setProjectId] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<OrgApplication["status"] | "all">("all");
+  const [projectId, setProjectId] = useState("all");
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<OrgApplication | null>(null);
+  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sortField, setSortField] = useState<"name" | "status" | "date" | "project">("date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [openId, setOpenId] = useState<string | null>(null);
 
-  // Apply ?project= param from URL
   useEffect(() => {
     const p = searchParams.get("project");
     if (p) setProjectId(p);
   }, [searchParams]);
 
-  // Close detail if it no longer matches filters
-  useEffect(() => {
-    if (selected) setSelected(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, statusFilter, search]);
+  // Close detail when project changes
+  useEffect(() => { setOpenId(null); }, [projectId]);
 
-  // Apps per project (for sidebar counts)
+  // Derived unique values for filter dropdowns
+  const allCountries = useMemo(() => Array.from(new Set(applications.map((a) => a.country).filter(Boolean))).sort(), [applications]);
+  const allLanguages = useMemo(() => {
+    const set = new Set<string>();
+    applications.forEach((a) => a.languages.forEach((l) => set.add(l.split(" ")[0])));
+    return Array.from(set).sort();
+  }, [applications]);
+
+  // Filtered + sorted list
+  const list = useMemo(() => {
+    const result = applications.filter((a) => {
+      if (projectId !== "all" && a.projectId !== projectId) return false;
+      if (filters.statuses.size > 0 && !filters.statuses.has(a.status)) return false;
+      if (filters.country && a.country !== filters.country) return false;
+      if (filters.institution && !a.institution.toLowerCase().includes(filters.institution.toLowerCase())) return false;
+      if (filters.languages.size > 0 && !Array.from(filters.languages).some((l) => a.languages.some((al) => al.toLowerCase().startsWith(l.toLowerCase())))) return false;
+      if (filters.dateFrom && a.submittedAt < filters.dateFrom) return false;
+      if (filters.dateTo && a.submittedAt > filters.dateTo + "T23:59:59") return false;
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        return `${a.firstName} ${a.lastName} ${a.email} ${a.country} ${a.institution}`.toLowerCase().includes(q);
+      }
+      return true;
+    });
+
+    return result.sort((a, b) => {
+      let cmp = 0;
+      if (sortField === "name") cmp = `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, "uk");
+      else if (sortField === "status") cmp = a.status.localeCompare(b.status);
+      else if (sortField === "date") cmp = a.submittedAt.localeCompare(b.submittedAt);
+      else if (sortField === "project") cmp = a.projectTitle.localeCompare(b.projectTitle, "uk");
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [applications, projectId, filters, search, sortField, sortDir]);
+
+  // Active filter chips
+  const filterChips = useMemo(() => [
+    ...Array.from(filters.statuses).map((s) => ({
+      key: `status-${s}`,
+      label: STATUS_LABEL[s],
+      onRemove: () => { const n = new Set(filters.statuses); n.delete(s); setFilters((f) => ({ ...f, statuses: n })); },
+    })),
+    filters.country ? { key: "country", label: `Країна: ${filters.country}`, onRemove: () => setFilters((f) => ({ ...f, country: "" })) } : null,
+    filters.institution ? { key: "inst", label: `Заклад: ${filters.institution}`, onRemove: () => setFilters((f) => ({ ...f, institution: "" })) } : null,
+    ...Array.from(filters.languages).map((l) => ({
+      key: `lang-${l}`,
+      label: `Мова: ${l}`,
+      onRemove: () => { const n = new Set(filters.languages); n.delete(l); setFilters((f) => ({ ...f, languages: n })); },
+    })),
+    filters.dateFrom ? { key: "from", label: `Від: ${new Date(filters.dateFrom).toLocaleDateString("uk-UA")}`, onRemove: () => setFilters((f) => ({ ...f, dateFrom: "" })) } : null,
+    filters.dateTo ? { key: "to", label: `До: ${new Date(filters.dateTo).toLocaleDateString("uk-UA")}`, onRemove: () => setFilters((f) => ({ ...f, dateTo: "" })) } : null,
+  ].filter(Boolean) as { key: string; label: string; onRemove: () => void }[], [filters]);
+
+  const hasFilters = filterChips.length > 0 || search.trim() !== "";
+
+  // Selection helpers
+  const allSelected = list.length > 0 && list.every((a) => selectedIds.has(a.id));
+  const someSelected = !allSelected && list.some((a) => selectedIds.has(a.id));
+
+  function toggleAll() {
+    setSelectedIds(allSelected ? new Set() : new Set(list.map((a) => a.id)));
+  }
+  function toggleOne(id: string) {
+    setSelectedIds((prev) => { const n = new Set(prev); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; });
+  }
+
+  function applyBulkStatus(status: OrgApplication["status"]) {
+    selectedIds.forEach((id) => updateApp(id, { status }));
+    setSelectedIds(new Set());
+  }
+
+  function getSelectedApps() {
+    return list.filter((a) => selectedIds.has(a.id));
+  }
+
+  function toggleSort(field: typeof sortField) {
+    if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortField(field); setSortDir("asc"); }
+  }
+
   function appsForProject(id: string) {
     return id === "all" ? applications : applications.filter((a) => a.projectId === id);
   }
 
-  // Filtered + searched list
-  const list = applications.filter((a) => {
-    if (projectId !== "all" && a.projectId !== projectId) return false;
-    if (statusFilter !== "all" && a.status !== statusFilter) return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return `${a.firstName} ${a.lastName} ${a.email} ${a.country} ${a.institution}`.toLowerCase().includes(q);
-    }
-    return true;
-  });
+  // Stats for current project selection
+  const projectApps = projectId === "all" ? applications : applications.filter((a) => a.projectId === projectId);
+  const statusCounts: Record<string, number> = { all: projectApps.length };
+  STATUSES.forEach((s) => { statusCounts[s] = projectApps.filter((a) => a.status === s).length; });
 
-  // Status counts within current project selection
-  const allForProject = projectId === "all" ? applications : applications.filter((a) => a.projectId === projectId);
-  const statusCounts: Record<string, number> = { all: allForProject.length };
-  STATUSES.forEach((s) => { statusCounts[s] = allForProject.filter((a) => a.status === s).length; });
+  const openApp = list.find((a) => a.id === openId) ?? null;
+  const selectedCount = selectedIds.size;
 
   if (!ready) {
-    return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <div className="w-7 h-7 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin" />
-      </div>
-    );
+    return <div className="flex items-center justify-center min-h-[40vh]"><div className="w-7 h-7 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
   }
-
-  const currentProject = projects.find((p) => p.id === projectId);
 
   return (
     <div className="page-transition">
-      {/* Page header */}
-      <div className="flex items-center justify-between gap-4 mb-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
         <div>
           <h1 className="text-2xl font-black text-foreground">Заявки</h1>
           <p className="text-sm text-muted mt-0.5">{applications.length} заявок всього</p>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+              filtersOpen || filterChips.length > 0
+                ? "border-primary bg-primary-light text-primary"
+                : "border-border bg-white text-foreground hover:border-primary/30"
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Фільтри
+            {filterChips.length > 0 && (
+              <span className="w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {filterChips.length}
+              </span>
+            )}
+          </button>
+          <ExportDropdown
+            onCSV={() => exportCSV(selectedCount > 0 ? getSelectedApps() : list)}
+            onXLSX={() => exportXLSX(selectedCount > 0 ? getSelectedApps() : list)}
+          />
+        </div>
       </div>
 
-      {/* Three-column grid: projects | list | detail */}
+      {/* Layout: sidebar + main + detail */}
       <div className="flex gap-5 items-start">
 
-        {/* ── Left: project sidebar ── */}
+        {/* Project sidebar */}
         <div className="hidden sm:flex flex-col w-52 flex-shrink-0 bg-white rounded-2xl border border-border overflow-hidden sticky top-24 self-start">
           <div className="px-3 py-3 border-b border-border">
             <p className="text-[11px] font-semibold text-muted uppercase tracking-wider">Проекти</p>
           </div>
           <div className="p-2 flex flex-col gap-0.5">
-            <ProjectItem
-              project={{ id: "all", title: "Всі заявки" }}
-              apps={applications}
-              selected={projectId === "all"}
-              onClick={() => setProjectId("all")}
-            />
-            {projects.map((p) => (
-              <ProjectItem
-                key={p.id}
-                project={p}
-                apps={appsForProject(p.id)}
-                selected={projectId === p.id}
-                onClick={() => setProjectId(p.id)}
-              />
-            ))}
+            {[{ id: "all", title: "Всі заявки" }, ...projects].map((p) => {
+              const apps = appsForProject(p.id);
+              const newCount = apps.filter((a) => a.status === "new").length;
+              const selected = projectId === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setProjectId(p.id)}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center justify-between gap-2 ${
+                    selected ? "bg-primary-light text-primary" : "text-muted hover:bg-muted-bg hover:text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {p.id === "all"
+                        ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                      }
+                    </svg>
+                    <span className="text-sm font-medium truncate leading-tight">{p.title}</span>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {newCount > 0 && <span className="w-4 h-4 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{newCount}</span>}
+                    <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${selected ? "bg-primary/15 text-primary" : "bg-border/60 text-muted"}`}>{apps.length}</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* ── Center: application list ── */}
-        <div className={`flex-1 min-w-0 flex flex-col gap-4 ${selected ? "hidden lg:flex" : "flex"}`}>
+        {/* Main list + filters */}
+        <div className={`flex-1 min-w-0 flex flex-col gap-4 ${openApp ? "hidden lg:flex" : "flex"}`}>
 
-          {/* Mobile: project selector */}
+          {/* Mobile project selector */}
           <div className="sm:hidden">
-            <select
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-            >
+            <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
               <option value="all">Всі заявки ({applications.length})</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.title} ({appsForProject(p.id).length})
-                </option>
-              ))}
+              {projects.map((p) => <option key={p.id} value={p.id}>{p.title} ({appsForProject(p.id).length})</option>)}
             </select>
           </div>
 
-          {/* Project header */}
-          {currentProject && (
-            <div className="flex items-center gap-3 py-1">
-              <div>
-                <p className="font-semibold text-foreground">{currentProject.title}</p>
-                <p className="text-xs text-muted">{currentProject.flag} {currentProject.location} · до {currentProject.deadlineDisplay}</p>
+          {/* Filter panel */}
+          {filtersOpen && (
+            <FilterPanel
+              filters={filters}
+              onChange={(p) => setFilters((f) => ({ ...f, ...p }))}
+              allCountries={allCountries}
+              allLanguages={allLanguages}
+            />
+          )}
+
+          {/* Active filter chips */}
+          {filterChips.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {filterChips.map((chip) => (
+                <button
+                  key={chip.key}
+                  onClick={chip.onRemove}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 bg-primary-light text-primary rounded-xl hover:bg-red-50 hover:text-red-500 transition-all"
+                >
+                  {chip.label}
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              ))}
+              <button onClick={() => { setFilters(EMPTY_FILTERS); setSearch(""); }} className="text-xs font-semibold text-muted hover:text-red-500 transition-colors px-1">
+                Скинути всі
+              </button>
+            </div>
+          )}
+
+          {/* Bulk toolbar OR search + status */}
+          {selectedCount > 0 ? (
+            <BulkToolbar
+              count={selectedCount}
+              onStatusChange={applyBulkStatus}
+              onExport={() => exportCSV(getSelectedApps(), "selected-applications")}
+              onClear={() => setSelectedIds(new Set())}
+            />
+          ) : (
+            <div className="flex flex-col gap-3">
+              {/* Search */}
+              <div className="relative">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Пошук за ім'ям, email, країною..." className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                {search && <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>}
+              </div>
+
+              {/* Status pills */}
+              <div className="flex gap-1.5 flex-wrap">
+                {([["all", "Всі"] as const, ...STATUSES.map((s) => [s, STATUS_LABEL[s]] as const)]).map(([val, lbl]) => {
+                  const isActive = filters.statuses.size === 0 ? val === "all" : (val !== "all" && filters.statuses.has(val as OrgApplication["status"]));
+                  return (
+                    <button
+                      key={val}
+                      onClick={() => {
+                        if (val === "all") setFilters((f) => ({ ...f, statuses: new Set() }));
+                        else {
+                          const n = new Set(filters.statuses);
+                          const sv = val as OrgApplication["status"]; if (n.has(sv)) { n.delete(sv); } else { n.add(sv); }
+                          setFilters((f) => ({ ...f, statuses: n }));
+                        }
+                      }}
+                      className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all ${
+                        isActive ? "bg-primary text-white" : "bg-white border border-border text-muted hover:text-foreground hover:border-primary/30"
+                      }`}
+                    >
+                      {val !== "all" && <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-white/70" : STATUS_DOT[val as OrgApplication["status"]]}`} />}
+                      {lbl}
+                      <span className={`px-1 rounded text-[10px] font-bold ${isActive ? "bg-white/20" : ""}`}>
+                        {statusCounts[val] ?? 0}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* Search + status filter */}
-          <div className="flex flex-col gap-3">
-            <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Пошук за ім'ям, email, країною..."
-                className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-              />
-              {search && (
-                <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
+          {/* Results info */}
+          {(hasFilters || list.length !== applications.length) && (
+            <p className="text-xs text-muted -mb-2">
+              Показано {list.length} {list.length === applications.length ? "" : `з ${applications.length}`} заявок
+            </p>
+          )}
 
-            {/* Status filter pills */}
-            <div className="flex gap-1.5 flex-wrap">
-              {([["all", "Всі"] as const, ...STATUSES.map((s) => [s, STATUS_LABEL[s]] as const)]).map(([val, lbl]) => (
-                <button
-                  key={val}
-                  onClick={() => setStatusFilter(val as OrgApplication["status"] | "all")}
-                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all ${
-                    statusFilter === val
-                      ? "bg-primary text-white"
-                      : "bg-white border border-border text-muted hover:text-foreground hover:border-primary/30"
-                  }`}
-                >
-                  {val !== "all" && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${statusFilter === val ? "bg-white/60" : STATUS_DOT[val as OrgApplication["status"]]}`} />
-                  )}
-                  {lbl}
-                  <span className={`px-1 rounded-full text-[10px] font-bold ${statusFilter === val ? "bg-white/20" : ""}`}>
-                    {statusCounts[val] ?? 0}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Applications */}
+          {/* Table */}
           {list.length === 0 ? (
             <div className="bg-white rounded-2xl border border-border p-12 text-center">
               <div className="w-12 h-12 bg-muted-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -521,46 +604,113 @@ function ApplicationsContent() {
                 </svg>
               </div>
               <p className="font-semibold text-foreground text-sm">Заявок не знайдено</p>
-              <p className="text-xs text-muted mt-1">Спробуйте змінити пошук або фільтри</p>
+              <p className="text-xs text-muted mt-1">Змініть фільтри або пошуковий запит</p>
+              {hasFilters && <button onClick={() => { setFilters(EMPTY_FILTERS); setSearch(""); }} className="mt-4 text-xs font-semibold text-primary hover:underline">Скинути фільтри</button>}
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-border overflow-hidden">
               {/* Table header */}
-              <div className="flex items-center gap-3.5 px-4 py-2.5 border-b border-border bg-muted-bg">
-                <div className="w-8 flex-shrink-0" />
-                <span className="flex-1 text-[11px] font-semibold text-muted uppercase tracking-wider">Кандидат</span>
-                <span className="flex-shrink-0 text-[11px] font-semibold text-muted uppercase tracking-wider text-right">Статус / Дата</span>
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted-bg">
+                <label className="flex items-center cursor-pointer flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    ref={(el) => { if (el) el.indeterminate = someSelected; }}
+                    onChange={toggleAll}
+                    className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 accent-primary cursor-pointer"
+                  />
+                </label>
+                <button onClick={() => toggleSort("name")} className="flex-1 flex items-center text-[11px] font-semibold text-muted uppercase tracking-wider hover:text-foreground transition-colors text-left">
+                  Кандидат <SortIcon field="name" current={sortField} dir={sortDir} />
+                </button>
+                <button onClick={() => toggleSort("project")} className="hidden md:flex items-center w-36 text-[11px] font-semibold text-muted uppercase tracking-wider hover:text-foreground transition-colors flex-shrink-0">
+                  Проєкт <SortIcon field="project" current={sortField} dir={sortDir} />
+                </button>
+                <button onClick={() => toggleSort("status")} className="flex items-center w-28 text-[11px] font-semibold text-muted uppercase tracking-wider hover:text-foreground transition-colors flex-shrink-0">
+                  Статус <SortIcon field="status" current={sortField} dir={sortDir} />
+                </button>
+                <button onClick={() => toggleSort("date")} className="hidden sm:flex items-center w-20 text-[11px] font-semibold text-muted uppercase tracking-wider hover:text-foreground transition-colors flex-shrink-0 justify-end">
+                  Дата <SortIcon field="date" current={sortField} dir={sortDir} />
+                </button>
               </div>
-              {list.map((app) => (
-                <AppRow
-                  key={app.id}
-                  app={app}
-                  selected={selected?.id === app.id}
-                  showProject={projectId === "all"}
-                  onClick={() => setSelected(selected?.id === app.id ? null : app)}
-                />
-              ))}
-              <div className="px-4 py-2.5 bg-muted-bg/50 border-t border-border">
+
+              {/* Rows */}
+              {list.map((app, i) => {
+                const isOpen = openId === app.id;
+                const isChecked = selectedIds.has(app.id);
+                return (
+                  <div
+                    key={app.id}
+                    className={`flex items-center gap-3 px-4 py-3.5 transition-all ${i < list.length - 1 ? "border-b border-border" : ""} ${isOpen ? "bg-primary-light" : isChecked ? "bg-blue-50/60" : "hover:bg-muted-bg"}`}
+                  >
+                    {/* Checkbox */}
+                    <label className="flex-shrink-0 cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleOne(app.id)}
+                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 accent-primary cursor-pointer"
+                      />
+                    </label>
+
+                    {/* Row clickable area */}
+                    <button className="flex items-center gap-3 flex-1 min-w-0 text-left" onClick={() => router.push(`/dashboard/applications/${app.id}`)}>
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                        style={isOpen ? { background: "linear-gradient(135deg,#3B4FE8,#7C3AED)", color: "#fff" } : { background: "#EEF0FD", color: "#3B4FE8" }}
+                      >
+                        {app.firstName[0]}{app.lastName[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-semibold truncate ${isOpen ? "text-primary" : "text-foreground"}`}>{app.firstName} {app.lastName}</p>
+                        <p className="text-xs text-muted truncate">{app.country} · {app.institution}</p>
+                      </div>
+                    </button>
+
+                    {/* Project */}
+                    <p className="hidden md:block text-xs text-muted truncate w-36 flex-shrink-0">{app.projectTitle}</p>
+
+                    {/* Status */}
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full w-28 flex-shrink-0 text-center ${STATUS_CHIP[app.status]}`}>{STATUS_LABEL[app.status]}</span>
+
+                    {/* Date */}
+                    <span className="hidden sm:block text-xs text-muted w-20 text-right flex-shrink-0">
+                      {new Date(app.submittedAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}
+                    </span>
+                  </div>
+                );
+              })}
+
+              {/* Footer */}
+              <div className="flex items-center justify-between px-4 py-2.5 bg-muted-bg/60 border-t border-border">
                 <p className="text-xs text-muted">
                   {list.length} {list.length === 1 ? "заявка" : list.length < 5 ? "заявки" : "заявок"}
                   {list.length !== applications.length && ` з ${applications.length}`}
                 </p>
+                {selectedCount > 0 && <p className="text-xs font-semibold text-primary">Обрано: {selectedCount}</p>}
               </div>
             </div>
           )}
         </div>
 
-        {/* ── Right: detail panel ── */}
-        {selected && (
-          <div className="w-full lg:w-96 flex-shrink-0 bg-white rounded-2xl border border-border overflow-hidden flex flex-col sticky top-24 self-start" style={{ maxHeight: "calc(100vh - 120px)" }}>
-            <AppDetail
-              app={selected}
-              onClose={() => setSelected(null)}
-              onUpdate={(id, data) => {
-                updateApp(id, data);
-                setSelected((prev) => (prev?.id === id ? { ...prev, ...data } : prev));
-              }}
-            />
+        {/* Mini detail preview when open on list page (redirect to detail instead) */}
+        {openApp && (
+          <div className="hidden lg:flex w-72 flex-shrink-0 bg-white rounded-2xl border border-border p-5 flex-col gap-3 sticky top-24 self-start">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto text-white font-black text-base shadow-sm"
+              style={{ background: "linear-gradient(135deg,#3B4FE8,#7C3AED)" }}
+            >
+              {openApp.firstName[0]}{openApp.lastName[0]}
+            </div>
+            <div className="text-center">
+              <p className="font-bold text-foreground">{openApp.firstName} {openApp.lastName}</p>
+              <p className="text-xs text-muted mt-0.5">{openApp.institution}</p>
+              <span className={`inline-block mt-2 text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_CHIP[openApp.status]}`}>{STATUS_LABEL[openApp.status]}</span>
+            </div>
+            <Link href={`/dashboard/applications/${openApp.id}`} className="w-full text-center px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all">
+              Відкрити повністю →
+            </Link>
+            <button onClick={() => setOpenId(null)} className="w-full text-center text-xs text-muted hover:text-foreground transition-colors py-1">Закрити</button>
           </div>
         )}
       </div>

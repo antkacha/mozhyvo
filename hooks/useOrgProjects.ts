@@ -27,6 +27,7 @@ export interface OrgProject {
   ageMin?: number;
   ageMax?: number;
   status: "draft" | "published" | "closed";
+  autoClose?: boolean;
   views: number;
   saves: number;
   createdAt: string;

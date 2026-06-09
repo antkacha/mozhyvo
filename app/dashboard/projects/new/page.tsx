@@ -58,6 +58,75 @@ const INITIAL: FormData = {
 
 const STEPS = ["Основна", "Місце і час", "Учасники", "Опис"];
 
+const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormData> }[] = [
+  {
+    id: "exchange",
+    emoji: "🌍",
+    label: "Молодіжний обмін",
+    fill: {
+      type: "exchange", typeName: "Обмін",
+      title: "Молодіжний обмін",
+      shortDescription: "Двотижневий міжнародний обмін для молодих активістів.",
+      format: "offline", funding: "fully-funded",
+      fundingDetails: "Перельоти, проживання, харчування",
+      duration: "14 днів",
+      languages: "Англійська",
+      ageMin: "18", ageMax: "28",
+      requirements: "Вік 18–28 років\nРівень англійської B1+\nДосвід громадянської діяльності",
+      benefits: "Повне фінансування\nСертифікат учасника\nМіжнародний нетворкінг",
+    },
+  },
+  {
+    id: "scholarship",
+    emoji: "🎓",
+    label: "Стипендія",
+    fill: {
+      type: "grant", typeName: "Стипендія",
+      title: "Стипендіальна програма",
+      shortDescription: "Щорічна стипендія для студентів та молодих дослідників.",
+      format: "offline", funding: "fully-funded",
+      fundingDetails: "Щомісячна стипендія + навчання",
+      languages: "Англійська, Українська",
+      ageMin: "18", ageMax: "35",
+      requirements: "Студент або аспірант\nВисокий академічний рейтинг\nРекомендаційний лист",
+      benefits: "Щомісячна стипендія\nНаукове керівництво\nПублікації у збірках",
+    },
+  },
+  {
+    id: "volunteer",
+    emoji: "🤝",
+    label: "Волонтерство",
+    fill: {
+      type: "volunteer", typeName: "Волонтерство",
+      title: "Волонтерська програма",
+      shortDescription: "Міжнародна волонтерська програма для молодих людей.",
+      format: "offline", funding: "fully-funded",
+      fundingDetails: "Проживання, харчування та кишенькові кошти",
+      duration: "6 місяців",
+      languages: "Англійська",
+      ageMin: "18", ageMax: "30",
+      requirements: "Вік 18–30 років\nМотивація та готовність волонтерити\nБазова англійська",
+      benefits: "Безкоштовне проживання\nКишенькові кошти\nСертифікат YouthPass",
+    },
+  },
+  {
+    id: "grant",
+    emoji: "💡",
+    label: "Грант",
+    fill: {
+      type: "grant", typeName: "Грант",
+      title: "Конкурс проєктів",
+      shortDescription: "Конкурс мікрогрантів для соціальних ініціатив молоді.",
+      format: "online", funding: "fully-funded",
+      fundingDetails: "До 5 000 грн на реалізацію проєкту",
+      languages: "Українська",
+      ageMin: "16", ageMax: "30",
+      requirements: "Вік 16–30 років\nГотова ідея соціального проєкту\nКоманда мінімум 2 особи",
+      benefits: "Фінансування проєкту\nМенторська підтримка\nПублікація в медіа",
+    },
+  },
+];
+
 function splitLines(s: string) {
   return s.split("\n").map((x) => x.trim()).filter(Boolean);
 }
@@ -69,6 +138,7 @@ function NewProjectContent() {
 
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(INITIAL);
+  const [templateChosen, setTemplateChosen] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [saving, setSaving] = useState(false);
 
@@ -160,7 +230,45 @@ function NewProjectContent() {
         <span className="text-foreground font-semibold">Новий проект</span>
       </div>
 
-      <h1 className="text-2xl font-black text-foreground mb-7">Новий проект</h1>
+      <h1 className="text-2xl font-black text-foreground mb-6">Новий проект</h1>
+
+      {/* Templates */}
+      {!templateChosen && (
+        <div className="mb-7">
+          <p className="text-sm font-semibold text-foreground mb-3">Почніть зі шаблону або з нуля</p>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+            {TEMPLATES.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => {
+                  setForm((f) => ({ ...f, ...t.fill }));
+                  setTemplateChosen(true);
+                }}
+                className="flex flex-col items-center gap-2 p-3.5 bg-white border border-border rounded-2xl hover:border-primary/40 hover:bg-primary-light/50 transition-all group text-center"
+              >
+                <span className="text-2xl">{t.emoji}</span>
+                <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors leading-tight">{t.label}</span>
+              </button>
+            ))}
+            <button
+              onClick={() => setTemplateChosen(true)}
+              className="flex flex-col items-center gap-2 p-3.5 bg-muted-bg border border-dashed border-border rounded-2xl hover:border-primary/40 hover:bg-primary-light/50 transition-all group text-center"
+            >
+              <span className="text-2xl">✏️</span>
+              <span className="text-xs font-semibold text-muted group-hover:text-primary transition-colors leading-tight">Почати з нуля</span>
+            </button>
+          </div>
+        </div>
+      )}
+      {templateChosen && (
+        <button
+          onClick={() => { setForm(INITIAL); setTemplateChosen(false); setStep(0); }}
+          className="text-xs font-semibold text-muted hover:text-primary transition-colors mb-5 flex items-center gap-1.5"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          Змінити шаблон
+        </button>
+      )}
 
       {/* Step indicator */}
       <div className="flex items-center gap-0 mb-8">

@@ -8,6 +8,7 @@ export interface OrgProfile {
   country: string;
   city: string;
   website: string;
+  phone?: string;
   contactEmail: string;
   description: string;
   logo: string | null;

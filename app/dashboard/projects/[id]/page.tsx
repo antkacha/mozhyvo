@@ -105,6 +105,7 @@ function EditProjectContent() {
       ageMin: form.ageMin,
       ageMax: form.ageMax,
       status: statusOverride ?? form.status,
+      autoClose: form.autoClose,
     });
 
     setSaving(false);
@@ -218,6 +219,22 @@ function EditProjectContent() {
               <label className={label}>Тривалість</label>
               <input value={form.duration ?? ""} onChange={(e) => set("duration", e.target.value)} className={input} placeholder="14 днів" />
             </div>
+          </div>
+
+          {/* Auto-close toggle */}
+          <div className={`flex items-start justify-between gap-4 p-4 rounded-2xl border transition-all ${form.autoClose ? "border-amber-200 bg-amber-50/60" : "border-border bg-muted-bg/40"}`}>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Автоматично закрити після дедлайну</p>
+              <p className="text-xs text-muted mt-0.5">Проєкт автоматично перейде в статус «Закрито» наступного дня після дедлайну</p>
+            </div>
+            <button
+              role="switch"
+              aria-checked={!!form.autoClose}
+              onClick={() => setForm((f) => f ? { ...f, autoClose: !f.autoClose } : f)}
+              className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${form.autoClose ? "bg-primary" : "bg-border"}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.autoClose ? "translate-x-5" : "translate-x-0"}`} />
+            </button>
           </div>
         </section>
 
