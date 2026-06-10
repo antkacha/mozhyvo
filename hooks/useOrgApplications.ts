@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export interface OrgApplication {
@@ -23,6 +23,14 @@ export interface OrgApplication {
   internalNote?: string;
   submittedAt: string;
 }
+
+// Maps org status → user-facing status in applications table
+const USER_STATUS: Record<OrgApplication["status"], string> = {
+  new:       "pending",
+  reviewing: "reviewing",
+  selected:  "accepted",
+  rejected:  "rejected",
+};
 
 function fromRow(row: Record<string, unknown>): OrgApplication {
   return {
@@ -52,6 +60,10 @@ export function useOrgApplications(orgId?: string, projectId?: string) {
   const [applications, setApplications] = useState<OrgApplication[]>([]);
   const [ready, setReady] = useState(false);
 
+  // Keep a ref so updateApp can read latest apps without dep array issues
+  const appsRef = useRef<OrgApplication[]>([]);
+  useEffect(() => { appsRef.current = applications; }, [applications]);
+
   const reload = useCallback(async () => {
     if (!orgId) { setApplications([]); setReady(true); return; }
     let query = supabase
@@ -61,7 +73,8 @@ export function useOrgApplications(orgId?: string, projectId?: string) {
       .order("submitted_at", { ascending: false });
     if (projectId) query = query.eq("project_id", projectId);
     const { data } = await query;
-    setApplications((data ?? []).map((r) => fromRow(r as Record<string, unknown>)));
+    const mapped = (data ?? []).map((r) => fromRow(r as Record<string, unknown>));
+    setApplications(mapped);
     setReady(true);
   }, [supabase, orgId, projectId]);
 
@@ -69,21 +82,35 @@ export function useOrgApplications(orgId?: string, projectId?: string) {
 
   const updateApp = useCallback(
     async (id: string, data: Partial<OrgApplication>) => {
+      const current = appsRef.current.find((a) => a.id === id);
       const row: Record<string, unknown> = {};
       if (data.status       !== undefined) row.status        = data.status;
       if (data.internalNote !== undefined) row.internal_note = data.internalNote;
+
       const { error } = await supabase
         .from("org_applications")
         .update(row)
         .eq("id", id);
+
       if (!error) {
         setApplications((prev) =>
           prev.map((a) => (a.id === id ? { ...a, ...data } : a))
         );
+
+        // Sync status change to user's applications table so they see their result
+        if (data.status !== undefined && current) {
+          await supabase
+            .from("applications")
+            .update({ status: USER_STATUS[data.status] })
+            .eq("opportunity_slug", current.projectId)
+            .eq("email", current.email);
+        }
+      } else {
+        throw new Error(error.message);
       }
     },
     [supabase]
   );
 
-  return { applications, ready, updateApp };
+  return { applications, ready, updateApp, reload };
 }

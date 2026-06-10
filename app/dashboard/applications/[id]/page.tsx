@@ -77,7 +77,12 @@ function ApplicationDetail() {
     if (!app || app.status === status) return;
     setSavingStatus(true);
     const prev = app.status;
-    updateApp(id, { status });
+    try {
+      await updateApp(id, { status });
+    } catch {
+      setSavingStatus(false);
+      return;
+    }
     addEntry({
       applicationId: id,
       action: "status_changed",
@@ -223,6 +228,54 @@ function ApplicationDetail() {
               )}
             </div>
           </div>
+
+          {/* Documents */}
+          {(app.cvUrl || app.portfolioUrl) && (
+            <div className="bg-white rounded-2xl border border-border p-6">
+              <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+                <span className="w-6 h-6 bg-primary-light rounded-lg flex items-center justify-center text-xs">📎</span>
+                Документи
+              </h2>
+              <div className="flex flex-col gap-3">
+                {app.cvUrl && (
+                  <a href={app.cvUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-4 py-3 bg-muted-bg rounded-xl hover:bg-primary-light hover:text-primary transition-all group">
+                    <svg className="w-4 h-4 text-muted group-hover:text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    <span className="text-sm font-medium">Резюме / CV</span>
+                    <span className="text-xs text-muted ml-auto truncate max-w-48">{app.cvUrl}</span>
+                  </a>
+                )}
+                {app.portfolioUrl && (
+                  <a href={app.portfolioUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-4 py-3 bg-muted-bg rounded-xl hover:bg-primary-light hover:text-primary transition-all group">
+                    <svg className="w-4 h-4 text-muted group-hover:text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    <span className="text-sm font-medium">Портфоліо</span>
+                    <span className="text-xs text-muted ml-auto truncate max-w-48">{app.portfolioUrl}</span>
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Custom answers */}
+          {app.customAnswers && Object.keys(app.customAnswers).length > 0 && (
+            <div className="bg-white rounded-2xl border border-border p-6">
+              <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+                <span className="w-6 h-6 bg-primary-light rounded-lg flex items-center justify-center text-xs">❓</span>
+                Відповіді на питання організатора
+              </h2>
+              <div className="flex flex-col gap-4">
+                {Object.entries(app.customAnswers).map(([key, value]) => (
+                  <div key={key} className="border-b border-border pb-4 last:border-0 last:pb-0">
+                    <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">{key}</p>
+                    <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                      {Array.isArray(value) ? value.join(", ") : value || "—"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Activity log */}
           <div className="bg-white rounded-2xl border border-border p-6">

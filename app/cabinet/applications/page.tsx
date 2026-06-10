@@ -134,7 +134,10 @@ export default function CabinetApplicationsPage() {
               className="w-full bg-white border border-border rounded-2xl p-4 flex items-center justify-between gap-4 hover:border-primary/30 hover:shadow-sm transition-all text-left group">
               <div className="min-w-0">
                 <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">{app.opportunityTitle}</p>
-                <p className="text-xs text-muted mt-0.5">{app.org} · Дедлайн: {app.deadline}</p>
+                <p className="text-xs text-muted mt-0.5">
+                  {app.org} · Дедлайн:{" "}
+                  {app.deadline ? new Date(app.deadline).toLocaleDateString("uk-UA", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                </p>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
                 <StatusBadge status={app.status} size="sm" />
