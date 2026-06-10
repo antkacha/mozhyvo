@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSaved } from "@/hooks/useSaved";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 
 const navLinks = [
   { label: "Головна", href: "/" },
@@ -36,6 +37,8 @@ export default function Header() {
   const pathname = usePathname();
   const { saved } = useSaved();
   const { user, loading: authLoading, signOut } = useAuth();
+  const { profile } = useProfile();
+  const isAdmin = profile.role === "admin";
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
@@ -120,6 +123,17 @@ export default function Header() {
                     {user.user_metadata?.first_name ?? user.email?.split("@")[0]}
                   </span>
                 </Link>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition-all duration-150"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Адмін
+                  </Link>
+                )}
                 <button
                   onClick={signOut}
                   className="text-sm font-medium px-3.5 py-2 rounded-xl border border-border text-muted hover:border-primary/50 hover:text-primary transition-all duration-150"
@@ -202,6 +216,18 @@ export default function Header() {
                   >
                     Мій кабінет
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition-all"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      Адмін-панель
+                    </Link>
+                  )}
                   <button
                     onClick={() => { signOut(); setMenuOpen(false); }}
                     className="text-sm font-medium px-4 py-2.5 rounded-xl border border-border text-muted text-center hover:border-primary hover:text-primary transition-all"
