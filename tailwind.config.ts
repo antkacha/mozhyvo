@@ -28,6 +28,14 @@ const config: Config = {
         "3xl": "1.5rem",
       },
       keyframes: {
+        reveal: {
+          from: { opacity: "0", transform: "translateY(16px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        fadeUp: {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
         float1: {
           "0%, 100%": { transform: "translateY(0px) rotate(-2deg)" },
           "50%": { transform: "translateY(-6px) rotate(-2deg)" },
@@ -45,6 +53,8 @@ const config: Config = {
         float1: "float1 4s ease-in-out infinite",
         float2: "float2 3.6s ease-in-out infinite 0.8s",
         float3: "float3 3.2s ease-in-out infinite 1.6s",
+        reveal: "reveal 0.5s ease forwards",
+        "fade-up": "fadeUp 0.4s ease forwards",
       },
     },
   },

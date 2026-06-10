@@ -13,36 +13,59 @@ const navLinks = [
   { label: "Для організацій", href: "/organizations" },
 ];
 
+function LogoMark({ size = 32 }: { size?: number }) {
+  return (
+    <div
+      className="bg-primary rounded-xl grid place-items-center flex-shrink-0 shadow-sm"
+      style={{ width: size, height: size }}
+    >
+      <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 16 16" fill="none">
+        <path
+          d="M8 1.5L10.5 6.5H15L11 9.5L12.5 14.5L8 11.5L3.5 14.5L5 9.5L1 6.5H5.5L8 1.5Z"
+          fill="white"
+        />
+      </svg>
+    </div>
+  );
+}
+
+export { LogoMark };
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const { saved } = useSaved();
   const { user, loading: authLoading, signOut } = useAuth();
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="sticky top-0 z-50 bg-background px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-2.5">
+        {/* ── Floating island ─────────────────────────────────────── */}
+        <div className="bg-white/92 backdrop-blur-xl border border-border/70 rounded-2xl shadow-lg shadow-black/[0.05] flex items-center justify-between px-5 h-14">
+
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-1 group">
-            <span className="text-xl">⚡</span>
-            <span className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-200">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="group-hover:scale-95 transition-transform duration-150">
+              <LogoMark />
+            </div>
+            <span className="text-[17px] font-black tracking-tight text-foreground group-hover:text-primary transition-colors duration-200">
               Моживо
             </span>
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-7">
+          <nav className="hidden md:flex items-center gap-0.5">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-all duration-200 pb-0.5 ${
+                className={`text-sm font-medium px-3.5 py-2 rounded-xl transition-all duration-150 ${
                   isActive(link.href)
-                    ? "text-primary border-b-2 border-primary font-semibold"
-                    : "text-muted hover:text-foreground border-b-2 border-transparent"
+                    ? "bg-primary-light text-primary font-semibold"
+                    : "text-muted hover:text-foreground hover:bg-muted-bg"
                 }`}
               >
                 {link.label}
@@ -50,8 +73,10 @@ export default function Header() {
             ))}
             <Link
               href="/saved"
-              className={`relative text-sm font-medium transition-colors duration-200 flex items-center gap-1.5 ${
-                isActive("/saved") ? "text-primary" : "text-muted hover:text-foreground"
+              className={`relative text-sm font-medium px-3.5 py-2 rounded-xl transition-all duration-150 flex items-center gap-1.5 ${
+                isActive("/saved")
+                  ? "bg-primary-light text-primary font-semibold"
+                  : "text-muted hover:text-foreground hover:bg-muted-bg"
               }`}
             >
               <svg
@@ -69,7 +94,7 @@ export default function Header() {
               </svg>
               Збережені
               {saved.length > 0 && (
-                <span className="absolute -top-1.5 -right-3 min-w-[18px] h-[18px] bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
                   {saved.length}
                 </span>
               )}
@@ -77,21 +102,27 @@ export default function Header() {
           </nav>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2">
             {!authLoading && user ? (
               <>
                 <Link
-                  href="/profile"
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-200 text-sm font-medium ${isActive("/profile") ? "border-primary text-primary bg-primary-light" : "border-border text-foreground hover:border-primary hover:text-primary"}`}
+                  href="/cabinet"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all duration-150 ${
+                    isActive("/cabinet")
+                      ? "border-primary text-primary bg-primary-light"
+                      : "border-border text-foreground hover:border-primary/50 hover:text-primary"
+                  }`}
                 >
-                  <div className="w-5 h-5 rounded-full bg-primary-light flex items-center justify-center text-primary text-[10px] font-bold flex-shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 leading-none">
                     {(user.user_metadata?.first_name?.[0] ?? user.email?.[0] ?? "?").toUpperCase()}
                   </div>
-                  <span className="max-w-[100px] truncate">{user.user_metadata?.first_name ?? user.email?.split("@")[0]}</span>
+                  <span className="max-w-[100px] truncate">
+                    {user.user_metadata?.first_name ?? user.email?.split("@")[0]}
+                  </span>
                 </Link>
                 <button
                   onClick={signOut}
-                  className="text-sm font-medium px-4 py-2 rounded-xl border border-border text-muted hover:border-primary hover:text-primary transition-all duration-200"
+                  className="text-sm font-medium px-3.5 py-2 rounded-xl border border-border text-muted hover:border-primary/50 hover:text-primary transition-all duration-150"
                 >
                   Вийти
                 </button>
@@ -100,13 +131,13 @@ export default function Header() {
               <>
                 <Link
                   href="/login"
-                  className="text-sm font-medium px-4 py-2 rounded-xl border border-border text-foreground hover:border-primary hover:text-primary transition-all duration-200"
+                  className="text-sm font-medium px-4 py-2 rounded-xl border border-border text-foreground hover:border-primary/50 hover:text-primary transition-all duration-150"
                 >
                   Увійти
                 </Link>
                 <Link
                   href="/register"
-                  className="text-sm font-semibold px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary-dark transition-all duration-200 shadow-sm"
+                  className="text-sm font-semibold px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary-dark transition-all duration-150 shadow-sm shadow-primary/20"
                 >
                   Зареєструватись
                 </Link>
@@ -116,39 +147,29 @@ export default function Header() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-muted-bg transition-colors duration-200"
+            className="md:hidden flex flex-col gap-1.5 p-2 rounded-xl hover:bg-muted-bg transition-colors"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Меню"
           >
-            <span
-              className={`block w-5 h-0.5 bg-foreground transition-all duration-200 ${
-                menuOpen ? "rotate-45 translate-y-2" : ""
-              }`}
-            />
-            <span
-              className={`block w-5 h-0.5 bg-foreground transition-all duration-200 ${
-                menuOpen ? "opacity-0" : ""
-              }`}
-            />
-            <span
-              className={`block w-5 h-0.5 bg-foreground transition-all duration-200 ${
-                menuOpen ? "-rotate-45 -translate-y-2" : ""
-              }`}
-            />
+            <span className={`block w-5 h-0.5 bg-foreground transition-all duration-200 ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+            <span className={`block w-5 h-0.5 bg-foreground transition-all duration-200 ${menuOpen ? "opacity-0" : ""}`} />
+            <span className={`block w-5 h-0.5 bg-foreground transition-all duration-200 ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
           </button>
         </div>
+      </div>
 
-        {/* Mobile menu */}
-        {menuOpen && (
-          <div className="md:hidden border-t border-border py-4 flex flex-col gap-1">
+      {/* Mobile menu — second floating island */}
+      {menuOpen && (
+        <div className="md:hidden max-w-7xl mx-auto mb-2">
+          <div className="bg-white/95 backdrop-blur-xl border border-border/70 rounded-2xl shadow-lg px-4 py-4 flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm py-2 px-1 rounded-lg transition-colors duration-200 ${
+                className={`text-sm py-2.5 px-3 rounded-xl transition-colors ${
                   isActive(link.href)
-                    ? "text-primary font-semibold"
-                    : "text-muted font-medium hover:text-foreground"
+                    ? "text-primary font-semibold bg-primary-light"
+                    : "text-muted font-medium hover:text-foreground hover:bg-muted-bg"
                 }`}
                 onClick={() => setMenuOpen(false)}
               >
@@ -157,14 +178,16 @@ export default function Header() {
             ))}
             <Link
               href="/saved"
-              className={`text-sm py-2 px-1 flex items-center gap-2 rounded-lg transition-colors duration-200 ${
-                isActive("/saved") ? "text-primary font-semibold" : "text-muted font-medium hover:text-foreground"
+              className={`text-sm py-2.5 px-3 flex items-center gap-2 rounded-xl transition-colors ${
+                isActive("/saved")
+                  ? "text-primary font-semibold bg-primary-light"
+                  : "text-muted font-medium hover:text-foreground hover:bg-muted-bg"
               }`}
               onClick={() => setMenuOpen(false)}
             >
               Збережені
               {saved.length > 0 && (
-                <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold leading-none">
                   {saved.length}
                 </span>
               )}
@@ -173,15 +196,15 @@ export default function Header() {
               {!authLoading && user ? (
                 <>
                   <Link
-                    href="/profile"
-                    className="text-sm font-medium px-4 py-2 rounded-xl border border-border text-foreground text-center hover:border-primary hover:text-primary transition-all duration-200"
+                    href="/cabinet"
+                    className="text-sm font-medium px-4 py-2.5 rounded-xl border border-border text-foreground text-center hover:border-primary hover:text-primary transition-all"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Мій профіль
+                    Мій кабінет
                   </Link>
                   <button
                     onClick={() => { signOut(); setMenuOpen(false); }}
-                    className="text-sm font-medium px-4 py-2 rounded-xl border border-border text-muted text-center hover:border-primary hover:text-primary transition-all duration-200"
+                    className="text-sm font-medium px-4 py-2.5 rounded-xl border border-border text-muted text-center hover:border-primary hover:text-primary transition-all"
                   >
                     Вийти
                   </button>
@@ -190,14 +213,14 @@ export default function Header() {
                 <>
                   <Link
                     href="/login"
-                    className="text-sm font-medium px-4 py-2 rounded-xl border border-border text-foreground text-center hover:border-primary hover:text-primary transition-all duration-200"
+                    className="text-sm font-medium px-4 py-2.5 rounded-xl border border-border text-foreground text-center hover:border-primary hover:text-primary transition-all"
                     onClick={() => setMenuOpen(false)}
                   >
                     Увійти
                   </Link>
                   <Link
                     href="/register"
-                    className="text-sm font-semibold px-4 py-2 rounded-xl bg-primary text-white text-center hover:bg-primary-dark transition-all duration-200"
+                    className="text-sm font-semibold px-4 py-2.5 rounded-xl bg-primary text-white text-center hover:bg-primary-dark transition-all"
                     onClick={() => setMenuOpen(false)}
                   >
                     Зареєструватись
@@ -206,8 +229,8 @@ export default function Header() {
               )}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </header>
   );
 }

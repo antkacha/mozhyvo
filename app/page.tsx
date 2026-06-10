@@ -32,37 +32,51 @@ const features = [
 export default function Home() {
   return (
     <>
-      {/* ── Hero — white ────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-white">
-        {/* Soft radial glow */}
+      {/* ── Hero — dark ─────────────────────────────────────────────── */}
+      <section
+        className="relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #09091a 0%, #0f1235 55%, #0b1228 100%)" }}
+      >
+        {/* Dot grid */}
         <div
           aria-hidden
-          className="absolute -top-20 right-0 w-[700px] h-[700px] rounded-full pointer-events-none"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            background:
-              "radial-gradient(circle, rgba(59,79,232,0.06) 0%, transparent 65%)",
+            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
           }}
         />
+        {/* Glows */}
+        <div
+          aria-hidden
+          className="absolute -top-24 right-0 w-[700px] h-[700px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(59,79,232,0.3) 0%, transparent 65%)" }}
+        />
+        <div
+          aria-hidden
+          className="absolute bottom-0 -left-20 w-[500px] h-[500px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(59,79,232,0.12) 0%, transparent 65%)" }}
+        />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-0 relative z-10 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-6 lg:py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-28 relative z-10 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-4 lg:py-8">
 
             {/* Left: content */}
             <div className="flex flex-col gap-7">
-              <div className="inline-flex items-center gap-2 self-start px-4 py-1.5 rounded-full border border-primary/25 bg-white text-primary text-xs font-semibold shadow-sm">
-                <span>✦</span>
+              <div className="inline-flex items-center gap-2 self-start px-4 py-1.5 rounded-full border border-white/15 bg-white/[0.06] text-white/70 text-xs font-semibold backdrop-blur-sm">
+                <span className="text-accent">✦</span>
                 Платформа можливостей для молоді
               </div>
 
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-foreground tracking-tight leading-[1.04]">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.04]">
                 Знайди свою
                 <br />
                 можливість
                 <br />
-                <span className="text-primary">у світі</span>
+                <span className="text-accent">у світі</span>
               </h1>
 
-              <p className="text-lg text-muted leading-relaxed max-w-[440px]">
+              <p className="text-lg text-white/55 leading-relaxed max-w-[440px]">
                 Гранти, стажування, обміни та волонтерство — все в одному місці
                 для молоді України
               </p>
@@ -70,13 +84,13 @@ export default function Home() {
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/opportunities"
-                  className="px-6 py-3 rounded-full bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-all shadow-lg shadow-primary/25 hover:-translate-y-0.5"
+                  className="px-6 py-3 rounded-full bg-accent text-foreground font-semibold text-sm hover:bg-accent-dark transition-all shadow-lg shadow-accent/20 hover:-translate-y-0.5"
                 >
                   Знайти свою можливість →
                 </Link>
                 <Link
                   href="/organizations"
-                  className="px-6 py-3 rounded-full border-2 border-primary/20 text-primary font-semibold text-sm hover:border-primary/50 hover:bg-primary-light transition-all"
+                  className="px-6 py-3 rounded-full border border-white/20 text-white font-semibold text-sm hover:border-white/40 hover:bg-white/[0.06] transition-all"
                 >
                   Для організацій
                 </Link>
@@ -86,30 +100,35 @@ export default function Home() {
                 <div className="flex items-center gap-2.5">
                   <span className="text-xl">🌍</span>
                   <div>
-                    <p className="text-sm font-bold text-foreground leading-tight">40+</p>
-                    <p className="text-xs text-muted">країн</p>
+                    <p className="text-sm font-bold text-white leading-tight">40+</p>
+                    <p className="text-xs text-white/40">країн</p>
                   </div>
                 </div>
-                <div className="w-px h-8 bg-border" />
+                <div className="w-px h-8 bg-white/10" />
                 <div className="flex items-center gap-2.5">
                   <span className="text-xl">📋</span>
                   <div>
-                    <p className="text-sm font-bold text-foreground leading-tight">1 200+</p>
-                    <p className="text-xs text-muted">можливостей</p>
+                    <p className="text-sm font-bold text-white leading-tight">1 200+</p>
+                    <p className="text-xs text-white/40">можливостей</p>
+                  </div>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">🎓</span>
+                  <div>
+                    <p className="text-sm font-bold text-white leading-tight">0₴</p>
+                    <p className="text-xs text-white/40">завжди</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right: compact overlapping card stack */}
+            {/* Right: overlapping card stack — look great on dark bg */}
             <div className="relative h-[360px] sm:h-[400px] lg:h-[400px] w-full overflow-hidden">
 
-              {/* Card 1 — Erasmus, indigo, float1 */}
-              <div
-                className="absolute z-0 animate-float1"
-                style={{ top: "80px", left: "10px", width: "278px" }}
-              >
-                <div className="bg-primary rounded-2xl p-5 shadow-2xl shadow-primary/30 text-white">
+              {/* Card 1 — Erasmus, indigo */}
+              <div className="absolute z-0 animate-float1" style={{ top: "80px", left: "10px", width: "278px" }}>
+                <div className="bg-primary rounded-2xl p-5 shadow-2xl shadow-primary/40 text-white">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/15">
                       🎓 Стипендія
@@ -127,12 +146,9 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Card 2 — DAAD, white, float2, overlaps Card 1 bottom */}
-              <div
-                className="absolute z-10 animate-float2"
-                style={{ top: "205px", left: "50px", width: "240px" }}
-              >
-                <div className="bg-white rounded-2xl p-5 shadow-xl border border-border">
+              {/* Card 2 — DAAD, white */}
+              <div className="absolute z-10 animate-float2" style={{ top: "205px", left: "50px", width: "240px" }}>
+                <div className="bg-white rounded-2xl p-5 shadow-2xl">
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-bold text-foreground text-sm">DAAD</span>
                     <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">
@@ -150,12 +166,9 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Card 3 — Notification, top-right, float3 */}
-              <div
-                className="absolute z-20 animate-float3"
-                style={{ top: "15px", right: "10px", width: "178px" }}
-              >
-                <div className="bg-white rounded-2xl p-4 shadow-lg border border-border">
+              {/* Card 3 — Notification */}
+              <div className="absolute z-20 animate-float3" style={{ top: "15px", right: "10px", width: "178px" }}>
+                <div className="bg-white rounded-2xl p-4 shadow-2xl">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0 text-base">
                       🔔
@@ -171,10 +184,17 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Wave transition to white sections below */}
+        <div aria-hidden className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ lineHeight: 0 }}>
+          <svg viewBox="0 0 1440 80" preserveAspectRatio="none" style={{ display: "block", width: "100%", height: "80px" }}>
+            <path d="M0,80 L1440,80 L1440,44 Q1080,0 720,22 Q360,44 0,14 Z" fill="white" />
+          </svg>
+        </div>
       </section>
 
       {/* ── Why Mozhyvo — editorial 2-col layout ─────────────────────── */}
-      <section className="bg-white py-16 border-t border-gray-100">
+      <section className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
 

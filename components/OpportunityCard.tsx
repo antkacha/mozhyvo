@@ -4,20 +4,30 @@ import Link from "next/link";
 import { Opportunity, typeColors, formatLabels } from "@/lib/data";
 import { useSaved } from "@/hooks/useSaved";
 
-const typeBorderColors: Record<string, string> = {
-  scholarship: "border-t-primary",
-  internship: "border-t-blue-500",
-  exchange: "border-t-green-500",
-  volunteering: "border-t-teal-500",
-  competition: "border-t-orange-500",
-  grant: "border-t-yellow-400",
-  conference: "border-t-pink-500",
-  hackathon: "border-t-red-500",
+const typeEmoji: Record<string, string> = {
+  scholarship: "🎓",
+  internship: "💼",
+  exchange: "🌍",
+  volunteering: "🤝",
+  competition: "🏆",
+  grant: "🚀",
+  conference: "🎙",
+  hackathon: "💻",
+};
+
+const typeAvatarBg: Record<string, string> = {
+  scholarship: "bg-primary-light",
+  internship: "bg-blue-50",
+  exchange: "bg-green-50",
+  volunteering: "bg-teal-50",
+  competition: "bg-orange-50",
+  grant: "bg-yellow-50",
+  conference: "bg-pink-50",
+  hackathon: "bg-red-50",
 };
 
 function isExpiringSoon(deadline: string): boolean {
-  const diff =
-    (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+  const diff = (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
   return diff <= 14 && diff > 0;
 }
 
@@ -28,90 +38,100 @@ export default function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; 
 
   return (
     <div
-      className={`card-animate relative bg-white rounded-2xl border border-border border-t-4 ${typeBorderColors[opp.type] ?? "border-t-gray-200"} shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-shadow,transform duration-200 flex flex-col p-6 gap-4 group`}
+      className="card-animate bg-white rounded-2xl border border-border hover:border-primary/30 hover:shadow-xl hover:shadow-primary/[0.06] hover:-translate-y-1 transition-all duration-200 flex flex-col overflow-hidden group"
       style={{ animationDelay: `${index * 40}ms` }}
     >
-      {/* Save button — floats outside top-right corner */}
-      <button
-        onClick={() => toggle(opp.slug)}
-        disabled={!ready}
-        className={`absolute -top-3.5 -right-3.5 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 disabled:opacity-40 shadow-md z-10 ${
-          saved
-            ? "bg-primary text-white"
-            : "bg-white text-muted hover:text-primary border border-border"
-        }`}
-        aria-label={saved ? "Видалити зі збережених" : "Зберегти"}
-      >
-        <svg
-          className="w-4 h-4"
-          fill={saved ? "currentColor" : "none"}
-          stroke="currentColor"
-          strokeWidth={2}
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-          />
-        </svg>
-      </button>
+      <div className="p-5 flex flex-col gap-4 flex-1">
 
-      {/* Type badge + deadline */}
-      <div className="flex items-center justify-between gap-2 pr-8">
-        <span
-          className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${typeColors[opp.type]}`}
-        >
-          {opp.typeName}
-        </span>
-        <span
-          className={`text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0 ${
-            expiring ? "bg-red-50 text-red-600" : "text-muted bg-muted-bg"
-          }`}
-        >
-          {expiring ? "⏰ " : ""}Дедлайн: {opp.deadlineDisplay}
-        </span>
-      </div>
+        {/* ── Header row: avatar + org + save ─────────────────── */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${typeAvatarBg[opp.type] ?? "bg-muted-bg"}`}
+            >
+              {typeEmoji[opp.type] ?? "✦"}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold text-muted/60 uppercase tracking-wider truncate leading-none mb-1.5">
+                {opp.org}
+              </p>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${typeColors[opp.type]}`}>
+                {opp.typeName}
+              </span>
+            </div>
+          </div>
 
-      {/* Org + title + description */}
-      <div className="flex-1">
-        <p className="text-xs font-semibold text-muted mb-1.5 uppercase tracking-wide">{opp.org}</p>
-        <Link href={`/opportunities/${opp.slug}`}>
-          <h3 className="font-bold text-foreground leading-snug group-hover:text-primary transition-colors duration-200 line-clamp-2">
-            {opp.title}
-          </h3>
-        </Link>
-        <p className="text-sm text-muted mt-2 line-clamp-2">{opp.shortDescription}</p>
-      </div>
+          {/* Save button — inside the card */}
+          <button
+            onClick={() => toggle(opp.slug)}
+            disabled={!ready}
+            className={`flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-150 disabled:opacity-40 ${
+              saved
+                ? "bg-primary text-white shadow-sm shadow-primary/25"
+                : "bg-muted-bg text-muted hover:bg-primary/10 hover:text-primary"
+            }`}
+            aria-label={saved ? "Видалити зі збережених" : "Зберегти"}
+          >
+            <svg
+              className="w-4 h-4"
+              fill={saved ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+          </button>
+        </div>
 
-      {/* Info chips */}
-      <div className="flex flex-wrap gap-1.5">
-        <span className="text-xs bg-muted-bg text-muted px-2 py-0.5 rounded-full">
-          {formatLabels[opp.format]}
-        </span>
-        {opp.funding === "fully-funded" && (
-          <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium">
-            Повне фінансування
+        {/* ── Title + description ──────────────────────────────── */}
+        <div className="flex-1">
+          <Link href={`/opportunities/${opp.slug}`}>
+            <h3 className="font-extrabold text-foreground text-[15px] leading-snug group-hover:text-primary transition-colors duration-150 line-clamp-2 mb-2">
+              {opp.title}
+            </h3>
+          </Link>
+          <p className="text-sm text-muted line-clamp-2 leading-relaxed">
+            {opp.shortDescription}
+          </p>
+        </div>
+
+        {/* ── Chips ───────────────────────────────────────────── */}
+        <div className="flex flex-wrap gap-1.5">
+          <span className="text-[11px] bg-muted-bg text-muted px-2 py-0.5 rounded-full">
+            {formatLabels[opp.format]}
           </span>
-        )}
-        {opp.duration && (
-          <span className="text-xs bg-muted-bg text-muted px-2 py-0.5 rounded-full">
-            {opp.duration}
-          </span>
-        )}
+          {opp.funding === "fully-funded" && (
+            <span className="text-[11px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium">
+              ✓ Повне фінансування
+            </span>
+          )}
+          {opp.duration && (
+            <span className="text-[11px] bg-muted-bg text-muted px-2 py-0.5 rounded-full">
+              {opp.duration}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-2 border-t border-border">
-        <span className="text-sm text-muted flex items-center gap-1.5">
+      {/* ── Footer strip ─────────────────────────────────────── */}
+      <div className="px-5 py-3 border-t border-border/60 bg-muted-bg/30 flex items-center justify-between gap-3">
+        <span className="text-xs text-muted truncate">
           {opp.flag} {opp.location}
         </span>
-        <Link
-          href={`/opportunities/${opp.slug}`}
-          className="text-sm font-semibold text-primary hover:underline"
+        <span
+          className={`text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${
+            expiring
+              ? "bg-red-50 text-red-600 ring-1 ring-inset ring-red-200"
+              : "bg-white text-muted border border-border"
+          }`}
         >
-          Детальніше →
-        </Link>
+          {expiring ? "⏰ " : ""}{opp.deadlineDisplay}
+        </span>
       </div>
     </div>
   );
