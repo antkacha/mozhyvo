@@ -123,7 +123,7 @@ export default function OpportunityClient({ opp, related }: Props) {
                 <section>
                   <h2 className="text-xl font-bold text-foreground mb-4">Про програму</h2>
                   <div className={`border-l-4 pl-5 ${borderColor[opp.type] ?? "border-l-primary"}`}>
-                    <div className="text-base text-gray-600 leading-relaxed whitespace-pre-line">
+                    <div className="text-base text-gray-600 leading-relaxed whitespace-pre-line break-words">
                       {opp.fullDescription}
                     </div>
                   </div>
