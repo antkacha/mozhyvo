@@ -157,7 +157,7 @@ export default function RegisterPage() {
     setStatus("loading");
     setServerError("");
     const nameParts = name.trim().split(" ");
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -171,9 +171,13 @@ export default function RegisterPage() {
     if (error) {
       setServerError(
         error.message === "User already registered"
-          ? "Цей email вже зареєстрований."
+          ? "Цей email вже зареєстрований. Спробуй увійти."
           : "Помилка реєстрації. Перевір дані і спробуй знову."
       );
+      setStatus("error");
+    } else if ((data.user?.identities ?? []).length === 0) {
+      // Supabase returns success but empty identities when email already exists (unconfirmed)
+      setServerError("Цей email вже зареєстрований. Перевір пошту або спробуй увійти.");
       setStatus("error");
     } else {
       setStatus("success");
@@ -206,9 +210,15 @@ export default function RegisterPage() {
     if (error) {
       setServerError(
         error.message === "User already registered"
-          ? "Цей email вже зареєстрований."
+          ? "Цей email вже зареєстрований. Спробуй увійти."
           : "Помилка реєстрації. Перевір дані і спробуй знову."
       );
+      setStatus("error");
+      return;
+    }
+
+    if ((authData.user?.identities ?? []).length === 0) {
+      setServerError("Цей email вже зареєстрований. Перевір пошту або спробуй увійти.");
       setStatus("error");
       return;
     }
@@ -345,7 +355,16 @@ export default function RegisterPage() {
                   </label>
                   {errors.agreed && <p className="text-xs text-red-500 mt-1">{errors.agreed}</p>}
                 </div>
-                {serverError && <p className="text-xs text-red-500 text-center">{serverError}</p>}
+                {serverError && (
+                  <div className="text-xs text-red-500 text-center bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 leading-relaxed">
+                    {serverError}{" "}
+                    {serverError.includes("вже зареєстрований") && (
+                      <Link href="/login" className="font-semibold underline hover:text-red-700">
+                        Увійти →
+                      </Link>
+                    )}
+                  </div>
+                )}
                 <button type="submit" disabled={status === "loading"}
                   className="w-full py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
                 >
@@ -447,7 +466,16 @@ export default function RegisterPage() {
                   />
                 </Field>
 
-                {serverError && <p className="text-xs text-red-500 text-center">{serverError}</p>}
+                {serverError && (
+                  <div className="text-xs text-red-500 text-center bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 leading-relaxed">
+                    {serverError}{" "}
+                    {serverError.includes("вже зареєстрований") && (
+                      <Link href="/login" className="font-semibold underline hover:text-red-700">
+                        Увійти →
+                      </Link>
+                    )}
+                  </div>
+                )}
 
                 <button type="submit" disabled={status === "loading"}
                   className="w-full py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
