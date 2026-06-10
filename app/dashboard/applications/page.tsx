@@ -87,75 +87,80 @@ function ExportModal({ open, apps, onClose }: { open: boolean; apps: OrgApplicat
   const groups = Array.from(new Set(EXPORT_FIELDS.map((f) => f.group)));
   const allOn = EXPORT_FIELDS.every((f) => selected.has(f.key));
   const selectedKeys = EXPORT_FIELDS.filter((f) => selected.has(f.key)).map((f) => f.key);
+  const n = selected.size;
+  const countLabel = `${n} ${n === 1 ? "поле" : n < 5 ? "поля" : "полів"}`;
 
   function toggle(key: ExportableKey) {
-    setSelected((prev) => { const n = new Set(prev); if (n.has(key)) { n.delete(key); } else { n.add(key); } return n; });
-  }
-  function toggleGroup(group: string) {
-    const keys = EXPORT_FIELDS.filter((f) => f.group === group).map((f) => f.key);
-    const allGroupOn = keys.every((k) => selected.has(k));
-    setSelected((prev) => { const n = new Set(prev); keys.forEach((k) => allGroupOn ? n.delete(k) : n.add(k)); return n; });
+    setSelected((prev) => { const s = new Set(prev); if (s.has(key)) { s.delete(key); } else { s.add(key); } return s; });
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md flex flex-col" style={{ maxHeight: "90vh" }}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="bg-white w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col"
+        style={{ maxHeight: "88vh" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Drag handle (mobile) */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden flex-shrink-0">
+          <div className="w-10 h-1 rounded-full bg-border" />
+        </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border flex-shrink-0">
+        <div className="flex items-start justify-between px-6 pt-4 sm:pt-6 pb-4 flex-shrink-0">
           <div>
-            <h2 className="text-base font-bold text-foreground">Налаштування експорту</h2>
-            <p className="text-xs text-muted mt-0.5">
-              {apps.length} {apps.length === 1 ? "заявка" : apps.length < 5 ? "заявки" : "заявок"} · {selected.size} {selected.size === 1 ? "поле" : selected.size < 5 ? "поля" : "полів"}
+            <h2 className="text-base font-bold text-foreground">Експорт заявок</h2>
+            <p className="text-sm text-muted mt-0.5">
+              <span className="font-semibold text-foreground">{apps.length}</span>{" "}
+              {apps.length === 1 ? "заявка" : apps.length < 5 ? "заявки" : "заявок"}
             </p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-muted-bg transition-all">
+          <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:bg-muted-bg transition-all mt-0.5 flex-shrink-0">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        {/* Field picker */}
-        <div className="overflow-y-auto flex-1 px-6 py-4 flex flex-col gap-5">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-muted uppercase tracking-wider">Поля для вигрузки</p>
-            <button
-              onClick={() => setSelected(allOn ? new Set() : new Set(EXPORT_FIELDS.map((f) => f.key)))}
-              className="text-xs font-semibold text-primary hover:underline"
-            >
-              {allOn ? "Скинути всі" : "Вибрати всі"}
-            </button>
-          </div>
+        {/* Divider */}
+        <div className="h-px bg-border mx-6 flex-shrink-0" />
 
+        {/* Field sections */}
+        <div className="overflow-y-auto flex-1 px-6 py-5 flex flex-col gap-6">
           {groups.map((group) => {
             const fields = EXPORT_FIELDS.filter((f) => f.group === group);
-            const allGroupOn = fields.every((f) => selected.has(f.key));
             return (
               <div key={group}>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[11px] font-semibold text-muted uppercase tracking-wider">{group}</p>
-                  <button onClick={() => toggleGroup(group)} className="text-[11px] font-semibold text-primary hover:underline">
-                    {allGroupOn ? "Зняти" : "Вибрати"}
-                  </button>
-                </div>
-                <div className="bg-muted-bg/50 rounded-xl overflow-hidden divide-y divide-border/50">
+                <p className="text-[10px] font-bold text-muted/70 uppercase tracking-[0.1em] mb-3">{group}</p>
+                <div className="flex flex-wrap gap-2">
                   {fields.map((field) => {
                     const on = selected.has(field.key);
                     return (
-                      <label key={field.key} className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted-bg transition-colors select-none">
-                        <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${on ? "bg-primary border-primary" : "border-border bg-white"}`}>
-                          {on && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                        </div>
-                        <input type="checkbox" checked={on} onChange={() => toggle(field.key)} className="sr-only" />
-                        <span className={`text-sm transition-colors flex-1 ${on ? "text-foreground font-medium" : "text-muted"}`}>{field.label}</span>
+                      <button
+                        key={field.key}
+                        onClick={() => toggle(field.key)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                          on
+                            ? "bg-primary-light text-primary ring-1 ring-primary/20"
+                            : "bg-muted-bg text-muted hover:bg-muted-bg/80 hover:text-foreground"
+                        }`}
+                      >
+                        {on ? (
+                          <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3 h-3 flex-shrink-0 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        )}
+                        {field.label}
                         {field.key === "motivation" && (
-                          <span className="text-[10px] font-semibold bg-primary-light text-primary px-2 py-0.5 rounded-full flex-shrink-0">ключове</span>
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0 ${on ? "bg-primary/15 text-primary" : "bg-border text-muted"}`}>
+                            ★
+                          </span>
                         )}
-                        {(field.key === "cvUrl" || field.key === "portfolioUrl") && (
-                          <span className="text-[10px] font-semibold bg-muted-bg text-muted px-2 py-0.5 rounded-full flex-shrink-0">посилання</span>
-                        )}
-                      </label>
+                      </button>
                     );
                   })}
                 </div>
@@ -165,27 +170,37 @@ function ExportModal({ open, apps, onClose }: { open: boolean; apps: OrgApplicat
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-6 pt-4 border-t border-border flex-shrink-0 flex gap-3">
-          <button
-            disabled={selected.size === 0}
-            onClick={() => { doExportCSV(apps, selectedKeys); onClose(); }}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:border-primary/30 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            CSV
-          </button>
-          <button
-            disabled={selected.size === 0}
-            onClick={() => { doExportXLSX(apps, selectedKeys); onClose(); }}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm shadow-primary/20"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Excel (.xlsx)
-          </button>
+        <div className="px-6 pt-4 pb-6 flex-shrink-0 border-t border-border">
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <p className="text-xs text-muted">
+                <span className="font-semibold text-foreground">{countLabel}</span> обрано
+              </p>
+              <button
+                onClick={() => setSelected(allOn ? new Set() : new Set(EXPORT_FIELDS.map((f) => f.key)))}
+                className="text-xs text-primary hover:underline mt-0.5"
+              >
+                {allOn ? "Скинути всі" : "Вибрати всі"}
+              </button>
+            </div>
+            <button
+              disabled={selected.size === 0}
+              onClick={() => { doExportCSV(apps, selectedKeys); onClose(); }}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:border-primary/40 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              CSV
+            </button>
+            <button
+              disabled={selected.size === 0}
+              onClick={() => { doExportXLSX(apps, selectedKeys); onClose(); }}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm shadow-primary/20"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Excel
+            </button>
+          </div>
         </div>
       </div>
     </div>
