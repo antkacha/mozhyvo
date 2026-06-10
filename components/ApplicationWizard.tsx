@@ -142,9 +142,12 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
     return Object.keys(e).length === 0 && Object.keys(ce).length === 0;
   }
 
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   async function handleSubmit() {
     if (!validate(step) || !user) return;
     setSubmitting(true);
+    setSubmitError(null);
     try {
       await submit({
         opportunitySlug:  opp.slug,
@@ -168,6 +171,8 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
       localStorage.removeItem(DRAFT_KEY(opp.slug));
       setSubmitted(true);
       setTimeout(onSuccess, 1500);
+    } catch (e) {
+      setSubmitError(e instanceof Error ? e.message : "Помилка відправки. Спробуй ще раз.");
     } finally {
       setSubmitting(false);
     }
@@ -484,6 +489,12 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
           </div>
         )}
       </div>
+
+      {submitError && (
+        <div className="mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+          {submitError}
+        </div>
+      )}
 
       {/* Navigation */}
       <div className="flex items-center justify-between mt-7 pt-5 border-t border-border gap-3">
