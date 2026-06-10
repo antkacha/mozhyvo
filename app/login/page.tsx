@@ -4,7 +4,6 @@ import { useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { DEMO_ORG_EMAIL, DEMO_ORG_PASSWORD, DEMO_ORG_PROFILE } from "@/lib/demo-org";
 
 function LoginContent() {
   const router = useRouter();
@@ -26,21 +25,29 @@ function LoginContent() {
     setStatus("loading");
     setErrorMsg("");
 
-    // Demo org account — works without Supabase
-    if (email === DEMO_ORG_EMAIL && password === DEMO_ORG_PASSWORD) {
-      localStorage.setItem("mozhyvo_org_profile", JSON.stringify(DEMO_ORG_PROFILE));
-      setStatus("success");
-      setTimeout(() => router.push("/dashboard"), 800);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        setErrorMsg("Підтверди email — ми надіслали листа при реєстрації");
+      } else if (error.message.toLowerCase().includes("invalid login credentials")) {
+        setErrorMsg("Невірний email або пароль");
+      } else {
+        setErrorMsg(error.message);
+      }
+      setStatus("error");
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setErrorMsg("Невірний email або пароль");
-      setStatus("error");
+    setStatus("success");
+    // Org users go to dashboard; everyone else to home or ?next=
+    const role = data.user?.user_metadata?.role;
+    const next = searchParams.get("next");
+    if (role === "org") {
+      setTimeout(() => router.push("/dashboard"), 500);
+    } else if (next) {
+      setTimeout(() => router.push(next), 500);
     } else {
-      setStatus("success");
-      setTimeout(() => router.push("/"), 800);
+      setTimeout(() => router.push("/"), 500);
     }
   };
 

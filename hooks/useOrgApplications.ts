@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export interface OrgApplication {
   id: string;
@@ -23,168 +24,65 @@ export interface OrgApplication {
   submittedAt: string;
 }
 
-const STORAGE_KEY = (orgId: string) => `mozhyvo_org_applications_${orgId}`;
-const DEMO_ORG_ID = "demo-org-001";
-
-const SEED: OrgApplication[] = [
-  {
-    id: "oa-001",
-    projectId: "proj-001",
-    projectTitle: "Молодіжний обмін «Разом до змін»",
-    firstName: "Марія",
-    lastName: "Коваленко",
-    email: "maria.k@gmail.com",
-    phone: "+380671234567",
-    country: "Україна",
-    institution: "КНУ ім. Тараса Шевченка",
-    degree: "Бакалавр",
-    motivation: "Я активно займаюся волонтерством вже 3 роки і хочу познайомитися з однодумцями з інших країн. Ця програма — чудова можливість обмінятися досвідом та навчитися новим підходам до вирішення соціальних проблем.",
-    languages: ["Англійська (B2)", "Польська (A2)"],
-    status: "new",
-    submittedAt: "2025-05-20T10:30:00",
-  },
-  {
-    id: "oa-002",
-    projectId: "proj-001",
-    projectTitle: "Молодіжний обмін «Разом до змін»",
-    firstName: "Олексій",
-    lastName: "Петренко",
-    email: "o.petrenko@ukr.net",
-    country: "Україна",
-    institution: "Львівська Політехніка",
-    degree: "Магістр",
-    motivation: "Маю досвід організації молодіжних заходів та хочу вийти на міжнародний рівень. Програма відповідає моїм цілям розвитку в сфері громадянського суспільства.",
-    languages: ["Англійська (C1)", "Французька (B1)"],
-    cvUrl: "https://example.com/cv-petrenk.pdf",
-    status: "reviewing",
-    internalNote: "Сильний кандидат. Перевірити рекомендаційного листа.",
-    submittedAt: "2025-05-18T14:15:00",
-  },
-  {
-    id: "oa-003",
-    projectId: "proj-001",
-    projectTitle: "Молодіжний обмін «Разом до змін»",
-    firstName: "Анна",
-    lastName: "Мельник",
-    email: "anna.m@yahoo.com",
-    phone: "+380991234567",
-    country: "Україна",
-    institution: "НаУКМА",
-    degree: "Бакалавр",
-    motivation: "Цікавлюся питаннями євроінтеграції та хочу долучитися до мережі молодих лідерів ЄС. Маю досвід участі у двох міжнародних конференціях.",
-    languages: ["Англійська (C1)", "Німецька (B2)"],
-    portfolioUrl: "https://anna-portfolio.com",
-    status: "selected",
-    internalNote: "Відмінний профіль. Підтвердити участь.",
-    submittedAt: "2025-05-17T09:00:00",
-  },
-  {
-    id: "oa-004",
-    projectId: "proj-002",
-    projectTitle: "Мікрогранти для молодіжних ініціатив",
-    firstName: "Тарас",
-    lastName: "Гриценко",
-    email: "taras.grytsenko@gmail.com",
-    country: "Україна",
-    institution: "Харківський університет",
-    degree: "Студент 3 курсу",
-    motivation: "Хочу реалізувати проект «Зелений двір» — облаштування шкільних дворів у Харкові після ремонту. Маємо команду 4 осіб та підтримку місцевої громади.",
-    languages: ["Українська", "Англійська (B1)"],
-    status: "reviewing",
-    submittedAt: "2025-05-22T11:00:00",
-  },
-  {
-    id: "oa-005",
-    projectId: "proj-002",
-    projectTitle: "Мікрогранти для молодіжних ініціатив",
-    firstName: "Софія",
-    lastName: "Бондаренко",
-    email: "sofia.b@gmail.com",
-    country: "Україна",
-    institution: "Одеський університет",
-    degree: "Магістр",
-    motivation: "Наш проект — освітні гуртки для дітей ВПО у Одесі. Вже 6 місяців ми проводимо безкоштовні заняття для 30 дітей, але потребуємо коштів на матеріали.",
-    languages: ["Українська", "Англійська (B2)", "Румунська"],
-    status: "new",
-    submittedAt: "2025-05-25T16:30:00",
-  },
-  {
-    id: "oa-006",
-    projectId: "proj-002",
-    projectTitle: "Мікрогранти для молодіжних ініціатив",
-    firstName: "Іван",
-    lastName: "Романюк",
-    email: "i.romanyuk@ukr.net",
-    country: "Україна",
-    institution: "КНЕУ",
-    degree: "Бакалавр",
-    motivation: "Проект цифрової грамотності для людей похилого віку. Хочемо провести 10 безкоштовних воркшопів у Києві та Борисполі.",
-    languages: ["Українська", "Англійська (A2)"],
-    status: "rejected",
-    internalNote: "Проект цікавий, але не відповідає цільовій аудиторії (молодь 16-30 р.). Порадити інший грант.",
-    submittedAt: "2025-05-19T08:45:00",
-  },
-  {
-    id: "oa-007",
-    projectId: "proj-001",
-    projectTitle: "Молодіжний обмін «Разом до змін»",
-    firstName: "Дарина",
-    lastName: "Шевчук",
-    email: "daryna.sh@gmail.com",
-    phone: "+380662345678",
-    country: "Україна",
-    institution: "ЧНУ ім. Федьковича",
-    degree: "Магістр",
-    motivation: "Займаюся розвитком молодіжної політики на Буковині. Участь в обміні дозволить познайомитися з кращими практиками ЄС та адаптувати їх для нашого регіону.",
-    languages: ["Англійська (B2)", "Румунська"],
-    cvUrl: "https://example.com/cv-shevchuk.pdf",
-    status: "new",
-    submittedAt: "2025-05-26T13:00:00",
-  },
-];
-
-function loadAll(orgId: string): OrgApplication[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY(orgId));
-    return stored ? (JSON.parse(stored) as OrgApplication[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveAll(orgId: string, apps: OrgApplication[]) {
-  localStorage.setItem(STORAGE_KEY(orgId), JSON.stringify(apps));
+function fromRow(row: Record<string, unknown>): OrgApplication {
+  return {
+    id:            (row.id as string) ?? "",
+    projectId:     (row.project_id as string) ?? "",
+    projectTitle:  (row.project_title as string) ?? "",
+    firstName:     (row.first_name as string) ?? "",
+    lastName:      (row.last_name as string) ?? "",
+    email:         (row.email as string) ?? "",
+    phone:         (row.phone as string) ?? "",
+    country:       (row.country as string) ?? "",
+    institution:   (row.institution as string) ?? "",
+    degree:        (row.degree as string) ?? "",
+    motivation:    (row.motivation as string) ?? "",
+    languages:     (row.languages as string[]) ?? [],
+    cvUrl:         (row.cv_url as string) ?? "",
+    portfolioUrl:  (row.portfolio_url as string) ?? "",
+    customAnswers: (row.custom_answers as Record<string, string | string[]>) ?? {},
+    status:        (row.status as OrgApplication["status"]) ?? "new",
+    internalNote:  (row.internal_note as string) ?? "",
+    submittedAt:   (row.submitted_at as string) ?? "",
+  };
 }
 
 export function useOrgApplications(orgId?: string, projectId?: string) {
+  const supabase = useMemo(() => createClient(), []);
   const [applications, setApplications] = useState<OrgApplication[]>([]);
   const [ready, setReady] = useState(false);
 
-  const reload = useCallback(() => {
-    if (!orgId) { setReady(true); return; }
-    let all = loadAll(orgId);
-    // Seed only for the demo org so new real orgs start empty
-    if (all.length === 0 && orgId === DEMO_ORG_ID) {
-      all = SEED;
-      saveAll(orgId, all);
-    }
-    setApplications(projectId ? all.filter((a) => a.projectId === projectId) : all);
+  const reload = useCallback(async () => {
+    if (!orgId) { setApplications([]); setReady(true); return; }
+    let query = supabase
+      .from("org_applications")
+      .select("*")
+      .eq("org_id", orgId)
+      .order("submitted_at", { ascending: false });
+    if (projectId) query = query.eq("project_id", projectId);
+    const { data } = await query;
+    setApplications((data ?? []).map((r) => fromRow(r as Record<string, unknown>)));
     setReady(true);
-  }, [orgId, projectId]);
+  }, [supabase, orgId, projectId]);
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  useEffect(() => { reload(); }, [reload]);
 
   const updateApp = useCallback(
-    (id: string, data: Partial<OrgApplication>) => {
-      if (!orgId) return;
-      const all = loadAll(orgId);
-      const updated = all.map((a) => (a.id === id ? { ...a, ...data } : a));
-      saveAll(orgId, updated);
-      setApplications(projectId ? updated.filter((a) => a.projectId === projectId) : updated);
+    async (id: string, data: Partial<OrgApplication>) => {
+      const row: Record<string, unknown> = {};
+      if (data.status       !== undefined) row.status        = data.status;
+      if (data.internalNote !== undefined) row.internal_note = data.internalNote;
+      const { error } = await supabase
+        .from("org_applications")
+        .update(row)
+        .eq("id", id);
+      if (!error) {
+        setApplications((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, ...data } : a))
+        );
+      }
     },
-    [orgId, projectId]
+    [supabase]
   );
 
   return { applications, ready, updateApp };

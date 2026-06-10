@@ -7,7 +7,6 @@ import Image from "next/image";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgProjects } from "@/hooks/useOrgProjects";
 import { useOrgApplications } from "@/hooks/useOrgApplications";
-import { DEMO_ORG_EMAIL } from "@/lib/demo-org";
 
 // ── Icons ───────────────────────────────────────────────────────────
 function IconGrid(p: React.SVGProps<SVGSVGElement>) {
@@ -214,33 +213,6 @@ function Sidebar() {
 
       {/* Footer */}
       <div className="p-2 border-t border-border">
-        {org.contactEmail === DEMO_ORG_EMAIL && (
-          <div className="mb-2 px-3 py-2.5 rounded-xl bg-muted-bg border border-dashed border-border">
-            <p className="text-[10px] text-muted font-mono mb-2 uppercase tracking-wider">Demo режим</p>
-            <div className="flex gap-1.5">
-              <button
-                onClick={() => update({ status: "pending" })}
-                className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-all ${
-                  org.status === "pending"
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-white text-muted border border-border hover:border-amber-300 hover:text-amber-600"
-                }`}
-              >
-                На перевірці
-              </button>
-              <button
-                onClick={() => update({ status: "verified" })}
-                className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-all ${
-                  org.status === "verified"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-white text-muted border border-border hover:border-green-300 hover:text-green-600"
-                }`}
-              >
-                Верифіковано
-              </button>
-            </div>
-          </div>
-        )}
         <button
           onClick={logout}
           className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-red-600 hover:bg-red-50 transition-all"

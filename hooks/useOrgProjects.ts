@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export interface FormQuestion {
   id: string;
@@ -45,177 +46,129 @@ export interface OrgProject {
   updatedAt: string;
 }
 
-const STORAGE_KEY = (orgId: string) => `mozhyvo_org_projects_${orgId}`;
-export const DEMO_ORG_ID = "demo-org-001";
+// Kept for ApplyForm backward compat — no longer a real org ID
+export const DEMO_ORG_ID = "";
 
-const SEED: OrgProject[] = [
-  {
-    id: "proj-001",
-    orgId: DEMO_ORG_ID,
-    title: "Молодіжний обмін «Разом до змін»",
-    type: "exchange",
-    typeName: "Обмін",
-    shortDescription: "Двотижневий обмін для молодих активістів з України та країн ЄС.",
-    fullDescription: "Програма «Разом до змін» — це унікальна можливість для молодих лідерів обмінятися досвідом та напрацювати спільні рішення актуальних проблем. Учасники проведуть 14 днів у Варшаві разом з однодумцями з 8 країн.",
-    requirements: ["Вік 18–28 років", "Рівень англійської B1+", "Досвід волонтерської або громадської діяльності", "Громадянство або проживання в Україні"],
-    benefits: ["Повне фінансування (переліт, проживання, харчування)", "Культурна програма та екскурсії", "Сертифікат учасника Erasmus+", "Нетворкінг з активістами з 8 країн"],
-    tags: ["Молодь", "Обмін", "ЄС", "Лідерство"],
-    deadline: "2025-08-15",
-    deadlineDisplay: "15 серп 2025",
-    country: "Польща",
-    city: "Варшава",
-    location: "Варшава, Польща",
-    flag: "🇵🇱",
-    format: "offline",
-    funding: "fully-funded",
-    fundingDetails: "Перельоти, проживання, харчування",
-    duration: "14 днів",
-    languages: ["Англійська"],
-    ageMin: 18,
-    ageMax: 28,
-    status: "published",
-    views: 124,
-    saves: 18,
-    createdAt: "2025-04-10",
-    updatedAt: "2025-04-10",
-  },
-  {
-    id: "proj-002",
-    orgId: DEMO_ORG_ID,
-    title: "Мікрогранти для молодіжних ініціатив",
-    type: "grant",
-    typeName: "Грант",
-    shortDescription: "Конкурс мікрогрантів до 5 000 грн для соціальних проектів молоді.",
-    fullDescription: "Фонд «Молодь України» оголошує конкурс мікрогрантів для підтримки ініціатив молодих людей. Пріоритет — проекти у сферах екології, освіти та громадянського суспільства.",
-    requirements: ["Вік 16–30 років", "Наявність готової ідеї соціального проекту", "Реєстрація або проживання в Україні", "Команда мінімум 2 особи"],
-    benefits: ["Фінансування до 5 000 грн", "Менторська підтримка протягом реалізації", "Публікація проекту в медіа фонду", "Можливість отримати наступний грант"],
-    tags: ["Грант", "Молодь", "Соціальний проект", "Україна"],
-    deadline: "2025-09-01",
-    deadlineDisplay: "1 вер 2025",
-    country: "Україна",
-    city: "Онлайн",
-    location: "Онлайн",
-    flag: "🇺🇦",
-    format: "online",
-    funding: "fully-funded",
-    fundingDetails: "До 5 000 грн",
-    languages: ["Українська"],
-    ageMin: 16,
-    ageMax: 30,
-    status: "published",
-    views: 89,
-    saves: 22,
-    createdAt: "2025-05-01",
-    updatedAt: "2025-05-01",
-  },
-  {
-    id: "proj-003",
-    orgId: DEMO_ORG_ID,
-    title: "Літня школа лідерства 2025",
-    type: "conference",
-    typeName: "Школа",
-    shortDescription: "7-денна інтенсивна програма для майбутніх лідерів громадянського суспільства.",
-    fullDescription: "Літня школа лідерства — це 7 днів інтенсивного навчання, нетворкінгу та практики для тих, хто хоче розвинути навички адвокасі, управління проектами та публічних комунікацій.",
-    requirements: ["Вік 20–30 років", "Мотиваційний лист (до 500 слів)", "Досвід у громадянському суспільстві від 1 року"],
-    benefits: ["Навчання від топ-тренерів", "Проживання та харчування у Львові", "Мережа випускників", "Доступ до бібліотеки матеріалів"],
-    tags: ["Лідерство", "Навчання", "Громадянське суспільство"],
-    deadline: "2025-07-01",
-    deadlineDisplay: "1 лип 2025",
-    country: "Україна",
-    city: "Львів",
-    location: "Львів",
-    flag: "🇺🇦",
-    format: "offline",
-    funding: "fully-funded",
-    duration: "7 днів",
-    languages: ["Українська"],
-    ageMin: 20,
-    ageMax: 30,
-    status: "draft",
-    views: 0,
-    saves: 0,
-    createdAt: "2025-05-15",
-    updatedAt: "2025-05-15",
-  },
-];
-
-function loadAll(orgId: string): OrgProject[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY(orgId));
-    return stored ? (JSON.parse(stored) as OrgProject[]) : [];
-  } catch {
-    return [];
-  }
+function fromRow(row: Record<string, unknown>): OrgProject {
+  return {
+    id:               (row.id as string) ?? "",
+    orgId:            (row.org_id as string) ?? "",
+    title:            (row.title as string) ?? "",
+    type:             (row.type as string) ?? "",
+    typeName:         (row.type_name as string) ?? "",
+    shortDescription: (row.short_description as string) ?? "",
+    fullDescription:  (row.full_description as string) ?? "",
+    requirements:     (row.requirements as string[]) ?? [],
+    benefits:         (row.benefits as string[]) ?? [],
+    tags:             (row.tags as string[]) ?? [],
+    deadline:         (row.deadline as string) ?? "",
+    deadlineDisplay:  (row.deadline_display as string) ?? "",
+    country:          (row.country as string) ?? "",
+    city:             (row.city as string) ?? "",
+    location:         (row.location as string) ?? "",
+    flag:             (row.flag as string) ?? "🇺🇦",
+    format:           (row.format as OrgProject["format"]) ?? "offline",
+    funding:          (row.funding as OrgProject["funding"]) ?? "fully-funded",
+    fundingDetails:   (row.funding_details as string) ?? "",
+    duration:         (row.duration as string) ?? "",
+    languages:        (row.languages as string[]) ?? [],
+    ageMin:           row.age_min as number | undefined,
+    ageMax:           row.age_max as number | undefined,
+    status:           (row.status as OrgProject["status"]) ?? "draft",
+    autoClose:        (row.auto_close as boolean) ?? false,
+    formQuestions:    (row.form_questions as FormQuestion[]) ?? [],
+    views:            (row.views as number) ?? 0,
+    saves:            (row.saves as number) ?? 0,
+    createdAt:        (row.created_at as string) ?? "",
+    updatedAt:        (row.updated_at as string) ?? "",
+  };
 }
 
-function saveAll(orgId: string, projects: OrgProject[]) {
-  localStorage.setItem(STORAGE_KEY(orgId), JSON.stringify(projects));
+function toRow(data: Partial<OrgProject>): Record<string, unknown> {
+  const row: Record<string, unknown> = {};
+  if (data.title            !== undefined) row.title             = data.title;
+  if (data.type             !== undefined) row.type              = data.type;
+  if (data.typeName         !== undefined) row.type_name         = data.typeName;
+  if (data.shortDescription !== undefined) row.short_description = data.shortDescription;
+  if (data.fullDescription  !== undefined) row.full_description  = data.fullDescription;
+  if (data.requirements     !== undefined) row.requirements      = data.requirements;
+  if (data.benefits         !== undefined) row.benefits          = data.benefits;
+  if (data.tags             !== undefined) row.tags              = data.tags;
+  if (data.deadline         !== undefined) row.deadline          = data.deadline;
+  if (data.deadlineDisplay  !== undefined) row.deadline_display  = data.deadlineDisplay;
+  if (data.country          !== undefined) row.country           = data.country;
+  if (data.city             !== undefined) row.city              = data.city;
+  if (data.location         !== undefined) row.location          = data.location;
+  if (data.flag             !== undefined) row.flag              = data.flag;
+  if (data.format           !== undefined) row.format            = data.format;
+  if (data.funding          !== undefined) row.funding           = data.funding;
+  if (data.fundingDetails   !== undefined) row.funding_details   = data.fundingDetails;
+  if (data.duration         !== undefined) row.duration          = data.duration;
+  if (data.languages        !== undefined) row.languages         = data.languages;
+  if (data.ageMin           !== undefined) row.age_min           = data.ageMin;
+  if (data.ageMax           !== undefined) row.age_max           = data.ageMax;
+  if (data.status           !== undefined) row.status            = data.status;
+  if (data.autoClose        !== undefined) row.auto_close        = data.autoClose;
+  if (data.formQuestions    !== undefined) row.form_questions    = data.formQuestions;
+  return row;
 }
 
 export function useOrgProjects(orgId?: string) {
+  const supabase = useMemo(() => createClient(), []);
   const [projects, setProjects] = useState<OrgProject[]>([]);
   const [ready, setReady] = useState(false);
 
-  const reload = useCallback(() => {
-    if (!orgId) { setReady(true); return; }
-    let all = loadAll(orgId);
-    if (all.length === 0 && orgId === DEMO_ORG_ID) {
-      all = SEED;
-      saveAll(orgId, all);
-    }
-    setProjects(all);
+  const reload = useCallback(async () => {
+    if (!orgId) { setProjects([]); setReady(true); return; }
+    const { data } = await supabase
+      .from("org_projects")
+      .select("*")
+      .eq("org_id", orgId)
+      .order("created_at", { ascending: false });
+    setProjects((data ?? []).map((r) => fromRow(r as Record<string, unknown>)));
     setReady(true);
-  }, [orgId]);
+  }, [supabase, orgId]);
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  useEffect(() => { reload(); }, [reload]);
 
   const create = useCallback(
-    (data: Omit<OrgProject, "id" | "createdAt" | "updatedAt" | "views" | "saves">): OrgProject => {
+    async (data: Omit<OrgProject, "id" | "createdAt" | "updatedAt" | "views" | "saves">): Promise<OrgProject> => {
       if (!orgId) throw new Error("orgId required");
-      const now = new Date().toISOString().split("T")[0];
-      const project: OrgProject = {
-        ...data,
-        id: `proj-${Date.now()}`,
-        views: 0,
-        saves: 0,
-        createdAt: now,
-        updatedAt: now,
-      };
-      const all = loadAll(orgId);
-      const updated = [...all, project];
-      saveAll(orgId, updated);
-      setProjects(updated);
+      const row = { ...toRow(data as Partial<OrgProject>), org_id: orgId };
+      const { data: created, error } = await supabase
+        .from("org_projects")
+        .insert(row)
+        .select()
+        .single();
+      if (error) throw error;
+      const project = fromRow(created as Record<string, unknown>);
+      setProjects((prev) => [project, ...prev]);
       return project;
     },
-    [orgId]
+    [supabase, orgId]
   );
 
   const update = useCallback(
-    (id: string, data: Partial<OrgProject>) => {
-      if (!orgId) return;
-      const all = loadAll(orgId);
-      const updated = all.map((p) =>
-        p.id === id
-          ? { ...p, ...data, updatedAt: new Date().toISOString().split("T")[0] }
-          : p
-      );
-      saveAll(orgId, updated);
-      setProjects(updated);
+    async (id: string, data: Partial<OrgProject>) => {
+      const { error } = await supabase
+        .from("org_projects")
+        .update(toRow(data))
+        .eq("id", id);
+      if (!error) {
+        setProjects((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, ...data } : p))
+        );
+      }
     },
-    [orgId]
+    [supabase]
   );
 
   const remove = useCallback(
-    (id: string) => {
-      if (!orgId) return;
-      const all = loadAll(orgId);
-      const updated = all.filter((p) => p.id !== id);
-      saveAll(orgId, updated);
-      setProjects(updated);
+    async (id: string) => {
+      await supabase.from("org_projects").delete().eq("id", id);
+      setProjects((prev) => prev.filter((p) => p.id !== id));
     },
-    [orgId]
+    [supabase]
   );
 
   return { projects, ready, create, update, remove, reload };

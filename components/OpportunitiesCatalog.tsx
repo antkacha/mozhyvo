@@ -15,6 +15,7 @@ import {
 import { getDaysUntilDeadline } from "@/lib/recommendations";
 import OpportunityCard from "@/components/OpportunityCard";
 import { SkeletonGrid } from "@/components/SkeletonCard";
+import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
 
 const PER_PAGE = 12;
 const SORT_OPTIONS = [
@@ -103,6 +104,7 @@ export default function OpportunitiesCatalog() {
   const router = useRouter();
   const params = useSearchParams();
   const [loading, setLoading] = useState(true);
+  const { projects: orgProjects } = usePublicOrgProjects();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initialise from URL
@@ -164,9 +166,12 @@ export default function OpportunitiesCatalog() {
     setSort("newest"); setPage(1); setGridKey((k) => k + 1);
   }
 
+  // Merge static + Supabase org projects
+  const allOpportunities = useMemo(() => [...opportunities, ...orgProjects], [orgProjects]);
+
   // Filtered + sorted list
   const filtered = useMemo(() => {
-    let result = opportunities.filter((o) => {
+    let result = allOpportunities.filter((o) => {
       if (types.length > 0    && !types.includes(o.type))      return false;
       if (formats.length > 0  && !formats.includes(o.format))  return false;
       if (fundings.length > 0 && !fundings.includes(o.funding)) return false;
