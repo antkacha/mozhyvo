@@ -3,15 +3,24 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+export type StandardBlock = "block_contacts" | "block_education" | "block_motivation" | "block_documents";
+
 export interface FormQuestion {
   id: string;
-  type: "text" | "textarea" | "select" | "radio" | "checkbox";
+  type: "text" | "textarea" | "select" | "radio" | "checkbox" | StandardBlock;
   label: string;
   description?: string;
   placeholder?: string;
   options?: string[];
   required: boolean;
 }
+
+export const STANDARD_BLOCKS: { type: StandardBlock; label: string; desc: string; icon: string }[] = [
+  { type: "block_contacts",   label: "Контакти",          desc: "Телефон, країна",               icon: "📍" },
+  { type: "block_education",  label: "Освіта",             desc: "Заклад, ступінь, мови",         icon: "🎓" },
+  { type: "block_motivation", label: "Мотиваційний лист",  desc: "Текст від 300 символів",        icon: "✍️" },
+  { type: "block_documents",  label: "CV та портфоліо",    desc: "Посилання на документи",        icon: "📎" },
+];
 
 export interface OrgProject {
   id: string;
