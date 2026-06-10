@@ -225,6 +225,7 @@ export default function RegisterPage() {
       description: orgDescription,
       logo: orgLogo,
       coverImage: null,
+      coverVideo: null,
       brandColor: "#3B4FE8",
       focusAreas: [],
       socials: {},

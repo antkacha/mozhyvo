@@ -15,6 +15,7 @@ export interface OrgProfile {
   founded?: string;
   logo: string | null;
   coverImage: string | null;
+  coverVideo: string | null;
   brandColor: string;
   focusAreas: string[];
   socials: {
@@ -43,6 +44,7 @@ export const DEMO_ORG_PROFILE: OrgProfile = {
   founded: "",
   logo: null,
   coverImage: null,
+  coverVideo: null,
   brandColor: "#3B4FE8",
   focusAreas: [],
   socials: {},
