@@ -3,8 +3,6 @@ import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(req: NextRequest) {
   // Auth check — must be admin
   const supabase = createClient();
@@ -44,6 +42,7 @@ export async function POST(req: NextRequest) {
   await admin.from("orgs").update(updates).eq("id", orgId);
 
   // Send email
+  const resend = new Resend(process.env.RESEND_API_KEY);
   if (org.contact_email && process.env.RESEND_API_KEY) {
     if (action === "verify") {
       await resend.emails.send({
