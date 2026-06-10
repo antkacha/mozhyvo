@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgApplications, OrgApplication } from "@/hooks/useOrgApplications";
@@ -441,6 +441,7 @@ function BulkToolbar({
 // ── Main page ─────────────────────────────────────────────────────────
 function ApplicationsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { org } = useOrgSession();
   const { applications, ready, updateApp } = useOrgApplications(org?.id);
   const { projects } = useOrgProjects(org?.id);
@@ -452,7 +453,6 @@ function ApplicationsContent() {
   const [sortField, setSortField] = useState<"name" | "status" | "date" | "project">("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [openId, setOpenId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [sidebarSearch, setSidebarSearch] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
@@ -464,9 +464,6 @@ function ApplicationsContent() {
     const p = searchParams.get("project");
     if (p) setProjectId(p);
   }, [searchParams]);
-
-  // Close detail when project changes
-  useEffect(() => { setOpenId(null); }, [projectId]);
 
   // Reset page when any filter/sort changes
   useEffect(() => { setPage(1); }, [projectId, search, filters, sortField, sortDir]);
@@ -562,7 +559,6 @@ function ApplicationsContent() {
   const statusCounts: Record<string, number> = { all: projectApps.length };
   STATUSES.forEach((s) => { statusCounts[s] = projectApps.filter((a) => a.status === s).length; });
 
-  const openApp = list.find((a) => a.id === openId) ?? null;
   const selectedCount = selectedIds.size;
 
   if (!ready) {
@@ -662,7 +658,7 @@ function ApplicationsContent() {
         </div>
 
         {/* Main list + filters */}
-        <div className={`flex-1 min-w-0 flex flex-col gap-4 ${openApp ? "hidden lg:flex" : "flex"}`}>
+        <div className="flex-1 min-w-0 flex flex-col gap-4">
 
           {/* Mobile project selector */}
           <div className="sm:hidden">
@@ -801,12 +797,11 @@ function ApplicationsContent() {
 
               {/* Rows */}
               {paginated.map((app, i) => {
-                const isOpen = openId === app.id;
                 const isChecked = selectedIds.has(app.id);
                 return (
                   <div
                     key={app.id}
-                    className={`flex items-center gap-3 px-4 py-3.5 transition-all ${i < list.length - 1 ? "border-b border-border" : ""} ${isOpen ? "bg-primary-light" : isChecked ? "bg-blue-50/60" : "hover:bg-muted-bg"}`}
+                    className={`flex items-center gap-3 px-4 py-3.5 transition-all ${i < list.length - 1 ? "border-b border-border" : ""} ${isChecked ? "bg-blue-50/60" : "hover:bg-muted-bg"}`}
                   >
                     {/* Checkbox */}
                     <label className="flex-shrink-0 cursor-pointer" onClick={(e) => e.stopPropagation()}>
@@ -819,15 +814,15 @@ function ApplicationsContent() {
                     </label>
 
                     {/* Row clickable area */}
-                    <button className="flex items-center gap-3 flex-1 min-w-0 text-left" onClick={() => setOpenId(isOpen ? null : app.id)}>
+                    <button className="flex items-center gap-3 flex-1 min-w-0 text-left" onClick={() => router.push(`/dashboard/applications/${app.id}`)}>
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
-                        style={isOpen ? { background: "linear-gradient(135deg,#3B4FE8,#7C3AED)", color: "#fff" } : { background: "#EEF0FD", color: "#3B4FE8" }}
+                        style={{ background: "#EEF0FD", color: "#3B4FE8" }}
                       >
                         {app.firstName[0]}{app.lastName[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-semibold truncate ${isOpen ? "text-primary" : "text-foreground"}`}>{app.firstName} {app.lastName}</p>
+                        <p className="text-sm font-semibold truncate text-foreground group-hover:text-primary">{app.firstName} {app.lastName}</p>
                         <p className="text-xs text-muted truncate">{app.country} · {app.institution}</p>
                       </div>
                     </button>
@@ -865,102 +860,7 @@ function ApplicationsContent() {
           )}
         </div>
 
-        {/* Export modal */}
         <ExportModal open={exportOpen} apps={exportApps} onClose={() => setExportOpen(false)} />
-
-        {/* Side preview panel */}
-        {openApp && (
-          <div className="hidden lg:flex w-80 flex-shrink-0 flex-col gap-3 sticky top-24 self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
-            {/* Header */}
-            <div className="bg-white rounded-2xl border border-border p-5">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0"
-                    style={{ background: "linear-gradient(135deg,#3B4FE8,#7C3AED)" }}>
-                    {openApp.firstName[0]}{openApp.lastName[0]}
-                  </div>
-                  <div>
-                    <p className="font-bold text-foreground text-sm leading-tight">{openApp.firstName} {openApp.lastName}</p>
-                    <p className="text-xs text-muted mt-0.5 truncate max-w-[160px]">{openApp.institution}</p>
-                  </div>
-                </div>
-                <button onClick={() => setOpenId(null)} className="text-muted hover:text-foreground transition-colors flex-shrink-0 mt-0.5">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-
-              {/* Status chips */}
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {STATUSES.map((s) => (
-                  <button key={s} onClick={() => updateApp(openApp.id, { status: s })}
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-xl border transition-all ${openApp.status === s ? STATUS_ACTIVE[s] : "border-border text-muted hover:border-primary/30 hover:text-foreground"}`}>
-                    {STATUS_LABEL[s]}
-                  </button>
-                ))}
-              </div>
-
-              {/* Meta */}
-              <div className="flex flex-col gap-1.5 text-xs text-muted">
-                <div className="flex items-center gap-1.5"><span>📍</span><span>{openApp.country}</span></div>
-                <div className="flex items-center gap-1.5"><span>🎓</span><span>{openApp.degree}</span></div>
-                {openApp.languages.length > 0 && <div className="flex items-center gap-1.5"><span>🌐</span><span>{openApp.languages.join(", ")}</span></div>}
-                <div className="flex items-center gap-1.5"><span>📅</span><span>{new Date(openApp.submittedAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}</span></div>
-              </div>
-
-              {/* Contacts */}
-              <div className="mt-3 pt-3 border-t border-border flex flex-col gap-1.5">
-                <a href={`mailto:${openApp.email}`} className="text-xs text-primary hover:underline truncate">{openApp.email}</a>
-                {openApp.phone && <p className="text-xs text-muted">{openApp.phone}</p>}
-              </div>
-
-              {/* CV / portfolio */}
-              {(openApp.cvUrl || openApp.portfolioUrl) && (
-                <div className="mt-3 pt-3 border-t border-border flex gap-2">
-                  {openApp.cvUrl && (
-                    <a href={openApp.cvUrl} target="_blank" rel="noopener noreferrer"
-                      className="flex-1 text-center text-xs font-semibold py-1.5 rounded-xl bg-muted-bg hover:bg-primary-light hover:text-primary transition-all">
-                      CV →
-                    </a>
-                  )}
-                  {openApp.portfolioUrl && (
-                    <a href={openApp.portfolioUrl} target="_blank" rel="noopener noreferrer"
-                      className="flex-1 text-center text-xs font-semibold py-1.5 rounded-xl bg-muted-bg hover:bg-primary-light hover:text-primary transition-all">
-                      Портфоліо →
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Motivation */}
-            {openApp.motivation && (
-              <div className="bg-white rounded-2xl border border-border p-5">
-                <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Мотиваційний лист</p>
-                <p className="text-xs text-foreground leading-relaxed line-clamp-6">{openApp.motivation}</p>
-              </div>
-            )}
-
-            {/* Custom answers */}
-            {openApp.customAnswers && Object.keys(openApp.customAnswers).length > 0 && (
-              <div className="bg-white rounded-2xl border border-border p-5">
-                <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Питання організатора</p>
-                <div className="flex flex-col gap-3">
-                  {Object.entries(openApp.customAnswers).map(([key, value]) => (
-                    <div key={key}>
-                      <p className="text-[10px] font-bold text-muted uppercase tracking-wider mb-0.5">{key}</p>
-                      <p className="text-xs text-foreground">{Array.isArray(value) ? value.join(", ") : value || "—"}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <Link href={`/dashboard/applications/${openApp.id}`}
-              className="w-full text-center px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all">
-              Відкрити повністю →
-            </Link>
-          </div>
-        )}
       </div>
     </div>
   );
