@@ -72,13 +72,6 @@ export default function OpportunityClient({ opp, related }: Props) {
   const { isSaved, toggle, ready: savedReady } = useSaved();
 
   const isExternal = opp.applyUrl.startsWith("http");
-  function handleApply() {
-    if (isExternal) {
-      window.open(opp.applyUrl, "_blank", "noopener,noreferrer");
-    } else {
-      setWizardOpen(true);
-    }
-  }
   const saved = isSaved(opp.slug);
   const days = getDaysUntilDeadline(opp.deadline);
   const expired = days < 0;
@@ -203,12 +196,23 @@ export default function OpportunityClient({ opp, related }: Props) {
                 </div>
                 {!expired && (
                   <div className="mt-4 pt-6 border-t border-border">
-                    <button
-                      onClick={handleApply}
-                      className="px-8 py-3.5 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 text-sm"
-                    >
-                      {isExternal ? "Подати заявку →" : "Почати заявку →"}
-                    </button>
+                    {isExternal ? (
+                      <a
+                        href={opp.applyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block px-8 py-3.5 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 text-sm"
+                      >
+                        Подати заявку →
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => setWizardOpen(true)}
+                        className="px-8 py-3.5 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 text-sm"
+                      >
+                        Почати заявку →
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -278,12 +282,21 @@ export default function OpportunityClient({ opp, related }: Props) {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                       Заявку подано
                     </div>
-                  ) : (
-                    <button
-                      onClick={handleApply}
+                  ) : isExternal ? (
+                    <a
+                      href={opp.applyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="block w-full text-center py-3 px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 text-sm"
                     >
-                      {isExternal ? "Заповнити форму →" : "Подати заявку →"}
+                      Заповнити форму →
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => setWizardOpen(true)}
+                      className="block w-full text-center py-3 px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 text-sm"
+                    >
+                      Подати заявку →
                     </button>
                   )}
                   <button
