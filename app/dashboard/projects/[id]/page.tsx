@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgProjects, OrgProject, FormQuestion } from "@/hooks/useOrgProjects";
-import OrgShell from "@/components/OrgShell";
 import FormBuilder from "@/components/FormBuilder";
 
 const TYPE_OPTIONS = [
@@ -339,5 +338,5 @@ function EditProjectContent() {
 }
 
 export default function EditProjectPage() {
-  return <OrgShell><EditProjectContent /></OrgShell>;
+  return <EditProjectContent />;
 }

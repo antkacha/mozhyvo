@@ -5,7 +5,6 @@ import { useState, useMemo } from "react";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgProjects, OrgProject } from "@/hooks/useOrgProjects";
 import { useOrgApplications } from "@/hooks/useOrgApplications";
-import OrgShell from "@/components/OrgShell";
 
 const PAGE_SIZE = 20;
 
@@ -425,5 +424,5 @@ function ProjectsContent() {
 }
 
 export default function ProjectsPage() {
-  return <OrgShell><ProjectsContent /></OrgShell>;
+  return <ProjectsContent />;
 }

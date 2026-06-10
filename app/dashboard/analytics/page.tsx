@@ -7,7 +7,6 @@ import {
 import { useOrgApplications } from "@/hooks/useOrgApplications";
 import { useOrgProjects } from "@/hooks/useOrgProjects";
 import { useOrgSession } from "@/hooks/useOrgSession";
-import OrgShell from "@/components/OrgShell";
 
 const STATUS_LABEL: Record<string, string> = { new: "Нова", reviewing: "Розглядається", selected: "Відібрано", rejected: "Відхилено" };
 const STATUS_COLORS: Record<string, string> = { new: "#3B82F6", reviewing: "#F59E0B", selected: "#22C55E", rejected: "#F87171" };
@@ -294,5 +293,5 @@ function AnalyticsContent() {
 }
 
 export default function AnalyticsPage() {
-  return <OrgShell><AnalyticsContent /></OrgShell>;
+  return <AnalyticsContent />;
 }

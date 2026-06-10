@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useOrgSession } from "@/hooks/useOrgSession";
-import OrgShell from "@/components/OrgShell";
 import CoverPickerModal, { type CoverResult } from "@/components/CoverPickerModal";
 
 const ORG_TYPES = [
@@ -635,5 +634,5 @@ function ProfileContent() {
 }
 
 export default function ProfilePage() {
-  return <OrgShell><ProfileContent /></OrgShell>;
+  return <ProfileContent />;
 }

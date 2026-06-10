@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useTeamMembers, TeamRole } from "@/hooks/useTeamMembers";
 import { useNotificationSettings } from "@/hooks/useNotificationSettings";
-import OrgShell from "@/components/OrgShell";
 
 // ── Tab types ──────────────────────────────────────────────────────────
 const TABS = [
@@ -399,5 +398,5 @@ function SettingsContent() {
 }
 
 export default function SettingsPage() {
-  return <OrgShell><SettingsContent /></OrgShell>;
+  return <SettingsContent />;
 }

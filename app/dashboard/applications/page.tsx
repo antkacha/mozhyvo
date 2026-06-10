@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgApplications, OrgApplication } from "@/hooks/useOrgApplications";
 import { useOrgProjects } from "@/hooks/useOrgProjects";
-import OrgShell from "@/components/OrgShell";
 
 // ── Status config ─────────────────────────────────────────────────────
 const STATUSES: OrgApplication["status"][] = ["new", "reviewing", "selected", "rejected"];
@@ -896,5 +895,5 @@ function ApplicationsContent() {
 }
 
 export default function ApplicationsPage() {
-  return <OrgShell><ApplicationsContent /></OrgShell>;
+  return <ApplicationsContent />;
 }

@@ -7,7 +7,6 @@ import { useOrgApplications, OrgApplication } from "@/hooks/useOrgApplications";
 import { useActivityLog } from "@/hooks/useActivityLog";
 import { useAppNotes } from "@/hooks/useAppNotes";
 import { useOrgSession } from "@/hooks/useOrgSession";
-import OrgShell from "@/components/OrgShell";
 
 // ── Status config ─────────────────────────────────────────────────────
 const STATUSES: OrgApplication["status"][] = ["new", "reviewing", "selected", "rejected"];
@@ -385,5 +384,5 @@ function ApplicationDetail() {
 }
 
 export default function ApplicationDetailPage() {
-  return <OrgShell><ApplicationDetail /></OrgShell>;
+  return <ApplicationDetail />;
 }

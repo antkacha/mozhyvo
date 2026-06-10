@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgProjects, OrgProject } from "@/hooks/useOrgProjects";
-import OrgShell from "@/components/OrgShell";
 
 const TYPE_OPTIONS = [
   { value: "exchange", label: "Обмін", desc: "Молодіжний чи академічний обмін" },
@@ -589,5 +588,5 @@ function NewProjectContent() {
 }
 
 export default function NewProjectPage() {
-  return <OrgShell><NewProjectContent /></OrgShell>;
+  return <NewProjectContent />;
 }
