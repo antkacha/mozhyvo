@@ -5,7 +5,14 @@ import type { Metadata } from "next";
 import { opportunities, typeColors, formatLabels, type Opportunity } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
 import OpportunityClient from "@/components/OpportunityClient";
-import { createClient } from "@/lib/supabase/client";
+import { createClient as createSupabase } from "@supabase/supabase-js";
+
+function createPublicClient() {
+  return createSupabase(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 
 export function generateStaticParams() {
   return opportunities.map((o) => ({ slug: o.slug }));
@@ -15,7 +22,7 @@ export const dynamicParams = true;
 
 async function fetchOrgProject(id: string): Promise<Opportunity | null> {
   try {
-    const supabase = createClient();
+    const supabase = createPublicClient();
     const { data } = await supabase
       .from("org_projects")
       .select("*, orgs!inner(name, status)")

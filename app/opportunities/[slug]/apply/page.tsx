@@ -3,7 +3,14 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { opportunities } from "@/lib/data";
 import ApplyForm from "@/components/ApplyForm";
-import { createClient } from "@/lib/supabase/client";
+import { createClient as createSupabase } from "@supabase/supabase-js";
+
+function createPublicClient() {
+  return createSupabase(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 import type { Opportunity } from "@/lib/data";
 
 export function generateStaticParams() {
@@ -14,7 +21,7 @@ export const dynamicParams = true;
 
 async function fetchOrgProject(id: string): Promise<Opportunity | null> {
   try {
-    const supabase = createClient();
+    const supabase = createPublicClient();
     const { data } = await supabase
       .from("org_projects")
       .select("*, orgs!inner(name, status)")
