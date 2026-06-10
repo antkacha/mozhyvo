@@ -120,59 +120,59 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right: overlapping card stack — look great on dark bg */}
-            <div className="relative h-[360px] sm:h-[400px] lg:h-[400px] w-full overflow-hidden">
+            {/* Right: card stack */}
+            <div className="relative h-[380px] sm:h-[420px] lg:h-[420px] w-full">
 
-              {/* Card 1 — Erasmus, indigo */}
-              <div className="absolute z-0 animate-float1" style={{ top: "80px", left: "10px", width: "278px" }}>
-                <div className="rounded-2xl p-5 shadow-2xl text-white" style={{ background: "linear-gradient(135deg, #1a2fa8 0%, #5b21b6 100%)", boxShadow: "0 20px 40px rgba(0,0,0,0.35)" }}>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/15">
-                      🎓 Стипендія
-                    </span>
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-accent text-foreground">
-                      1 лип
-                    </span>
-                  </div>
-                  <p className="font-extrabold text-lg leading-tight mb-1">Erasmus+ 2025</p>
-                  <p className="text-white/65 text-sm mb-4">Навчання в ЄС · До 1 000€/міс</p>
-                  <div className="flex items-center justify-between pt-3 border-t border-white/15">
-                    <span className="text-xs text-white/60">🇪🇺 Євросоюз</span>
-                    <span className="text-xs font-semibold text-white/85">Детальніше →</span>
+              {/* Card 1 — Erasmus, main white card */}
+              <div className="absolute z-10 animate-float1" style={{ top: "40px", left: "0px", width: "290px" }}>
+                <div className="bg-white rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: "0 24px 48px rgba(0,0,0,0.22)" }}>
+                  {/* Yellow accent strip */}
+                  <div className="h-1.5 w-full" style={{ background: "linear-gradient(90deg, #FFD600, #FFB300)" }} />
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#FFF9E0] text-[#A07000]">
+                        🎓 Стипендія
+                      </span>
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-accent text-foreground">
+                        1 лип
+                      </span>
+                    </div>
+                    <p className="font-extrabold text-base leading-tight mb-1 text-foreground">Erasmus+ 2025</p>
+                    <p className="text-muted text-xs mb-4">Навчання в ЄС · До 1 000€/міс</p>
+                    <div className="flex items-center justify-between pt-3 border-t border-border">
+                      <span className="text-xs text-muted">🇪🇺 Євросоюз</span>
+                      <span className="text-xs font-semibold text-primary">Детальніше →</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Card 2 — DAAD, white */}
-              <div className="absolute z-10 animate-float2" style={{ top: "205px", left: "50px", width: "240px" }}>
-                <div className="bg-white rounded-2xl p-5 shadow-2xl">
+              {/* Card 2 — DAAD */}
+              <div className="absolute z-20 animate-float2" style={{ top: "210px", left: "60px", width: "252px" }}>
+                <div className="bg-white rounded-2xl p-5 shadow-2xl" style={{ boxShadow: "0 20px 40px rgba(0,0,0,0.18)" }}>
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-bold text-foreground text-sm">DAAD</span>
-                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">
-                      Відкрито
-                    </span>
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">Відкрито</span>
                   </div>
                   <p className="text-xs text-muted mb-1.5">🌍 Німеччина</p>
-                  <p className="font-semibold text-foreground text-sm leading-snug mb-3">
-                    Літня школа · Берлін
-                  </p>
-                  <div className="bg-muted-bg rounded-full h-1.5 mb-1.5">
-                    <div className="bg-primary h-1.5 rounded-full w-[65%]" />
+                  <p className="font-semibold text-foreground text-sm leading-snug mb-3">Літня школа · Берлін</p>
+                  <div className="bg-gray-100 rounded-full h-1.5 mb-1.5">
+                    <div className="h-1.5 rounded-full w-[65%]" style={{ background: "linear-gradient(90deg,#FFD600,#FFB300)" }} />
                   </div>
                   <p className="text-xs text-muted">65% місць зайнято</p>
                 </div>
               </div>
 
               {/* Card 3 — Notification */}
-              <div className="absolute z-20 animate-float3" style={{ top: "15px", right: "10px", width: "178px" }}>
-                <div className="bg-white rounded-2xl p-4 shadow-2xl">
+              <div className="absolute z-30 animate-float3" style={{ top: "10px", right: "0px", width: "188px" }}>
+                <div className="bg-white rounded-2xl p-4 shadow-xl" style={{ boxShadow: "0 16px 32px rgba(0,0,0,0.15)" }}>
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0 text-base">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-base" style={{ background: "#FFF9E0" }}>
                       🔔
                     </div>
                     <div>
                       <p className="text-xs font-bold text-foreground leading-tight">Новий дедлайн</p>
-                      <p className="text-xs text-muted mt-0.5">FLEX Program · 3 дні</p>
+                      <p className="text-[11px] text-muted mt-0.5">FLEX Program · 3 дні</p>
                     </div>
                   </div>
                 </div>
