@@ -35,6 +35,7 @@ function EditProjectContent() {
 
   const [form, setForm] = useState<FormState | null>(null);
   const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
+  const [applyMode, setApplyMode] = useState<"form" | "external">("form");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -48,6 +49,7 @@ function EditProjectContent() {
         tagsText: project.tags.join(", "),
       });
       setFormQuestions(project.formQuestions ?? []);
+      setApplyMode(project.externalApplyUrl ? "external" : "form");
     }
   }, [project, form]);
 
@@ -71,7 +73,7 @@ function EditProjectContent() {
     setSaved(false);
   }
 
-  function handleSave(statusOverride?: OrgProject["status"]) {
+  async function handleSave(statusOverride?: OrgProject["status"]) {
     if (!form || !project) return;
     setSaving(true);
 
@@ -84,7 +86,7 @@ function EditProjectContent() {
     const country = form.country.trim();
     const location = city ? `${city}, ${country}` : country;
 
-    update(project.id, {
+    await update(project.id, {
       title: form.title.trim(),
       type: form.type,
       typeName: form.typeName,
@@ -109,6 +111,7 @@ function EditProjectContent() {
       status: statusOverride ?? form.status,
       autoClose: form.autoClose,
       formQuestions,
+      externalApplyUrl: form.externalApplyUrl ?? "",
     });
 
     setSaving(false);
@@ -302,18 +305,59 @@ function EditProjectContent() {
 
         {/* Форма заявки */}
         <section className={section}>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Форма заявки</h2>
-              <p className="text-xs text-muted mt-1">Кастомні питання, які побачать учасники при подачі заявки</p>
-            </div>
-            {formQuestions.length > 0 && (
-              <span className="flex-shrink-0 text-[10px] font-bold bg-primary-light text-primary px-2.5 py-1 rounded-xl">
-                {formQuestions.length} {formQuestions.length === 1 ? "питання" : formQuestions.length < 5 ? "питання" : "питань"}
-              </span>
-            )}
+          <div>
+            <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Форма заявки</h2>
+            <p className="text-xs text-muted mt-1">Спосіб, яким учасники подаватимуть заявки</p>
           </div>
-          <FormBuilder questions={formQuestions} onChange={setFormQuestions} />
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setApplyMode("form")}
+              className={`p-3.5 rounded-2xl border-2 text-left transition-all ${
+                applyMode === "form"
+                  ? "border-primary bg-primary-light"
+                  : "border-border hover:border-primary/40"
+              }`}
+            >
+              <p className="text-sm font-semibold text-foreground">Форма на Моживо</p>
+              <p className="text-xs text-muted mt-0.5">Кастомні питання</p>
+            </button>
+            <button
+              onClick={() => setApplyMode("external")}
+              className={`p-3.5 rounded-2xl border-2 text-left transition-all ${
+                applyMode === "external"
+                  ? "border-primary bg-primary-light"
+                  : "border-border hover:border-primary/40"
+              }`}
+            >
+              <p className="text-sm font-semibold text-foreground">Зовнішній сервіс</p>
+              <p className="text-xs text-muted mt-0.5">Google Forms та інші</p>
+            </button>
+          </div>
+
+          {applyMode === "external" ? (
+            <div>
+              <label className={label}>Посилання на форму</label>
+              <input
+                value={form.externalApplyUrl ?? ""}
+                onChange={(e) => set("externalApplyUrl", e.target.value)}
+                placeholder="https://forms.google.com/..."
+                className={input}
+              />
+              <p className="text-xs text-muted mt-1">Учасники перенаправлятимуться на цей URL</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-xs text-muted">Базові поля (ім'я, email) додаються автоматично</p>
+                {formQuestions.length > 0 && (
+                  <span className="flex-shrink-0 text-[10px] font-bold bg-primary-light text-primary px-2.5 py-1 rounded-xl">
+                    {formQuestions.length} {formQuestions.length < 5 ? "питання" : "питань"}
+                  </span>
+                )}
+              </div>
+              <FormBuilder questions={formQuestions} onChange={setFormQuestions} />
+            </div>
+          )}
         </section>
 
         {/* Actions */}

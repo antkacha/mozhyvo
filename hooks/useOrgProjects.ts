@@ -40,6 +40,7 @@ export interface OrgProject {
   status: "draft" | "published" | "closed";
   autoClose?: boolean;
   formQuestions?: FormQuestion[];
+  externalApplyUrl?: string;
   views: number;
   saves: number;
   createdAt: string;
@@ -77,6 +78,7 @@ function fromRow(row: Record<string, unknown>): OrgProject {
     status:           (row.status as OrgProject["status"]) ?? "draft",
     autoClose:        (row.auto_close as boolean) ?? false,
     formQuestions:    (row.form_questions as FormQuestion[]) ?? [],
+    externalApplyUrl: (row.external_apply_url as string) || undefined,
     views:            (row.views as number) ?? 0,
     saves:            (row.saves as number) ?? 0,
     createdAt:        (row.created_at as string) ?? "",
@@ -110,6 +112,7 @@ function toRow(data: Partial<OrgProject>): Record<string, unknown> {
   if (data.status           !== undefined) row.status            = data.status;
   if (data.autoClose        !== undefined) row.auto_close        = data.autoClose;
   if (data.formQuestions    !== undefined) row.form_questions    = data.formQuestions;
+  if (data.externalApplyUrl !== undefined) row.external_apply_url = data.externalApplyUrl || null;
   return row;
 }
 

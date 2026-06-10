@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useOrgSession } from "@/hooks/useOrgSession";
-import { useOrgProjects, OrgProject } from "@/hooks/useOrgProjects";
+import { useOrgProjects, OrgProject, FormQuestion } from "@/hooks/useOrgProjects";
+import FormBuilder from "@/components/FormBuilder";
 
 const TYPE_OPTIONS = [
   { value: "exchange", label: "Обмін", desc: "Молодіжний чи академічний обмін" },
@@ -43,6 +44,7 @@ type FormData = {
   tags: string;
   requirements: string;
   benefits: string;
+  externalApplyUrl: string;
 };
 
 const INITIAL: FormData = {
@@ -53,9 +55,10 @@ const INITIAL: FormData = {
   deadline: "", duration: "",
   ageMin: "", ageMax: "", languages: "", tags: "",
   requirements: "", benefits: "",
+  externalApplyUrl: "",
 };
 
-const STEPS = ["Основна", "Місце і час", "Учасники", "Опис"];
+const STEPS = ["Основна", "Місце і час", "Учасники", "Опис", "Заявка"];
 
 const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormData> }[] = [
   {
@@ -137,6 +140,8 @@ function NewProjectContent() {
 
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(INITIAL);
+  const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
+  const [applyMode, setApplyMode] = useState<"form" | "external">("form");
   const [templateChosen, setTemplateChosen] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [saving, setSaving] = useState(false);
@@ -170,7 +175,7 @@ function NewProjectContent() {
     if (validateStep(step)) setStep((s) => Math.min(s + 1, STEPS.length - 1));
   }
 
-  function handleSubmit(status: OrgProject["status"]) {
+  async function handleSubmit(status: OrgProject["status"]) {
     if (!validateStep(step) || !org) return;
     setSaving(true);
 
@@ -183,32 +188,38 @@ function NewProjectContent() {
       ? `${form.city.trim()}, ${form.country.trim()}`
       : form.country.trim();
 
-    create({
-      orgId: org.id,
-      title: form.title.trim(),
-      type: form.type,
-      typeName: form.typeName,
-      shortDescription: form.shortDescription.trim(),
-      fullDescription: form.fullDescription.trim(),
-      country: form.country.trim(),
-      city: form.city.trim(),
-      location,
-      flag: flagEmoji,
-      format: form.format,
-      funding: form.funding,
-      fundingDetails: form.fundingDetails.trim(),
-      deadline,
-      deadlineDisplay,
-      duration: form.duration.trim(),
-      languages: form.languages.split(",").map((s) => s.trim()).filter(Boolean),
-      tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
-      requirements: splitLines(form.requirements),
-      benefits: splitLines(form.benefits),
-      ageMin: form.ageMin ? Number(form.ageMin) : undefined,
-      ageMax: form.ageMax ? Number(form.ageMax) : undefined,
-      status,
-    });
-    router.push("/dashboard/projects");
+    try {
+      await create({
+        orgId: org.id,
+        title: form.title.trim(),
+        type: form.type,
+        typeName: form.typeName,
+        shortDescription: form.shortDescription.trim(),
+        fullDescription: form.fullDescription.trim(),
+        country: form.country.trim(),
+        city: form.city.trim(),
+        location,
+        flag: flagEmoji,
+        format: form.format,
+        funding: form.funding,
+        fundingDetails: form.fundingDetails.trim(),
+        deadline,
+        deadlineDisplay,
+        duration: form.duration.trim(),
+        languages: form.languages.split(",").map((s) => s.trim()).filter(Boolean),
+        tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
+        requirements: splitLines(form.requirements),
+        benefits: splitLines(form.benefits),
+        ageMin: form.ageMin ? Number(form.ageMin) : undefined,
+        ageMax: form.ageMax ? Number(form.ageMax) : undefined,
+        status,
+        formQuestions,
+        externalApplyUrl: applyMode === "external" ? form.externalApplyUrl.trim() : "",
+      });
+      router.push("/dashboard/projects");
+    } catch {
+      setSaving(false);
+    }
   }
 
   const input = "w-full px-3.5 py-2.5 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted/50";
@@ -537,6 +548,68 @@ function NewProjectContent() {
               className={`${input} resize-none font-mono text-xs`}
             />
           </div>
+        </div>
+      )}
+
+      {/* Step 4: Форма заявки */}
+      {step === 4 && (
+        <div className="bg-white rounded-2xl border border-border p-6 flex flex-col gap-5">
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-1">Як учасники подаватимуть заявки?</p>
+            <p className="text-xs text-muted mb-4">Оберіть спосіб подачі заявок на цей проект</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setApplyMode("form")}
+                className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                  applyMode === "form"
+                    ? "border-primary bg-primary-light"
+                    : "border-border hover:border-primary/40"
+                }`}
+              >
+                <p className="text-sm font-semibold text-foreground">Форма на Моживо</p>
+                <p className="text-xs text-muted mt-0.5">Кастомні питання для учасників</p>
+              </button>
+              <button
+                onClick={() => setApplyMode("external")}
+                className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                  applyMode === "external"
+                    ? "border-primary bg-primary-light"
+                    : "border-border hover:border-primary/40"
+                }`}
+              >
+                <p className="text-sm font-semibold text-foreground">Зовнішній сервіс</p>
+                <p className="text-xs text-muted mt-0.5">Google Forms, Typeform та інші</p>
+              </button>
+            </div>
+          </div>
+
+          {applyMode === "external" ? (
+            <div>
+              <label className={label}>Посилання на форму</label>
+              <input
+                value={form.externalApplyUrl}
+                onChange={(e) => set("externalApplyUrl", e.target.value)}
+                placeholder="https://forms.google.com/..."
+                className={input}
+              />
+              <p className={hint}>Учасники будуть перенаправлятись на цей URL при натисканні «Подати заявку»</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Питання форми</p>
+                  <p className="text-xs text-muted mt-0.5">Базові поля (ім'я, email) додаються автоматично</p>
+                </div>
+                {formQuestions.length > 0 && (
+                  <span className="flex-shrink-0 text-[10px] font-bold bg-primary-light text-primary px-2.5 py-1 rounded-xl">
+                    {formQuestions.length} {formQuestions.length < 5 ? "питання" : "питань"}
+                  </span>
+                )}
+              </div>
+              <FormBuilder questions={formQuestions} onChange={setFormQuestions} />
+            </div>
+          )}
         </div>
       )}
 
