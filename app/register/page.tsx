@@ -224,6 +224,7 @@ export default function RegisterPage() {
       contactEmail: email,
       description: orgDescription,
       logo: orgLogo,
+      coverImage: null,
       brandColor: "#3B4FE8",
       focusAreas: [],
       socials: {},
