@@ -32,7 +32,7 @@ const STATUS_CLASS: Record<OrgProject["status"], string> = {
 function ProjectsContent() {
   const { org } = useOrgSession();
   const { projects, update, remove } = useOrgProjects(org?.id);
-  const { applications } = useOrgApplications();
+  const { applications } = useOrgApplications(org?.id);
   const [filter, setFilter] = useState<OrgProject["status"] | "all">("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
 

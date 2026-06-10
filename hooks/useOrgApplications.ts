@@ -22,7 +22,8 @@ export interface OrgApplication {
   submittedAt: string;
 }
 
-const STORAGE_KEY = "mozhyvo_org_applications";
+const STORAGE_KEY = (orgId: string) => `mozhyvo_org_applications_${orgId}`;
+const DEMO_ORG_ID = "demo-org-001";
 
 const SEED: OrgApplication[] = [
   {
@@ -141,32 +142,34 @@ const SEED: OrgApplication[] = [
   },
 ];
 
-function loadAll(): OrgApplication[] {
+function loadAll(orgId: string): OrgApplication[] {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY(orgId));
     return stored ? (JSON.parse(stored) as OrgApplication[]) : [];
   } catch {
     return [];
   }
 }
 
-function saveAll(apps: OrgApplication[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
+function saveAll(orgId: string, apps: OrgApplication[]) {
+  localStorage.setItem(STORAGE_KEY(orgId), JSON.stringify(apps));
 }
 
-export function useOrgApplications(projectId?: string) {
+export function useOrgApplications(orgId?: string, projectId?: string) {
   const [applications, setApplications] = useState<OrgApplication[]>([]);
   const [ready, setReady] = useState(false);
 
   const reload = useCallback(() => {
-    let all = loadAll();
-    if (all.length === 0) {
+    if (!orgId) { setReady(true); return; }
+    let all = loadAll(orgId);
+    // Seed only for the demo org so new real orgs start empty
+    if (all.length === 0 && orgId === DEMO_ORG_ID) {
       all = SEED;
-      saveAll(all);
+      saveAll(orgId, all);
     }
     setApplications(projectId ? all.filter((a) => a.projectId === projectId) : all);
     setReady(true);
-  }, [projectId]);
+  }, [orgId, projectId]);
 
   useEffect(() => {
     reload();
@@ -174,12 +177,13 @@ export function useOrgApplications(projectId?: string) {
 
   const updateApp = useCallback(
     (id: string, data: Partial<OrgApplication>) => {
-      const all = loadAll();
+      if (!orgId) return;
+      const all = loadAll(orgId);
       const updated = all.map((a) => (a.id === id ? { ...a, ...data } : a));
-      saveAll(updated);
+      saveAll(orgId, updated);
       setApplications(projectId ? updated.filter((a) => a.projectId === projectId) : updated);
     },
-    [projectId]
+    [orgId, projectId]
   );
 
   return { applications, ready, updateApp };

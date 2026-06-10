@@ -306,7 +306,7 @@ function ApplicationsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { org } = useOrgSession();
-  const { applications, ready, updateApp } = useOrgApplications();
+  const { applications, ready, updateApp } = useOrgApplications(org?.id);
   const { projects } = useOrgProjects(org?.id);
 
   const [projectId, setProjectId] = useState("all");

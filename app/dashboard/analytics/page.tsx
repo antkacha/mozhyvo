@@ -38,7 +38,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
 
 function AnalyticsContent() {
   const { org } = useOrgSession();
-  const { applications, ready } = useOrgApplications();
+  const { applications, ready } = useOrgApplications(org?.id);
   const { projects } = useOrgProjects(org?.id);
 
   // Applications over last 30 days

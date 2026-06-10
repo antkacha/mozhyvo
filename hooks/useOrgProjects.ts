@@ -34,7 +34,7 @@ export interface OrgProject {
   updatedAt: string;
 }
 
-const STORAGE_KEY = "mozhyvo_org_projects";
+const STORAGE_KEY = (orgId: string) => `mozhyvo_org_projects_${orgId}`;
 export const DEMO_ORG_ID = "demo-org-001";
 
 const SEED: OrgProject[] = [
@@ -128,17 +128,17 @@ const SEED: OrgProject[] = [
   },
 ];
 
-function loadAll(): OrgProject[] {
+function loadAll(orgId: string): OrgProject[] {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY(orgId));
     return stored ? (JSON.parse(stored) as OrgProject[]) : [];
   } catch {
     return [];
   }
 }
 
-function saveAll(projects: OrgProject[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+function saveAll(orgId: string, projects: OrgProject[]) {
+  localStorage.setItem(STORAGE_KEY(orgId), JSON.stringify(projects));
 }
 
 export function useOrgProjects(orgId?: string) {
@@ -146,12 +146,13 @@ export function useOrgProjects(orgId?: string) {
   const [ready, setReady] = useState(false);
 
   const reload = useCallback(() => {
-    let all = loadAll();
+    if (!orgId) { setReady(true); return; }
+    let all = loadAll(orgId);
     if (all.length === 0 && orgId === DEMO_ORG_ID) {
       all = SEED;
-      saveAll(all);
+      saveAll(orgId, all);
     }
-    setProjects(orgId ? all.filter((p) => p.orgId === orgId) : all);
+    setProjects(all);
     setReady(true);
   }, [orgId]);
 
@@ -161,6 +162,7 @@ export function useOrgProjects(orgId?: string) {
 
   const create = useCallback(
     (data: Omit<OrgProject, "id" | "createdAt" | "updatedAt" | "views" | "saves">): OrgProject => {
+      if (!orgId) throw new Error("orgId required");
       const now = new Date().toISOString().split("T")[0];
       const project: OrgProject = {
         ...data,
@@ -170,10 +172,10 @@ export function useOrgProjects(orgId?: string) {
         createdAt: now,
         updatedAt: now,
       };
-      const all = loadAll();
+      const all = loadAll(orgId);
       const updated = [...all, project];
-      saveAll(updated);
-      setProjects(orgId ? updated.filter((p) => p.orgId === orgId) : updated);
+      saveAll(orgId, updated);
+      setProjects(updated);
       return project;
     },
     [orgId]
@@ -181,24 +183,26 @@ export function useOrgProjects(orgId?: string) {
 
   const update = useCallback(
     (id: string, data: Partial<OrgProject>) => {
-      const all = loadAll();
+      if (!orgId) return;
+      const all = loadAll(orgId);
       const updated = all.map((p) =>
         p.id === id
           ? { ...p, ...data, updatedAt: new Date().toISOString().split("T")[0] }
           : p
       );
-      saveAll(updated);
-      setProjects(orgId ? updated.filter((p) => p.orgId === orgId) : updated);
+      saveAll(orgId, updated);
+      setProjects(updated);
     },
     [orgId]
   );
 
   const remove = useCallback(
     (id: string) => {
-      const all = loadAll();
+      if (!orgId) return;
+      const all = loadAll(orgId);
       const updated = all.filter((p) => p.id !== id);
-      saveAll(updated);
-      setProjects(orgId ? updated.filter((p) => p.orgId === orgId) : updated);
+      saveAll(orgId, updated);
+      setProjects(updated);
     },
     [orgId]
   );

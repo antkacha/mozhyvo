@@ -47,7 +47,7 @@ function ApplicationDetail() {
   const router = useRouter();
   const id = params.id as string;
   const { org } = useOrgSession();
-  const { applications, updateApp, ready } = useOrgApplications();
+  const { applications, updateApp, ready } = useOrgApplications(org?.id);
   const { entries, addEntry } = useActivityLog(id);
   const { notes, addNote, deleteNote } = useAppNotes(id);
 

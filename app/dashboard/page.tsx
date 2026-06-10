@@ -26,7 +26,7 @@ const APP_STATUS_CLASS: Record<OrgApplication["status"], string> = {
 function OrgOverview() {
   const { org } = useOrgSession();
   const { projects } = useOrgProjects(org?.id);
-  const { applications } = useOrgApplications();
+  const { applications } = useOrgApplications(org?.id);
 
   const published = projects.filter((p) => p.status === "published");
   const drafts = projects.filter((p) => p.status === "draft");
