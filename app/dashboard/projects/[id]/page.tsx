@@ -348,7 +348,7 @@ function EditProjectContent() {
           ) : (
             <div className="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-3">
-                <p className="text-xs text-muted">Базові поля (ім'я, email) додаються автоматично</p>
+                <p className="text-xs text-muted">Базові поля (ім&apos;я, email) додаються автоматично</p>
                 {formQuestions.length > 0 && (
                   <span className="flex-shrink-0 text-[10px] font-bold bg-primary-light text-primary px-2.5 py-1 rounded-xl">
                     {formQuestions.length} {formQuestions.length < 5 ? "питання" : "питань"}

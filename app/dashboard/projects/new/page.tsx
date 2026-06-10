@@ -599,7 +599,7 @@ function NewProjectContent() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium text-foreground">Питання форми</p>
-                  <p className="text-xs text-muted mt-0.5">Базові поля (ім'я, email) додаються автоматично</p>
+                  <p className="text-xs text-muted mt-0.5">Базові поля (ім&apos;я, email) додаються автоматично</p>
                 </div>
                 {formQuestions.length > 0 && (
                   <span className="flex-shrink-0 text-[10px] font-bold bg-primary-light text-primary px-2.5 py-1 rounded-xl">
