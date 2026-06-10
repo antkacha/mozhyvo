@@ -46,8 +46,17 @@ const socialLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-background border-t border-border mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
+    <footer className="bg-primary mt-20 relative overflow-hidden">
+      {/* Dot grid overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.07]"
+        style={{
+          backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
 
         {/* ── Main grid ─────────────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
@@ -55,17 +64,17 @@ export default function Footer() {
           {/* Brand — spans 2 cols on lg */}
           <div className="lg:col-span-2 flex flex-col gap-5">
             <Link href="/" className="flex items-center gap-2.5 group w-fit">
-              <div className="w-8 h-8 bg-primary rounded-xl grid place-items-center flex-shrink-0">
+              <div className="w-8 h-8 bg-white/15 rounded-xl grid place-items-center flex-shrink-0 group-hover:bg-white/25 transition-colors">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M8 1.5L10.5 6.5H15L11 9.5L12.5 14.5L8 11.5L3.5 14.5L5 9.5L1 6.5H5.5L8 1.5Z" fill="white" />
                 </svg>
               </div>
-              <span className="text-[17px] font-black tracking-tight text-foreground group-hover:text-primary transition-colors">
+              <span className="text-[17px] font-black tracking-tight text-white group-hover:text-white/80 transition-colors">
                 Моживо
               </span>
             </Link>
 
-            <p className="text-sm text-muted leading-relaxed max-w-sm">
+            <p className="text-sm text-white/55 leading-relaxed max-w-sm">
               Платформа можливостей для молоді України. Гранти, стипендії, стажування та програми обміну — все в одному місці, безкоштовно.
             </p>
 
@@ -75,7 +84,7 @@ export default function Footer() {
                   key={s.label}
                   href={s.href}
                   aria-label={s.label}
-                  className="w-9 h-9 rounded-xl bg-muted-bg hover:bg-primary-light flex items-center justify-center text-muted hover:text-primary transition-all duration-150"
+                  className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all duration-150"
                 >
                   {s.icon}
                 </a>
@@ -85,14 +94,14 @@ export default function Footer() {
 
           {/* Platform links */}
           <div className="flex flex-col gap-3">
-            <p className="text-[11px] font-semibold text-muted/50 uppercase tracking-widest mb-1">
+            <p className="text-[11px] font-semibold text-white/35 uppercase tracking-widest mb-1">
               Платформа
             </p>
             {platformLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm text-muted hover:text-primary transition-colors duration-150"
+                className="text-sm text-white/60 hover:text-white transition-colors duration-150"
               >
                 {link.label}
               </Link>
@@ -101,14 +110,14 @@ export default function Footer() {
 
           {/* Resources */}
           <div className="flex flex-col gap-3">
-            <p className="text-[11px] font-semibold text-muted/50 uppercase tracking-widest mb-1">
+            <p className="text-[11px] font-semibold text-white/35 uppercase tracking-widest mb-1">
               Ресурси
             </p>
             {resourceLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
-                className="text-sm text-muted hover:text-primary transition-colors duration-150"
+                className="text-sm text-white/60 hover:text-white transition-colors duration-150"
                 {...(link.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}
               >
                 {link.label}
@@ -118,15 +127,15 @@ export default function Footer() {
         </div>
 
         {/* ── Bottom bar ────────────────────────────────────────── */}
-        <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-muted/60">
+        <div className="pt-6 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-white/35">
             © 2026 Моживо. Зроблено в Україні 🇺🇦
           </p>
           <div className="flex items-center gap-5">
-            <Link href="/privacy" className="text-xs text-muted/60 hover:text-muted transition-colors">
+            <Link href="/privacy" className="text-xs text-white/35 hover:text-white/70 transition-colors">
               Конфіденційність
             </Link>
-            <Link href="/terms" className="text-xs text-muted/60 hover:text-muted transition-colors">
+            <Link href="/terms" className="text-xs text-white/35 hover:text-white/70 transition-colors">
               Умови використання
             </Link>
           </div>
