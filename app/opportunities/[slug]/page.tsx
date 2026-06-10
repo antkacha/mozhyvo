@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { opportunities, typeColors, formatLabels } from "@/lib/data";
+import { orgNameToSlug } from "@/lib/organizations";
 import OpportunityClient from "@/components/OpportunityClient";
 
 export function generateStaticParams() {
@@ -114,7 +115,16 @@ export default function OpportunityDetailPage({ params }: { params: { slug: stri
                 </span>
               </div>
 
-              <p className="text-sm font-semibold text-primary/60 uppercase tracking-widest mb-3">{opp.org}</p>
+              {orgNameToSlug[opp.org] ? (
+                <Link
+                  href={`/organizations/${orgNameToSlug[opp.org]}`}
+                  className="text-sm font-semibold text-primary/60 uppercase tracking-widest mb-3 hover:text-primary transition-colors inline-block"
+                >
+                  {opp.org}
+                </Link>
+              ) : (
+                <p className="text-sm font-semibold text-primary/60 uppercase tracking-widest mb-3">{opp.org}</p>
+              )}
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground leading-[1.05] mb-6">{opp.title}</h1>
 
               <div className="flex flex-wrap items-center gap-3">

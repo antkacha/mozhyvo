@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Opportunity, typeColors, formatLabels } from "@/lib/data";
+import { orgNameToSlug } from "@/lib/organizations";
 import { useSaved } from "@/hooks/useSaved";
 
 const typeEmoji: Record<string, string> = {
@@ -35,6 +36,7 @@ export default function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; 
   const expiring = isExpiringSoon(opp.deadline);
   const { isSaved, toggle, ready } = useSaved();
   const saved = isSaved(opp.slug);
+  const orgSlug = orgNameToSlug[opp.org];
 
   return (
     <div
@@ -52,9 +54,19 @@ export default function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; 
               {typeEmoji[opp.type] ?? "✦"}
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-bold text-muted/60 uppercase tracking-wider truncate leading-none mb-1.5">
-                {opp.org}
-              </p>
+              {orgSlug ? (
+                <Link
+                  href={`/organizations/${orgSlug}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[11px] font-bold text-muted/60 uppercase tracking-wider truncate leading-none mb-1.5 hover:text-primary transition-colors block"
+                >
+                  {opp.org}
+                </Link>
+              ) : (
+                <p className="text-[11px] font-bold text-muted/60 uppercase tracking-wider truncate leading-none mb-1.5">
+                  {opp.org}
+                </p>
+              )}
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${typeColors[opp.type]}`}>
                 {opp.typeName}
               </span>
