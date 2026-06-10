@@ -1,11 +1,57 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { opportunities } from "@/lib/data";
 import ApplyForm from "@/components/ApplyForm";
+import { createClient } from "@/lib/supabase/server";
+import type { Opportunity } from "@/lib/data";
 
 export function generateStaticParams() {
   return opportunities.map((o) => ({ slug: o.slug }));
+}
+
+export const dynamicParams = true;
+
+async function fetchOrgProject(id: string): Promise<Opportunity | null> {
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("org_projects")
+      .select("*, orgs!inner(name, status)")
+      .eq("id", id)
+      .eq("status", "published")
+      .maybeSingle();
+    if (!data) return null;
+    const org = data.orgs as { name: string; status: string };
+    if (org.status !== "verified") return null;
+    return {
+      slug:             data.id as string,
+      type:             (data.type as Opportunity["type"]) ?? "exchange",
+      typeName:         (data.type_name as string) ?? "",
+      org:              org.name ?? "",
+      title:            (data.title as string) ?? "",
+      shortDescription: (data.short_description as string) ?? "",
+      fullDescription:  (data.full_description as string) ?? "",
+      deadline:         (data.deadline as string) ?? "",
+      deadlineDisplay:  (data.deadline_display as string) ?? "",
+      flag:             (data.flag as string) ?? "🇺🇦",
+      location:         (data.location as string) ?? "",
+      country:          (data.country as string) ?? "",
+      format:           (data.format as Opportunity["format"]) ?? "offline",
+      languages:        (data.languages as string[]) ?? [],
+      ageMin:           data.age_min as number | undefined,
+      ageMax:           data.age_max as number | undefined,
+      funding:          (data.funding as Opportunity["funding"]) ?? "fully-funded",
+      fundingDetails:   (data.funding_details as string) ?? "",
+      requirements:     (data.requirements as string[]) ?? [],
+      benefits:         (data.benefits as string[]) ?? [],
+      tags:             (data.tags as string[]) ?? [],
+      applyUrl:         (data.external_apply_url as string) || `/opportunities/${data.id}/apply`,
+      duration:         (data.duration as string) ?? "",
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function generateMetadata({
@@ -13,7 +59,7 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
-  const opp = opportunities.find((o) => o.slug === params.slug);
+  const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);
   if (!opp) return {};
   return {
     title: `Подати заявку — ${opp.title} | Моживо`,
@@ -21,9 +67,12 @@ export async function generateMetadata({
   };
 }
 
-export default function ApplyPage({ params }: { params: { slug: string } }) {
-  const opp = opportunities.find((o) => o.slug === params.slug);
+export default async function ApplyPage({ params }: { params: { slug: string } }) {
+  const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);
   if (!opp) notFound();
+
+  // If org project has an external apply URL, redirect there directly
+  if (opp.applyUrl.startsWith("http")) redirect(opp.applyUrl);
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12">

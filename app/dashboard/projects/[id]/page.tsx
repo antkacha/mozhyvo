@@ -38,6 +38,7 @@ function EditProjectContent() {
   const [applyMode, setApplyMode] = useState<"form" | "external">("form");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (project && !form) {
@@ -76,6 +77,7 @@ function EditProjectContent() {
   async function handleSave(statusOverride?: OrgProject["status"]) {
     if (!form || !project) return;
     setSaving(true);
+    setSaveError(null);
 
     const deadline = form.deadline;
     const deadlineDisplay = new Date(deadline).toLocaleDateString("uk-UA", {
@@ -86,7 +88,7 @@ function EditProjectContent() {
     const country = form.country.trim();
     const location = city ? `${city}, ${country}` : country;
 
-    await update(project.id, {
+    try { await update(project.id, {
       title: form.title.trim(),
       type: form.type,
       typeName: form.typeName,
@@ -112,11 +114,15 @@ function EditProjectContent() {
       autoClose: form.autoClose,
       formQuestions,
       externalApplyUrl: form.externalApplyUrl ?? "",
-    });
+    }); } catch (e) {
+      setSaving(false);
+      setSaveError(e instanceof Error ? e.message : "Помилка збереження. Спробуй ще раз.");
+      return;
+    }
 
     setSaving(false);
     setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    setTimeout(() => setSaved(false), 3000);
   }
 
   const input = "w-full px-3.5 py-2.5 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all";
@@ -139,14 +145,6 @@ function EditProjectContent() {
       <div className="flex items-center justify-between gap-4 mb-7">
         <h1 className="text-2xl font-black text-foreground">Редагування</h1>
         <div className="flex items-center gap-3">
-          {saved && (
-            <span className="flex items-center gap-1.5 text-xs text-green-600 font-semibold">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-              Збережено
-            </span>
-          )}
           {project.status === "published" ? (
             <button onClick={() => handleSave("draft")} className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 transition-all">
               Зняти з публікації
@@ -360,6 +358,13 @@ function EditProjectContent() {
           )}
         </section>
 
+        {/* Save error */}
+        {saveError && (
+          <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-sm text-red-700 font-medium">
+            {saveError}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex items-center justify-between gap-3 pb-8">
           <button
@@ -371,9 +376,27 @@ function EditProjectContent() {
           <button
             onClick={() => handleSave()}
             disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 disabled:opacity-50"
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-sm font-semibold transition-all shadow-sm disabled:opacity-50 ${
+              saved
+                ? "bg-green-600 hover:bg-green-700 shadow-green-600/20"
+                : "bg-primary hover:bg-primary-dark shadow-primary/20"
+            }`}
           >
-            {saving ? "Зберігаємо..." : "Зберегти зміни"}
+            {saving ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Зберігаємо...
+              </>
+            ) : saved ? (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+                Збережено
+              </>
+            ) : (
+              "Зберегти зміни"
+            )}
           </button>
         </div>
       </div>

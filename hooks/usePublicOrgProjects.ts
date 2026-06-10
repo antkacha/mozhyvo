@@ -44,7 +44,7 @@ export function usePublicOrgProjects() {
           requirements:     (row.requirements as string[]) ?? [],
           benefits:         (row.benefits as string[]) ?? [],
           tags:             (row.tags as string[]) ?? [],
-          applyUrl:         `/opportunities/${row.id}/apply`,
+          applyUrl:         (row.external_apply_url as string) || `/opportunities/${row.id}/apply`,
           duration:         (row.duration as string) ?? "",
         };
       });

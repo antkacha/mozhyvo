@@ -2,18 +2,63 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { opportunities, typeColors, formatLabels } from "@/lib/data";
+import { opportunities, typeColors, formatLabels, type Opportunity } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
 import OpportunityClient from "@/components/OpportunityClient";
+import { createClient } from "@/lib/supabase/server";
 
 export function generateStaticParams() {
   return opportunities.map((o) => ({ slug: o.slug }));
 }
 
+export const dynamicParams = true;
+
+async function fetchOrgProject(id: string): Promise<Opportunity | null> {
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("org_projects")
+      .select("*, orgs!inner(name, status)")
+      .eq("id", id)
+      .eq("status", "published")
+      .maybeSingle();
+    if (!data) return null;
+    const org = data.orgs as { name: string; status: string };
+    if (org.status !== "verified") return null;
+    return {
+      slug:             data.id as string,
+      type:             (data.type as Opportunity["type"]) ?? "exchange",
+      typeName:         (data.type_name as string) ?? "",
+      org:              org.name ?? "",
+      title:            (data.title as string) ?? "",
+      shortDescription: (data.short_description as string) ?? "",
+      fullDescription:  (data.full_description as string) ?? "",
+      deadline:         (data.deadline as string) ?? "",
+      deadlineDisplay:  (data.deadline_display as string) ?? "",
+      flag:             (data.flag as string) ?? "🇺🇦",
+      location:         (data.location as string) ?? "",
+      country:          (data.country as string) ?? "",
+      format:           (data.format as Opportunity["format"]) ?? "offline",
+      languages:        (data.languages as string[]) ?? [],
+      ageMin:           data.age_min as number | undefined,
+      ageMax:           data.age_max as number | undefined,
+      funding:          (data.funding as Opportunity["funding"]) ?? "fully-funded",
+      fundingDetails:   (data.funding_details as string) ?? "",
+      requirements:     (data.requirements as string[]) ?? [],
+      benefits:         (data.benefits as string[]) ?? [],
+      tags:             (data.tags as string[]) ?? [],
+      applyUrl:         (data.external_apply_url as string) || `/opportunities/${data.id}/apply`,
+      duration:         (data.duration as string) ?? "",
+    };
+  } catch {
+    return null;
+  }
+}
+
 const BASE = "https://mozhyvo.ua";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const opp = opportunities.find((o) => o.slug === params.slug);
+  const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);
   if (!opp) return {};
   const url = `${BASE}/opportunities/${opp.slug}`;
   return {
@@ -46,8 +91,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default function OpportunityDetailPage({ params }: { params: { slug: string } }) {
-  const opp = opportunities.find((o) => o.slug === params.slug);
+export default async function OpportunityDetailPage({ params }: { params: { slug: string } }) {
+  const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);
   if (!opp) notFound();
 
   const days = (new Date(opp.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24);

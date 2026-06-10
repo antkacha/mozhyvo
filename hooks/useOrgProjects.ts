@@ -112,7 +112,7 @@ function toRow(data: Partial<OrgProject>): Record<string, unknown> {
   if (data.status           !== undefined) row.status            = data.status;
   if (data.autoClose        !== undefined) row.auto_close        = data.autoClose;
   if (data.formQuestions    !== undefined) row.form_questions    = data.formQuestions;
-  if (data.externalApplyUrl !== undefined) row.external_apply_url = data.externalApplyUrl || null;
+  if (data.externalApplyUrl) row.external_apply_url = data.externalApplyUrl;
   return row;
 }
 

@@ -145,6 +145,7 @@ function NewProjectContent() {
   const [templateChosen, setTemplateChosen] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function set(field: keyof FormData, value: string) {
     setForm((p) => {
@@ -188,6 +189,7 @@ function NewProjectContent() {
       ? `${form.city.trim()}, ${form.country.trim()}`
       : form.country.trim();
 
+    setSubmitError(null);
     try {
       await create({
         orgId: org.id,
@@ -217,8 +219,9 @@ function NewProjectContent() {
         externalApplyUrl: applyMode === "external" ? form.externalApplyUrl.trim() : "",
       });
       router.push("/dashboard/projects");
-    } catch {
+    } catch (e) {
       setSaving(false);
+      setSubmitError(e instanceof Error ? e.message : "Не вдалось зберегти проект. Спробуй ще раз.");
     }
   }
 
@@ -610,6 +613,13 @@ function NewProjectContent() {
               <FormBuilder questions={formQuestions} onChange={setFormQuestions} />
             </div>
           )}
+        </div>
+      )}
+
+      {/* Error banner */}
+      {submitError && (
+        <div className="mt-4 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-sm text-red-700 font-medium">
+          {submitError}
         </div>
       )}
 
