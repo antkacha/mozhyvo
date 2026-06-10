@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Opportunity } from "@/lib/data";
 import { useApplications } from "@/hooks/useApplications";
-import { useOrgProjects, FormQuestion, DEMO_ORG_ID } from "@/hooks/useOrgProjects";
+import { createClient } from "@/lib/supabase/client";
+import type { FormQuestion } from "@/hooks/useOrgProjects";
 
 const DEGREES = [
   "Бакалавр",
@@ -121,12 +122,21 @@ function inputCls(error?: string) {
 
 export default function ApplyForm({ opp }: { opp: Opportunity }) {
   const { submit, hasApplied, ready } = useApplications();
-  const { projects } = useOrgProjects(DEMO_ORG_ID);
+  const [customQuestions, setCustomQuestions] = useState<FormQuestion[]>([]);
 
-  const customQuestions = useMemo<FormQuestion[]>(() => {
-    const match = projects.find((p) => p.title === opp.title);
-    return match?.formQuestions ?? [];
-  }, [projects, opp.title]);
+  useEffect(() => {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(opp.slug);
+    if (!isUuid) return;
+    const supabase = createClient();
+    supabase
+      .from("org_projects")
+      .select("form_questions")
+      .eq("id", opp.slug)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.form_questions) setCustomQuestions(data.form_questions as FormQuestion[]);
+      });
+  }, [opp.slug]);
 
   const STEPS = useMemo(
     () =>

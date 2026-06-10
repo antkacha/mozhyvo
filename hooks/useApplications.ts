@@ -87,7 +87,7 @@ export function useApplications() {
   }, [load, supabase]);
 
   const submit = useCallback(
-    async (app: Omit<Application, "id" | "submittedAt" | "status">) => {
+    async (app: Omit<Application, "id" | "submittedAt" | "status"> & { customAnswers?: Record<string, string | string[]> }) => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -121,6 +121,37 @@ export function useApplications() {
       if (!error && data) {
         const newApp = fromRow(data);
         setApplications((prev) => [newApp, ...prev]);
+
+        // If the slug is a UUID (org project), also save to org_applications
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(app.opportunitySlug);
+        if (isUuid) {
+          const { data: project } = await supabase
+            .from("org_projects")
+            .select("org_id")
+            .eq("id", app.opportunitySlug)
+            .maybeSingle();
+          if (project?.org_id) {
+            await supabase.from("org_applications").insert({
+              org_id:        project.org_id,
+              project_id:    app.opportunitySlug,
+              project_title: app.opportunityTitle,
+              first_name:    app.firstName,
+              last_name:     app.lastName,
+              email:         app.email,
+              phone:         app.phone,
+              country:       app.country,
+              institution:   app.institution,
+              degree:        app.degree,
+              motivation:    app.motivation,
+              languages:     app.languages,
+              cv_url:        app.cvUrl,
+              portfolio_url: app.portfolioUrl,
+              custom_answers: app.customAnswers ?? {},
+              status:        "new",
+            });
+          }
+        }
+
         return newApp;
       }
     },
