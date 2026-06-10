@@ -3,6 +3,15 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+// Module-level cache — shared across all hook instances in the same browser session.
+// This means the second call to useOrgSession() returns data synchronously from cache
+// instead of waiting for a fresh Supabase fetch → no layout shift on navigation.
+let _cachedOrg: OrgProfile | null = null;
+let _cachedReady = false;
+const _listeners = new Set<() => void>();
+
+function notifyListeners() { _listeners.forEach((fn) => fn()); }
+
 export interface OrgProfile {
   id: string;
   userId: string;
@@ -81,12 +90,23 @@ function toRow(data: Partial<OrgProfile>): Record<string, unknown> {
 
 export function useOrgSession() {
   const supabase = useMemo(() => createClient(), []);
-  const [org, setOrg] = useState<OrgProfile | null>(null);
-  const [ready, setReady] = useState(false);
+  const [org, setOrg] = useState<OrgProfile | null>(_cachedOrg);
+  const [ready, setReady] = useState(_cachedReady);
+
+  // Keep local state in sync with module cache
+  useEffect(() => {
+    const sync = () => { setOrg(_cachedOrg); setReady(_cachedReady); };
+    _listeners.add(sync);
+    return () => { _listeners.delete(sync); };
+  }, []);
+
+  const setCache = useCallback((o: OrgProfile | null, r: boolean) => {
+    _cachedOrg = o; _cachedReady = r; notifyListeners();
+  }, []);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setOrg(null); setReady(true); return; }
+    if (!user) { setCache(null, true); return; }
 
     const { data } = await supabase
       .from("orgs")
@@ -94,11 +114,7 @@ export function useOrgSession() {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (data) {
-      setOrg(fromRow(data as Record<string, unknown>));
-      setReady(true);
-      return;
-    }
+    if (data) { setCache(fromRow(data as Record<string, unknown>), true); return; }
 
     // First login after email confirmation — bootstrap org from auth metadata
     const meta = user.user_metadata ?? {};
@@ -123,33 +139,32 @@ export function useOrgSession() {
         .from("profiles")
         .upsert({ id: user.id, role: "org" }, { onConflict: "id" });
 
-      setOrg(created ? fromRow(created as Record<string, unknown>) : null);
+      setCache(created ? fromRow(created as Record<string, unknown>) : null, true);
     } else {
-      setOrg(null);
+      setCache(null, true);
     }
-    setReady(true);
-  }, [supabase]);
+  }, [supabase, setCache]);
 
   useEffect(() => {
-    load();
+    if (!_cachedReady) load();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") load();
-      else if (event === "SIGNED_OUT") { setOrg(null); setReady(true); }
+      else if (event === "SIGNED_OUT") { setCache(null, true); }
     });
     return () => subscription.unsubscribe();
-  }, [load, supabase]);
+  }, [load, supabase, setCache]);
 
   const update = useCallback(async (data: Partial<OrgProfile>) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const { error } = await supabase.from("orgs").update(toRow(data)).eq("user_id", user.id);
-    if (!error) setOrg((prev) => prev ? { ...prev, ...data } : prev);
-  }, [supabase]);
+    if (!error) setCache(_cachedOrg ? { ..._cachedOrg, ...data } : null, true);
+  }, [supabase, setCache]);
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
-    setOrg(null);
-  }, [supabase]);
+    setCache(null, true);
+  }, [supabase, setCache]);
 
   // login() kept for backward compat — no-op in Supabase mode
   const login = useCallback((_profile: OrgProfile) => {}, []);
