@@ -70,6 +70,15 @@ export default function OpportunityClient({ opp, related }: Props) {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [applied, setApplied] = useState(false);
   const { isSaved, toggle, ready: savedReady } = useSaved();
+
+  const isExternal = opp.applyUrl.startsWith("http");
+  function handleApply() {
+    if (isExternal) {
+      window.open(opp.applyUrl, "_blank", "noopener,noreferrer");
+    } else {
+      setWizardOpen(true);
+    }
+  }
   const saved = isSaved(opp.slug);
   const days = getDaysUntilDeadline(opp.deadline);
   const expired = days < 0;
@@ -195,10 +204,10 @@ export default function OpportunityClient({ opp, related }: Props) {
                 {!expired && (
                   <div className="mt-4 pt-6 border-t border-border">
                     <button
-                      onClick={() => setWizardOpen(true)}
+                      onClick={handleApply}
                       className="px-8 py-3.5 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 text-sm"
                     >
-                      Почати заявку →
+                      {isExternal ? "Подати заявку →" : "Почати заявку →"}
                     </button>
                   </div>
                 )}
@@ -271,10 +280,10 @@ export default function OpportunityClient({ opp, related }: Props) {
                     </div>
                   ) : (
                     <button
-                      onClick={() => setWizardOpen(true)}
+                      onClick={handleApply}
                       className="block w-full text-center py-3 px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 text-sm"
                     >
-                      Подати заявку →
+                      {isExternal ? "Заповнити форму →" : "Подати заявку →"}
                     </button>
                   )}
                   <button

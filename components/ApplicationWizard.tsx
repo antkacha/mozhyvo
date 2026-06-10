@@ -4,19 +4,21 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useApplications } from "@/hooks/useApplications";
+import { createClient } from "@/lib/supabase/client";
+import type { FormQuestion } from "@/hooks/useOrgProjects";
 import type { Opportunity } from "@/lib/data";
 
-const STEPS = ["Особисті дані", "Освіта", "Мотивація", "Документи", "Підтвердження"] as const;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DRAFT_KEY = (slug: string) => `mozhyvo_draft_${slug}`;
 
 interface FormState {
-  // Step 1
+  // Step 0
   firstName: string; lastName: string; email: string; phone: string; country: string;
-  // Step 2
+  // Step 1
   institution: string; degree: string; graduationYear: string; languages: string;
-  // Step 3
+  // Step 2
   motivation: string;
-  // Step 4
+  // Step 3
   cvUrl: string; portfolioUrl: string;
 }
 
@@ -45,6 +47,30 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // Custom questions for org projects
+  const [customQuestions, setCustomQuestions] = useState<FormQuestion[]>([]);
+  const [customAnswers, setCustomAnswers] = useState<Record<string, string | string[]>>({});
+  const [customErrors, setCustomErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!UUID_RE.test(opp.slug)) return;
+    const supabase = createClient();
+    supabase.from("org_projects").select("form_questions")
+      .eq("id", opp.slug).maybeSingle()
+      .then(({ data }) => {
+        if (data?.form_questions && Array.isArray(data.form_questions) && data.form_questions.length > 0) {
+          setCustomQuestions(data.form_questions as FormQuestion[]);
+        }
+      });
+  }, [opp.slug]);
+
+  const hasCustom = customQuestions.length > 0;
+  const steps = hasCustom
+    ? ["Особисті дані", "Освіта", "Мотивація", "Документи", "Питання", "Підтвердження"]
+    : ["Особисті дані", "Освіта", "Мотивація", "Документи", "Підтвердження"];
+  const confirmStep = steps.length - 1;
+  const customQStep = hasCustom ? 4 : -1;
+
   // Pre-fill from profile
   useEffect(() => {
     if (!profileReady) return;
@@ -66,7 +92,7 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
     });
   }, [profileReady, profile, opp.slug]);
 
-  // Auto-save draft for motivation
+  // Auto-save draft
   useEffect(() => {
     if (!form.motivation && !form.cvUrl) return;
     localStorage.setItem(DRAFT_KEY(opp.slug), JSON.stringify(form));
@@ -77,8 +103,15 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
     setErrors((e) => ({ ...e, [field]: undefined }));
   }, []);
 
+  function setCustomAnswer(id: string, value: string | string[]) {
+    setCustomAnswers((p) => ({ ...p, [id]: value }));
+    setCustomErrors((p) => { const n = { ...p }; delete n[id]; return n; });
+  }
+
   function validate(s: number): boolean {
     const e: Partial<Record<keyof FormState, string>> = {};
+    const ce: Record<string, string> = {};
+
     if (s === 0) {
       if (!form.firstName.trim()) e.firstName = "Обов'язкове поле";
       if (!form.lastName.trim())  e.lastName  = "Обов'язкове поле";
@@ -94,8 +127,19 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
       if (len < 300) e.motivation = `Мінімум 300 символів (зараз ${len})`;
       if (len > 2000) e.motivation = `Максимум 2000 символів (зараз ${len})`;
     }
+    if (s === customQStep) {
+      for (const q of customQuestions) {
+        if (q.required) {
+          const ans = customAnswers[q.id];
+          const empty = !ans || (Array.isArray(ans) ? ans.length === 0 : !(ans as string).trim());
+          if (empty) ce[q.id] = "Обов'язкове поле";
+        }
+      }
+    }
+
     setErrors(e);
-    return Object.keys(e).length === 0;
+    setCustomErrors(ce);
+    return Object.keys(e).length === 0 && Object.keys(ce).length === 0;
   }
 
   async function handleSubmit() {
@@ -119,6 +163,7 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
         motivation:       form.motivation,
         cvUrl:            form.cvUrl,
         portfolioUrl:     form.portfolioUrl,
+        customAnswers:    hasCustom ? customAnswers : undefined,
       });
       localStorage.removeItem(DRAFT_KEY(opp.slug));
       setSubmitted(true);
@@ -133,6 +178,8 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
 
   const inputCls = (field: keyof FormState) =>
     `w-full px-3.5 py-2.5 text-sm rounded-xl border ${errors[field] ? "border-red-300 focus:ring-red-200 focus:border-red-400" : "border-border focus:ring-primary/20 focus:border-primary"} bg-white focus:outline-none focus:ring-2 transition-all`;
+  const customInputCls = (id: string) =>
+    `w-full px-3.5 py-2.5 text-sm rounded-xl border ${customErrors[id] ? "border-red-300 focus:ring-red-200 focus:border-red-400" : "border-border focus:ring-primary/20 focus:border-primary"} bg-white focus:outline-none focus:ring-2 transition-all`;
   const lbl = "block text-sm font-medium text-foreground mb-1.5";
 
   // Not logged in
@@ -192,7 +239,7 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
     <div>
       {/* Step indicator */}
       <div className="flex items-center gap-0 mb-8">
-        {STEPS.map((s, i) => (
+        {steps.map((s, i) => (
           <div key={i} className="flex items-center flex-1 last:flex-none">
             <div className="flex flex-col items-center gap-1">
               <div className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-all ${
@@ -204,7 +251,7 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
               </div>
               <span className={`text-[10px] font-semibold hidden sm:block ${i === step ? "text-primary" : "text-muted"}`}>{s}</span>
             </div>
-            {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 mx-1 ${i < step ? "bg-primary" : "bg-muted-bg"}`} />}
+            {i < steps.length - 1 && <div className={`flex-1 h-0.5 mx-1 ${i < step ? "bg-primary" : "bg-muted-bg"}`} />}
           </div>
         ))}
       </div>
@@ -309,8 +356,94 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
           </div>
         )}
 
-        {/* Step 4: Confirmation */}
-        {step === 4 && (
+        {/* Step 4: Custom questions (only for org projects that have them) */}
+        {step === customQStep && (
+          <div className="flex flex-col gap-5">
+            <p className="text-sm text-muted">Організатор програми задав додаткові питання</p>
+            {customQuestions.map((q) => {
+              const ans = customAnswers[q.id];
+              return (
+                <div key={q.id}>
+                  <label className={lbl}>{q.label}{q.required && " *"}</label>
+                  {q.description && <p className="text-xs text-muted mb-2">{q.description}</p>}
+
+                  {q.type === "text" && (
+                    <input
+                      value={(ans as string) ?? ""}
+                      onChange={(e) => setCustomAnswer(q.id, e.target.value)}
+                      placeholder={q.placeholder ?? ""}
+                      className={customInputCls(q.id)}
+                    />
+                  )}
+
+                  {q.type === "textarea" && (
+                    <textarea
+                      value={(ans as string) ?? ""}
+                      onChange={(e) => setCustomAnswer(q.id, e.target.value)}
+                      placeholder={q.placeholder ?? ""}
+                      rows={4}
+                      className={customInputCls(q.id) + " resize-none"}
+                    />
+                  )}
+
+                  {q.type === "select" && (
+                    <select
+                      value={(ans as string) ?? ""}
+                      onChange={(e) => setCustomAnswer(q.id, e.target.value)}
+                      className={customInputCls(q.id)}
+                    >
+                      <option value="">Оберіть...</option>
+                      {q.options?.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  )}
+
+                  {q.type === "radio" && (
+                    <div className="flex flex-col gap-2 mt-1">
+                      {q.options?.map((o) => (
+                        <label key={o} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={q.id}
+                            value={o}
+                            checked={(ans as string) === o}
+                            onChange={() => setCustomAnswer(q.id, o)}
+                            className="accent-primary"
+                          />
+                          <span className="text-sm text-foreground">{o}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {q.type === "checkbox" && (
+                    <div className="flex flex-col gap-2 mt-1">
+                      {q.options?.map((o) => (
+                        <label key={o} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={((ans as string[]) ?? []).includes(o)}
+                            onChange={(e) => {
+                              const current = (ans as string[]) ?? [];
+                              const next = e.target.checked ? [...current, o] : current.filter((x) => x !== o);
+                              setCustomAnswer(q.id, next);
+                            }}
+                            className="accent-primary"
+                          />
+                          <span className="text-sm text-foreground">{o}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {customErrors[q.id] && <p className="text-xs text-red-500 mt-1">{customErrors[q.id]}</p>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Confirmation step */}
+        {step === confirmStep && (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-border p-5 space-y-3">
               {[
@@ -330,6 +463,23 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
               <p className="text-xs font-semibold text-muted mb-2 uppercase tracking-wider">Мотиваційний лист</p>
               <p className="text-sm text-foreground line-clamp-4">{form.motivation}</p>
             </div>
+            {hasCustom && customQuestions.length > 0 && (
+              <div className="bg-muted-bg rounded-2xl p-4">
+                <p className="text-xs font-semibold text-muted mb-3 uppercase tracking-wider">Питання організатора</p>
+                <div className="space-y-2">
+                  {customQuestions.map((q) => {
+                    const a = customAnswers[q.id];
+                    const display = Array.isArray(a) ? a.join(", ") : (a as string) || "—";
+                    return (
+                      <div key={q.id} className="flex justify-between gap-3 text-sm">
+                        <span className="text-muted flex-shrink-0">{q.label}</span>
+                        <span className="font-medium text-foreground text-right line-clamp-2">{display}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <p className="text-xs text-muted">Надсилаючи заявку, ви погоджуєтеся з умовами використання платформи Моживо.</p>
           </div>
         )}
@@ -343,7 +493,7 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
         >
           {step === 0 ? "Скасувати" : "← Назад"}
         </button>
-        {step < STEPS.length - 1 ? (
+        {step < steps.length - 1 ? (
           <button onClick={next}
             className="px-6 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20">
             Далі →
