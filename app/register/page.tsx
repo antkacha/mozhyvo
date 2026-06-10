@@ -172,7 +172,7 @@ export default function RegisterPage() {
       setServerError(
         error.message === "User already registered"
           ? "Цей email вже зареєстрований. Спробуй увійти."
-          : "Помилка реєстрації. Перевір дані і спробуй знову."
+          : error.message
       );
       setStatus("error");
     } else if ((data.user?.identities ?? []).length === 0) {
@@ -211,7 +211,7 @@ export default function RegisterPage() {
       setServerError(
         error.message === "User already registered"
           ? "Цей email вже зареєстрований. Спробуй увійти."
-          : "Помилка реєстрації. Перевір дані і спробуй знову."
+          : error.message
       );
       setStatus("error");
       return;
