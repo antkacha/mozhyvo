@@ -245,17 +245,21 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1400));
-    submit({
-      opportunitySlug: opp.slug,
-      opportunityTitle: opp.title,
-      org: opp.org,
-      deadline: opp.deadline,
-      ...data,
-      ...(Object.keys(customAnswers).length > 0 ? { customAnswers } : {}),
-    });
-    setDone(true);
-    setSubmitting(false);
+    try {
+      await submit({
+        opportunitySlug: opp.slug,
+        opportunityTitle: opp.title,
+        org: opp.org,
+        deadline: opp.deadline,
+        ...data,
+        ...(Object.keys(customAnswers).length > 0 ? { customAnswers } : {}),
+      });
+      setDone(true);
+    } catch {
+      alert("Помилка відправки заявки. Спробуй ще раз.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Already applied

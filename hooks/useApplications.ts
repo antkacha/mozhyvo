@@ -131,7 +131,7 @@ export function useApplications() {
             .eq("id", app.opportunitySlug)
             .maybeSingle();
           if (project?.org_id) {
-            await supabase.from("org_applications").insert({
+            const { error: orgAppError } = await supabase.from("org_applications").insert({
               org_id:        project.org_id,
               project_id:    app.opportunitySlug,
               project_title: app.opportunityTitle,
@@ -149,6 +149,7 @@ export function useApplications() {
               custom_answers: app.customAnswers ?? {},
               status:        "new",
             });
+            if (orgAppError) throw new Error(`org_applications insert failed: ${orgAppError.message}`);
           }
         }
 
