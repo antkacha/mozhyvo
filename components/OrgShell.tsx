@@ -88,7 +88,7 @@ const NAV_BOTTOM: { href: string; label: string; Icon: (p: React.SVGProps<SVGSVG
 // ── Sidebar ─────────────────────────────────────────────────────────
 function Sidebar() {
   const pathname = usePathname();
-  const { org, update, logout } = useOrgSession();
+  const { org, logout } = useOrgSession();
   const { projects } = useOrgProjects(org?.id);
   const { applications } = useOrgApplications();
 

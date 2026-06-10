@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+
 import { createClient } from "@/lib/supabase/client";
 import { LogoMark } from "@/components/Header";
 
@@ -21,7 +21,7 @@ const STEPS = ["Організація", "Контакти", "Акаунт"] as 
 
 export default function OrgRegisterPage() {
   const supabase = useMemo(() => createClient(), []);
-  const router = useRouter();
+
 
   const [step, setStep] = useState(0);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");

@@ -197,7 +197,7 @@ export default function OpportunitiesCatalog() {
       result = [...result].sort((a) => (a.featured ? -1 : 1));
     }
     return result;
-  }, [types, formats, fundings, countries, languages, search, sort]);
+  }, [allOpportunities, types, formats, fundings, countries, languages, search, sort]);
 
   const urgent = useMemo(() =>
     opportunities.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d >= 0 && d <= 7; }).slice(0, 8),
