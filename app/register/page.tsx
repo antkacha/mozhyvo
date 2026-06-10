@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import type { OrgProfile } from "@/lib/demo-org";
 
 type Role = "user" | "org";
 
@@ -192,17 +191,19 @@ export default function RegisterPage() {
     setStatus("loading");
     setServerError("");
 
-    const nameParts = name.trim().split(" ");
     const { data: authData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
         data: {
-          first_name: nameParts[0] ?? "",
-          last_name: nameParts.slice(1).join(" ") ?? "",
-          role: "coordinator",
-          org_name: orgName,
-          org_type: orgType,
+          role:            "org",
+          org_name:        orgName,
+          org_type:        orgType,
+          org_country:     orgCountry,
+          org_city:        orgCity,
+          org_website:     orgWebsite,
+          org_description: orgDescription,
         },
       },
     });
@@ -222,27 +223,6 @@ export default function RegisterPage() {
       setStatus("error");
       return;
     }
-
-    // Save org profile to localStorage
-    const orgProfile: OrgProfile = {
-      id: authData.user?.id ?? `org-${Date.now()}`,
-      name: orgName,
-      type: orgType,
-      country: orgCountry,
-      city: orgCity,
-      website: orgWebsite,
-      contactEmail: email,
-      description: orgDescription,
-      logo: orgLogo,
-      coverImage: null,
-      coverVideo: null,
-      brandColor: "#3B4FE8",
-      focusAreas: [],
-      socials: {},
-      status: "pending",
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-    localStorage.setItem("mozhyvo_org_profile", JSON.stringify(orgProfile));
 
     setStatus("success");
     setTimeout(() => router.push("/dashboard"), 2000);

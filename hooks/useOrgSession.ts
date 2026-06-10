@@ -102,7 +102,7 @@ export function useOrgSession() {
 
     // First login after email confirmation — bootstrap org from auth metadata
     const meta = user.user_metadata ?? {};
-    if (meta.role === "org" && meta.org_name) {
+    if ((meta.role === "org" || meta.role === "coordinator") && meta.org_name) {
       const { data: created } = await supabase
         .from("orgs")
         .insert({

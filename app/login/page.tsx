@@ -42,7 +42,7 @@ function LoginContent() {
     // Org users go to dashboard; everyone else to home or ?next=
     const role = data.user?.user_metadata?.role;
     const next = searchParams.get("next");
-    if (role === "org") {
+    if (role === "org" || role === "coordinator") {
       setTimeout(() => router.push("/dashboard"), 500);
     } else if (next) {
       setTimeout(() => router.push(next), 500);
