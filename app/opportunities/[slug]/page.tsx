@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { opportunities, typeColors, formatLabels, type Opportunity } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
 import OpportunityClient from "@/components/OpportunityClient";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 
 export function generateStaticParams() {
   return opportunities.map((o) => ({ slug: o.slug }));

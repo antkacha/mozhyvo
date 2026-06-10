@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { opportunities } from "@/lib/data";
 import ApplyForm from "@/components/ApplyForm";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 import type { Opportunity } from "@/lib/data";
 
 export function generateStaticParams() {
