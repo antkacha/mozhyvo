@@ -33,16 +33,13 @@ export default function Home() {
   return (
     <>
       {/* ── Hero — dark ─────────────────────────────────────────────── */}
-      <section
-        className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #09091a 0%, #0f1235 55%, #0b1228 100%)" }}
-      >
+      <section className="relative overflow-hidden bg-primary">
         {/* Dot grid */}
         <div
           aria-hidden
           className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)",
+            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)",
             backgroundSize: "32px 32px",
           }}
         />
@@ -50,12 +47,12 @@ export default function Home() {
         <div
           aria-hidden
           className="absolute -top-24 right-0 w-[700px] h-[700px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(59,79,232,0.3) 0%, transparent 65%)" }}
+          style={{ background: "radial-gradient(circle, rgba(255,214,0,0.12) 0%, transparent 60%)" }}
         />
         <div
           aria-hidden
           className="absolute bottom-0 -left-20 w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(59,79,232,0.12) 0%, transparent 65%)" }}
+          style={{ background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 65%)" }}
         />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-28 relative z-10 w-full">
@@ -63,7 +60,7 @@ export default function Home() {
 
             {/* Left: content */}
             <div className="flex flex-col gap-7">
-              <div className="inline-flex items-center gap-2 self-start px-4 py-1.5 rounded-full border border-white/15 bg-white/[0.06] text-white/70 text-xs font-semibold backdrop-blur-sm">
+              <div className="inline-flex items-center gap-2 self-start px-4 py-1.5 rounded-full border border-white/25 bg-white/10 text-white/85 text-xs font-semibold">
                 <span className="text-accent">✦</span>
                 Платформа можливостей для молоді
               </div>
