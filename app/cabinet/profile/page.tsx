@@ -5,7 +5,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { profileCompleteness } from "@/lib/types";
 import type { UserProfile } from "@/lib/types";
 
-const DEGREES = ["Бакалавр", "Магістр", "Аспірант", "Доктор наук", "Студент", "Інше"];
+const DEGREES = ["Аспірант", "Бакалавр", "Доктор наук", "Магістр", "Студент", "Інше"];
 const INTEREST_OPTIONS = [
   "Стипендії", "Стажування", "Обміни", "Волонтерство", "Гранти", "Конференції",
   "Хакатони", "Конкурси", "Технології", "Бізнес", "Освіта", "Наука", "Мистецтво", "Спорт",

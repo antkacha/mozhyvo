@@ -283,7 +283,7 @@ export default function ApplicationWizard({ opp, onClose, onSuccess }: Props) {
                   <label className={lbl}>Ступінь *</label>
                   <select value={form.degree} onChange={(e) => set("degree", e.target.value)} className={inp("degree")}>
                     <option value="">Оберіть...</option>
-                    {["Бакалавр", "Магістр", "Аспірант", "Студент (не бакалавр)", "Доктор наук", "Інше"].map((d) => (
+                    {["Аспірант", "Бакалавр", "Доктор наук", "Магістр", "Студент (не бакалавр)", "Інше"].map((d) => (
                       <option key={d} value={d}>{d}</option>
                     ))}
                   </select>
