@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Opportunity } from "@/lib/data";
 import { useApplications } from "@/hooks/useApplications";
+import { useOrgProjects, FormQuestion, DEMO_ORG_ID } from "@/hooks/useOrgProjects";
 
 const DEGREES = [
   "Бакалавр",
@@ -75,7 +76,7 @@ const EMPTY: FormData = {
   portfolioUrl: "",
 };
 
-const STEPS = [
+const BASE_STEPS = [
   "Особисті дані",
   "Освіта та мови",
   "Мотивація",
@@ -120,10 +121,29 @@ function inputCls(error?: string) {
 
 export default function ApplyForm({ opp }: { opp: Opportunity }) {
   const { submit, hasApplied, ready } = useApplications();
+  const { projects } = useOrgProjects(DEMO_ORG_ID);
+
+  const customQuestions = useMemo<FormQuestion[]>(() => {
+    const match = projects.find((p) => p.title === opp.title);
+    return match?.formQuestions ?? [];
+  }, [projects, opp.title]);
+
+  const STEPS = useMemo(
+    () =>
+      customQuestions.length > 0
+        ? ["Особисті дані", "Освіта та мови", "Мотивація", "Додаткові питання", "Огляд заявки"]
+        : BASE_STEPS,
+    [customQuestions.length]
+  );
+
+  const REVIEW_STEP = STEPS.length - 1;
+  const CUSTOM_STEP = customQuestions.length > 0 ? 3 : -1;
 
   const [step, setStep] = useState(0);
   const [data, setData] = useState<FormData>(EMPTY);
+  const [customAnswers, setCustomAnswers] = useState<Record<string, string | string[]>>({});
   const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [customErrors, setCustomErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -140,6 +160,16 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
         : [...data.languages, lang]
     );
   };
+
+  function setAnswer(id: string, value: string | string[]) {
+    setCustomAnswers((prev) => ({ ...prev, [id]: value }));
+    if (customErrors[id]) setCustomErrors((prev) => ({ ...prev, [id]: "" }));
+  }
+
+  function toggleCheckbox(id: string, opt: string) {
+    const cur = (customAnswers[id] as string[] | undefined) ?? [];
+    setAnswer(id, cur.includes(opt) ? cur.filter((v) => v !== opt) : [...cur, opt]);
+  }
 
   // Per-step validation
   const validate = (s: number): Partial<FormData> => {
@@ -167,7 +197,27 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
     return e;
   };
 
+  function validateCustom(): Record<string, string> {
+    const e: Record<string, string> = {};
+    customQuestions.forEach((q) => {
+      if (!q.required) return;
+      const val = customAnswers[q.id];
+      if (!val || (Array.isArray(val) ? val.length === 0 : val.trim() === "")) {
+        e[q.id] = "Обов'язкове поле";
+      }
+    });
+    return e;
+  }
+
   const next = () => {
+    if (step === CUSTOM_STEP) {
+      const e = validateCustom();
+      if (Object.keys(e).length > 0) { setCustomErrors(e); return; }
+      setCustomErrors({});
+      setStep((s) => s + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     const e = validate(step);
     if (Object.keys(e).length > 0) {
       setErrors(e);
@@ -192,6 +242,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
       org: opp.org,
       deadline: opp.deadline,
       ...data,
+      ...(Object.keys(customAnswers).length > 0 ? { customAnswers } : {}),
     });
     setDone(true);
     setSubmitting(false);
@@ -286,6 +337,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
         <h2 className="text-lg font-bold text-foreground mb-1">{STEPS[step]}</h2>
         <p className="text-sm text-muted mb-6">Крок {step + 1} з {STEPS.length}</p>
 
+
         {/* ── Step 0: Personal ── */}
         {step === 0 && (
           <div className="flex flex-col gap-5">
@@ -379,8 +431,87 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
           </div>
         )}
 
-        {/* ── Step 3: Review ── */}
-        {step === 3 && (
+        {/* ── Step 3 (optional): Custom questions ── */}
+        {step === CUSTOM_STEP && CUSTOM_STEP !== -1 && (
+          <div className="flex flex-col gap-6">
+            {customQuestions.map((q) => {
+              const err = customErrors[q.id];
+              const val = customAnswers[q.id];
+              const inp = `w-full px-4 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white ${err ? "border-red-400" : "border-border"}`;
+              return (
+                <div key={q.id}>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">
+                    {q.label}
+                    {q.required && <span className="text-red-500 ml-0.5">*</span>}
+                  </label>
+                  {q.description && <p className="text-xs text-muted mb-2">{q.description}</p>}
+                  {q.type === "text" && (
+                    <input
+                      value={(val as string) ?? ""}
+                      onChange={(e) => setAnswer(q.id, e.target.value)}
+                      placeholder={q.placeholder}
+                      className={inp}
+                    />
+                  )}
+                  {q.type === "textarea" && (
+                    <textarea
+                      value={(val as string) ?? ""}
+                      onChange={(e) => setAnswer(q.id, e.target.value)}
+                      placeholder={q.placeholder}
+                      rows={4}
+                      className={`${inp} resize-none`}
+                    />
+                  )}
+                  {q.type === "select" && (
+                    <select value={(val as string) ?? ""} onChange={(e) => setAnswer(q.id, e.target.value)} className={inp}>
+                      <option value="">Оберіть варіант...</option>
+                      {(q.options ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  )}
+                  {q.type === "radio" && (
+                    <div className="flex flex-col gap-2 mt-1">
+                      {(q.options ?? []).map((o) => (
+                        <label key={o} className="flex items-center gap-3 cursor-pointer group">
+                          <div
+                            onClick={() => setAnswer(q.id, o)}
+                            className={`w-4 h-4 rounded-full border-2 flex-shrink-0 transition-all cursor-pointer ${
+                              val === o ? "border-primary bg-primary" : "border-border group-hover:border-primary/50"
+                            }`}
+                          >
+                            {val === o && <div className="w-full h-full rounded-full bg-white scale-[0.4] block" />}
+                          </div>
+                          <span className="text-sm text-foreground">{o}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {q.type === "checkbox" && (
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {(q.options ?? []).map((o) => {
+                        const checked = ((val as string[] | undefined) ?? []).includes(o);
+                        return (
+                          <button
+                            key={o} type="button"
+                            onClick={() => toggleCheckbox(q.id, o)}
+                            className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-all ${
+                              checked ? "bg-primary text-white border-primary" : "border-border text-muted hover:border-primary hover:text-primary bg-white"
+                            }`}
+                          >
+                            {o}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {err && <p className="text-xs text-red-500 mt-1">{err}</p>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Review step ── */}
+        {step === REVIEW_STEP && (
           <div className="flex flex-col gap-6">
             <div className="bg-muted-bg rounded-xl p-5">
               <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Особисті дані</p>
@@ -410,6 +541,23 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
                 </div>
               )}
             </div>
+            {customQuestions.length > 0 && (
+              <div className="bg-muted-bg rounded-xl p-5">
+                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Додаткові питання</p>
+                <div className="flex flex-col gap-3">
+                  {customQuestions.map((q) => {
+                    const val = customAnswers[q.id];
+                    const display = Array.isArray(val) ? val.join(", ") : val || "—";
+                    return (
+                      <div key={q.id} className="grid grid-cols-2 gap-x-4 text-sm">
+                        <span className="text-muted">{q.label}</span>
+                        <span className="text-foreground font-medium">{display}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <p className="text-xs text-muted text-center">
               Натискаючи «Відправити заявку», ти підтверджуєш, що всі дані вірні.
             </p>

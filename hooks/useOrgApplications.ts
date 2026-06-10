@@ -17,6 +17,7 @@ export interface OrgApplication {
   languages: string[];
   cvUrl?: string;
   portfolioUrl?: string;
+  customAnswers?: Record<string, string | string[]>;
   status: "new" | "reviewing" | "selected" | "rejected";
   internalNote?: string;
   submittedAt: string;

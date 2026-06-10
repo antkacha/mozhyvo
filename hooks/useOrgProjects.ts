@@ -2,6 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 
+export interface FormQuestion {
+  id: string;
+  type: "text" | "textarea" | "select" | "radio" | "checkbox";
+  label: string;
+  description?: string;
+  placeholder?: string;
+  options?: string[];
+  required: boolean;
+}
+
 export interface OrgProject {
   id: string;
   orgId: string;
@@ -28,6 +38,7 @@ export interface OrgProject {
   ageMax?: number;
   status: "draft" | "published" | "closed";
   autoClose?: boolean;
+  formQuestions?: FormQuestion[];
   views: number;
   saves: number;
   createdAt: string;

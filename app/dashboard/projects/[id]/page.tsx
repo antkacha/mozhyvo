@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useOrgSession } from "@/hooks/useOrgSession";
-import { useOrgProjects, OrgProject } from "@/hooks/useOrgProjects";
+import { useOrgProjects, OrgProject, FormQuestion } from "@/hooks/useOrgProjects";
 import OrgShell from "@/components/OrgShell";
+import FormBuilder from "@/components/FormBuilder";
 
 const TYPE_OPTIONS = [
   { value: "exchange", label: "Обмін" },
@@ -34,6 +35,7 @@ function EditProjectContent() {
   const project = projects.find((p) => p.id === params.id);
 
   const [form, setForm] = useState<FormState | null>(null);
+  const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -46,6 +48,7 @@ function EditProjectContent() {
         languagesText: project.languages.join(", "),
         tagsText: project.tags.join(", "),
       });
+      setFormQuestions(project.formQuestions ?? []);
     }
   }, [project, form]);
 
@@ -106,6 +109,7 @@ function EditProjectContent() {
       ageMax: form.ageMax,
       status: statusOverride ?? form.status,
       autoClose: form.autoClose,
+      formQuestions,
     });
 
     setSaving(false);
@@ -295,6 +299,22 @@ function EditProjectContent() {
               <textarea value={form.benefitsText} onChange={(e) => set("benefitsText", e.target.value)} rows={5} className={`${input} resize-none font-mono text-xs`} />
             </div>
           </div>
+        </section>
+
+        {/* Форма заявки */}
+        <section className={section}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Форма заявки</h2>
+              <p className="text-xs text-muted mt-1">Кастомні питання, які побачать учасники при подачі заявки</p>
+            </div>
+            {formQuestions.length > 0 && (
+              <span className="flex-shrink-0 text-[10px] font-bold bg-primary-light text-primary px-2.5 py-1 rounded-xl">
+                {formQuestions.length} {formQuestions.length === 1 ? "питання" : formQuestions.length < 5 ? "питання" : "питань"}
+              </span>
+            )}
+          </div>
+          <FormBuilder questions={formQuestions} onChange={setFormQuestions} />
         </section>
 
         {/* Actions */}
