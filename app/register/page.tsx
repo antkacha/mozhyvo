@@ -94,7 +94,6 @@ export default function RegisterPage() {
   const [orgCity, setOrgCity] = useState("");
   const [orgWebsite, setOrgWebsite] = useState("");
   const [orgDescription, setOrgDescription] = useState("");
-  const [orgLogo, setOrgLogo] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -114,7 +113,6 @@ export default function RegisterPage() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      setOrgLogo(dataUrl);
       setLogoPreview(dataUrl);
     };
     reader.readAsDataURL(file);
