@@ -15,39 +15,181 @@ const STATUS_CHIP: Record<OrgApplication["status"], string> = { new: "bg-blue-50
 const STATUS_ACTIVE: Record<OrgApplication["status"], string> = { new: "bg-blue-500 text-white border-blue-500", reviewing: "bg-amber-400 text-white border-amber-400", selected: "bg-green-500 text-white border-green-500", rejected: "bg-red-400 text-white border-red-400" };
 const STATUS_DOT: Record<OrgApplication["status"], string> = { new: "bg-blue-500", reviewing: "bg-amber-400", selected: "bg-green-500", rejected: "bg-red-400" };
 
-// ── Export helpers ────────────────────────────────────────────────────
-function exportCSV(apps: OrgApplication[], filename = "applications") {
-  const headers = ["Ім'я", "Прізвище", "Email", "Телефон", "Країна", "Заклад", "Ступінь", "Мови", "Проєкт", "Статус", "Дата подачі"];
-  const rows = apps.map((a) => [
-    a.firstName, a.lastName, a.email, a.phone ?? "", a.country,
-    a.institution, a.degree, a.languages.join("; "),
-    a.projectTitle, STATUS_LABEL[a.status],
-    new Date(a.submittedAt).toLocaleDateString("uk-UA"),
-  ]);
-  const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+// ── Export field config ───────────────────────────────────────────────
+type ExportableKey =
+  | "firstName" | "lastName" | "email" | "phone" | "country"
+  | "institution" | "degree" | "languages" | "motivation"
+  | "cvUrl" | "portfolioUrl" | "projectTitle" | "status"
+  | "internalNote" | "submittedAt";
+
+interface ExportField { key: ExportableKey; label: string; group: string; on: boolean }
+
+const EXPORT_FIELDS: ExportField[] = [
+  { key: "firstName",    label: "Ім'я",              group: "Особисті дані", on: true  },
+  { key: "lastName",     label: "Прізвище",          group: "Особисті дані", on: true  },
+  { key: "email",        label: "Email",             group: "Особисті дані", on: true  },
+  { key: "phone",        label: "Телефон",           group: "Особисті дані", on: false },
+  { key: "country",      label: "Країна",            group: "Особисті дані", on: true  },
+  { key: "institution",  label: "Заклад освіти",     group: "Освіта",        on: true  },
+  { key: "degree",       label: "Ступінь",           group: "Освіта",        on: true  },
+  { key: "languages",    label: "Мови",              group: "Освіта",        on: true  },
+  { key: "motivation",   label: "Мотиваційний лист", group: "Заявка",        on: true  },
+  { key: "cvUrl",        label: "CV (посилання)",    group: "Заявка",        on: false },
+  { key: "portfolioUrl", label: "Портфоліо",         group: "Заявка",        on: false },
+  { key: "projectTitle", label: "Проєкт",            group: "Адмін",         on: true  },
+  { key: "status",       label: "Статус",            group: "Адмін",         on: true  },
+  { key: "internalNote", label: "Внутр. нотатка",   group: "Адмін",         on: false },
+  { key: "submittedAt",  label: "Дата подачі",       group: "Адмін",         on: true  },
+];
+
+const COL_WIDTH: Partial<Record<ExportableKey, number>> = {
+  motivation: 80, email: 28, projectTitle: 32, institution: 26, firstName: 12, lastName: 14,
+};
+
+function getFieldValue(app: OrgApplication, key: ExportableKey): string {
+  if (key === "languages") return app.languages.join("; ");
+  if (key === "status")    return STATUS_LABEL[app.status];
+  if (key === "submittedAt") return new Date(app.submittedAt).toLocaleDateString("uk-UA");
+  const val = app[key as keyof OrgApplication];
+  return typeof val === "string" ? val : "";
+}
+
+function doExportCSV(apps: OrgApplication[], keys: ExportableKey[], filename = "applications") {
+  const headers = keys.map((k) => EXPORT_FIELDS.find((f) => f.key === k)!.label);
+  const rows = apps.map((a) => keys.map((k) => getFieldValue(a, k)));
+  const csv = [headers, ...rows].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
   const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = `${filename}-${new Date().toISOString().split("T")[0]}.csv`; a.click();
+  const el = document.createElement("a");
+  el.href = url; el.download = `${filename}-${new Date().toISOString().split("T")[0]}.csv`; el.click();
   URL.revokeObjectURL(url);
 }
 
-async function exportXLSX(apps: OrgApplication[], filename = "applications") {
+async function doExportXLSX(apps: OrgApplication[], keys: ExportableKey[], filename = "applications") {
   const XLSX = await import("xlsx");
-  const data = [
-    ["Ім'я", "Прізвище", "Email", "Телефон", "Країна", "Заклад", "Ступінь", "Мови", "Проєкт", "Статус", "Дата подачі"],
-    ...apps.map((a) => [
-      a.firstName, a.lastName, a.email, a.phone ?? "", a.country,
-      a.institution, a.degree, a.languages.join("; "),
-      a.projectTitle, STATUS_LABEL[a.status],
-      new Date(a.submittedAt).toLocaleDateString("uk-UA"),
-    ]),
-  ];
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  ws["!cols"] = [10, 12, 24, 14, 14, 22, 16, 20, 28, 16, 14].map((w) => ({ wch: w }));
+  const headers = keys.map((k) => EXPORT_FIELDS.find((f) => f.key === k)!.label);
+  const rows = apps.map((a) => keys.map((k) => getFieldValue(a, k)));
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws["!cols"] = keys.map((k) => ({ wch: COL_WIDTH[k] ?? 15 }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Заявки");
   XLSX.writeFile(wb, `${filename}-${new Date().toISOString().split("T")[0]}.xlsx`);
+}
+
+// ── Export modal ──────────────────────────────────────────────────────
+function ExportModal({ open, apps, onClose }: { open: boolean; apps: OrgApplication[]; onClose: () => void }) {
+  const [selected, setSelected] = useState<Set<ExportableKey>>(
+    () => new Set(EXPORT_FIELDS.filter((f) => f.on).map((f) => f.key))
+  );
+
+  if (!open) return null;
+
+  const groups = Array.from(new Set(EXPORT_FIELDS.map((f) => f.group)));
+  const allOn = EXPORT_FIELDS.every((f) => selected.has(f.key));
+  const selectedKeys = EXPORT_FIELDS.filter((f) => selected.has(f.key)).map((f) => f.key);
+
+  function toggle(key: ExportableKey) {
+    setSelected((prev) => { const n = new Set(prev); if (n.has(key)) { n.delete(key); } else { n.add(key); } return n; });
+  }
+  function toggleGroup(group: string) {
+    const keys = EXPORT_FIELDS.filter((f) => f.group === group).map((f) => f.key);
+    const allGroupOn = keys.every((k) => selected.has(k));
+    setSelected((prev) => { const n = new Set(prev); keys.forEach((k) => allGroupOn ? n.delete(k) : n.add(k)); return n; });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md flex flex-col" style={{ maxHeight: "90vh" }}>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border flex-shrink-0">
+          <div>
+            <h2 className="text-base font-bold text-foreground">Налаштування експорту</h2>
+            <p className="text-xs text-muted mt-0.5">
+              {apps.length} {apps.length === 1 ? "заявка" : apps.length < 5 ? "заявки" : "заявок"} · {selected.size} {selected.size === 1 ? "поле" : selected.size < 5 ? "поля" : "полів"}
+            </p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-muted-bg transition-all">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Field picker */}
+        <div className="overflow-y-auto flex-1 px-6 py-4 flex flex-col gap-5">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-muted uppercase tracking-wider">Поля для вигрузки</p>
+            <button
+              onClick={() => setSelected(allOn ? new Set() : new Set(EXPORT_FIELDS.map((f) => f.key)))}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              {allOn ? "Скинути всі" : "Вибрати всі"}
+            </button>
+          </div>
+
+          {groups.map((group) => {
+            const fields = EXPORT_FIELDS.filter((f) => f.group === group);
+            const allGroupOn = fields.every((f) => selected.has(f.key));
+            return (
+              <div key={group}>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[11px] font-semibold text-muted uppercase tracking-wider">{group}</p>
+                  <button onClick={() => toggleGroup(group)} className="text-[11px] font-semibold text-primary hover:underline">
+                    {allGroupOn ? "Зняти" : "Вибрати"}
+                  </button>
+                </div>
+                <div className="bg-muted-bg/50 rounded-xl overflow-hidden divide-y divide-border/50">
+                  {fields.map((field) => {
+                    const on = selected.has(field.key);
+                    return (
+                      <label key={field.key} className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted-bg transition-colors select-none">
+                        <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${on ? "bg-primary border-primary" : "border-border bg-white"}`}>
+                          {on && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                        </div>
+                        <input type="checkbox" checked={on} onChange={() => toggle(field.key)} className="sr-only" />
+                        <span className={`text-sm transition-colors flex-1 ${on ? "text-foreground font-medium" : "text-muted"}`}>{field.label}</span>
+                        {field.key === "motivation" && (
+                          <span className="text-[10px] font-semibold bg-primary-light text-primary px-2 py-0.5 rounded-full flex-shrink-0">ключове</span>
+                        )}
+                        {(field.key === "cvUrl" || field.key === "portfolioUrl") && (
+                          <span className="text-[10px] font-semibold bg-muted-bg text-muted px-2 py-0.5 rounded-full flex-shrink-0">посилання</span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 pb-6 pt-4 border-t border-border flex-shrink-0 flex gap-3">
+          <button
+            disabled={selected.size === 0}
+            onClick={() => { doExportCSV(apps, selectedKeys); onClose(); }}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:border-primary/30 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            CSV
+          </button>
+          <button
+            disabled={selected.size === 0}
+            onClick={() => { doExportXLSX(apps, selectedKeys); onClose(); }}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm shadow-primary/20"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Excel (.xlsx)
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ── Filter state type ─────────────────────────────────────────────────
@@ -282,58 +424,6 @@ function BulkToolbar({
   );
 }
 
-// ── Export dropdown ───────────────────────────────────────────────────
-function ExportDropdown({ onCSV, onXLSX }: { onCSV: () => void; onXLSX: () => void }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, []);
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-white text-sm font-semibold text-foreground hover:border-primary/30 hover:text-primary transition-all"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-        </svg>
-        Експорт
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-border overflow-hidden z-50 min-w-[180px]">
-          <button
-            onClick={() => { onCSV(); setOpen(false); }}
-            className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm hover:bg-muted-bg transition-colors"
-          >
-            <span className="text-base">📄</span>
-            <div>
-              <p className="font-semibold text-foreground">Експорт CSV</p>
-              <p className="text-xs text-muted">Відкривається в Excel</p>
-            </div>
-          </button>
-          <button
-            onClick={() => { onXLSX(); setOpen(false); }}
-            className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm hover:bg-muted-bg transition-colors border-t border-border"
-          >
-            <span className="text-base">📊</span>
-            <div>
-              <p className="font-semibold text-foreground">Експорт Excel (.xlsx)</p>
-              <p className="text-xs text-muted">З форматуванням</p>
-            </div>
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Main page ─────────────────────────────────────────────────────────
 function ApplicationsContent() {
   const router = useRouter();
@@ -352,6 +442,10 @@ function ApplicationsContent() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [sidebarSearch, setSidebarSearch] = useState("");
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportApps, setExportApps] = useState<OrgApplication[]>([]);
+
+  function openExport(apps: OrgApplication[]) { setExportApps(apps); setExportOpen(true); }
 
   useEffect(() => {
     const p = searchParams.get("project");
@@ -489,10 +583,15 @@ function ApplicationsContent() {
               </span>
             )}
           </button>
-          <ExportDropdown
-            onCSV={() => exportCSV(selectedCount > 0 ? getSelectedApps() : list)}
-            onXLSX={() => exportXLSX(selectedCount > 0 ? getSelectedApps() : list)}
-          />
+          <button
+            onClick={() => openExport(selectedCount > 0 ? getSelectedApps() : list)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-white text-sm font-semibold text-foreground hover:border-primary/30 hover:text-primary transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Експорт
+          </button>
         </div>
       </div>
 
@@ -596,7 +695,7 @@ function ApplicationsContent() {
             <BulkToolbar
               count={selectedCount}
               onStatusChange={applyBulkStatus}
-              onExport={() => exportCSV(getSelectedApps(), "selected-applications")}
+              onExport={() => openExport(getSelectedApps())}
               onClear={() => setSelectedIds(new Set())}
             />
           ) : (
@@ -752,6 +851,9 @@ function ApplicationsContent() {
             </div>
           )}
         </div>
+
+        {/* Export modal */}
+        <ExportModal open={exportOpen} apps={exportApps} onClose={() => setExportOpen(false)} />
 
         {/* Mini detail preview when open on list page (redirect to detail instead) */}
         {openApp && (
