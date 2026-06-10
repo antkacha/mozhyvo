@@ -37,7 +37,8 @@ type FormData = {
   funding: OrgProject["funding"];
   fundingDetails: string;
   deadline: string;
-  duration: string;
+  startDate: string;
+  endDate: string;
   ageMin: string;
   ageMax: string;
   languages: string;
@@ -52,7 +53,7 @@ const INITIAL: FormData = {
   shortDescription: "", fullDescription: "",
   flag: "🇺🇦", country: "", city: "",
   format: "offline", funding: "fully-funded", fundingDetails: "",
-  deadline: "", duration: "",
+  deadline: "", startDate: "", endDate: "",
   ageMin: "", ageMax: "", languages: "", tags: "",
   requirements: "", benefits: "",
   externalApplyUrl: "",
@@ -71,7 +72,6 @@ const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormD
       shortDescription: "Двотижневий міжнародний обмін для молодих активістів.",
       format: "offline", funding: "fully-funded",
       fundingDetails: "Перельоти, проживання, харчування",
-      duration: "14 днів",
       languages: "Англійська",
       ageMin: "18", ageMax: "28",
       requirements: "Вік 18–28 років\nРівень англійської B1+\nДосвід громадянської діяльності",
@@ -104,7 +104,6 @@ const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormD
       shortDescription: "Міжнародна волонтерська програма для молодих людей.",
       format: "offline", funding: "fully-funded",
       fundingDetails: "Проживання, харчування та кишенькові кошти",
-      duration: "6 місяців",
       languages: "Англійська",
       ageMin: "18", ageMax: "30",
       requirements: "Вік 18–30 років\nМотивація та готовність волонтерити\nБазова англійська",
@@ -189,6 +188,13 @@ function NewProjectContent() {
       ? `${form.city.trim()}, ${form.country.trim()}`
       : form.country.trim();
 
+    const fmt = (d: string) => new Date(d).toLocaleDateString("uk-UA", { day: "numeric", month: "short", year: "numeric" });
+    const duration = form.startDate && form.endDate
+      ? `${fmt(form.startDate)} — ${fmt(form.endDate)}`
+      : form.startDate ? `Від ${fmt(form.startDate)}`
+      : form.endDate   ? `До ${fmt(form.endDate)}`
+      : "";
+
     setSubmitError(null);
     try {
       await create({
@@ -207,7 +213,7 @@ function NewProjectContent() {
         fundingDetails: form.fundingDetails.trim(),
         deadline,
         deadlineDisplay,
-        duration: form.duration.trim(),
+        duration,
         languages: form.languages.split(",").map((s) => s.trim()).filter(Boolean),
         tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
         requirements: splitLines(form.requirements),
@@ -423,12 +429,25 @@ function NewProjectContent() {
               />
               {errors.deadline && <p className={`${hint} text-red-500`}>{errors.deadline}</p>}
             </div>
+            <div />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={label}>Тривалість</label>
+              <label className={label}>Дата початку</label>
               <input
-                value={form.duration}
-                onChange={(e) => set("duration", e.target.value)}
-                placeholder="14 днів, 1 місяць..."
+                type="date"
+                value={form.startDate}
+                onChange={(e) => set("startDate", e.target.value)}
+                className={input}
+              />
+            </div>
+            <div>
+              <label className={label}>Дата закінчення</label>
+              <input
+                type="date"
+                value={form.endDate}
+                onChange={(e) => set("endDate", e.target.value)}
                 className={input}
               />
             </div>
