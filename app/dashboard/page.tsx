@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgProjects } from "@/hooks/useOrgProjects";
 import { useOrgApplications, OrgApplication } from "@/hooks/useOrgApplications";
