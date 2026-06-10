@@ -262,9 +262,20 @@ export default function OrgShell({ children }: { children: React.ReactNode }) {
 
   if (!ready || !org) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-7 h-7 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin" />
-      </div>
+      <>
+        <div className="lg:hidden h-12 bg-white border-b border-border" />
+        <div className="flex min-h-[calc(100vh-64px)]">
+          {/* Sidebar skeleton — same width as real sidebar so content doesn't shift */}
+          <aside className="hidden lg:flex flex-col w-[240px] flex-shrink-0 bg-white border-r border-border" />
+          <main className="flex-1 min-w-0 bg-background">
+            <div className="max-w-5xl mx-auto px-5 sm:px-7 py-7 lg:py-8">
+              <div className="flex items-center justify-center py-24">
+                <div className="w-7 h-7 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin" />
+              </div>
+            </div>
+          </main>
+        </div>
+      </>
     );
   }
 
