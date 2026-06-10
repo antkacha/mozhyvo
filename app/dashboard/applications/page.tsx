@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgApplications, OrgApplication } from "@/hooks/useOrgApplications";
 import { useOrgProjects } from "@/hooks/useOrgProjects";
