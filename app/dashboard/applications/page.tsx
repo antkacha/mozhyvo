@@ -61,6 +61,39 @@ interface Filters {
 }
 const EMPTY_FILTERS: Filters = { statuses: new Set(), country: "", institution: "", languages: new Set(), dateFrom: "", dateTo: "" };
 
+const PAGE_SIZE = 25;
+
+function Pagination({ total, page, perPage, onChange }: { total: number; page: number; perPage: number; onChange: (p: number) => void }) {
+  const totalPages = Math.ceil(total / perPage);
+  if (totalPages <= 1) return null;
+
+  const pages: (number | "...")[] = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (page > 3) pages.push("...");
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
+    if (page < totalPages - 2) pages.push("...");
+    pages.push(totalPages);
+  }
+
+  const btn = "w-8 h-8 flex items-center justify-center rounded-xl text-sm font-semibold transition-all";
+  return (
+    <div className="flex items-center gap-1">
+      <button onClick={() => onChange(page - 1)} disabled={page === 1} className={`${btn} border border-border text-muted hover:text-foreground hover:border-primary/30 disabled:opacity-30 disabled:cursor-not-allowed`}>‹</button>
+      {pages.map((p, i) =>
+        p === "..." ? (
+          <span key={`d${i}`} className="w-8 h-8 flex items-center justify-center text-muted text-xs">…</span>
+        ) : (
+          <button key={p} onClick={() => onChange(p as number)} className={`${btn} ${p === page ? "bg-primary text-white" : "border border-border text-muted hover:text-foreground hover:border-primary/30"}`}>{p}</button>
+        )
+      )}
+      <button onClick={() => onChange(page + 1)} disabled={page === totalPages} className={`${btn} border border-border text-muted hover:text-foreground hover:border-primary/30 disabled:opacity-30 disabled:cursor-not-allowed`}>›</button>
+    </div>
+  );
+}
+
 // ── Sort indicator ────────────────────────────────────────────────────
 function SortIcon({ field, current, dir }: { field: string; current: string; dir: "asc" | "desc" }) {
   const active = field === current;
@@ -317,6 +350,8 @@ function ApplicationsContent() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [openId, setOpenId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [sidebarSearch, setSidebarSearch] = useState("");
 
   useEffect(() => {
     const p = searchParams.get("project");
@@ -325,6 +360,9 @@ function ApplicationsContent() {
 
   // Close detail when project changes
   useEffect(() => { setOpenId(null); }, [projectId]);
+
+  // Reset page when any filter/sort changes
+  useEffect(() => { setPage(1); }, [projectId, search, filters, sortField, sortDir]);
 
   // Derived unique values for filter dropdowns
   const allCountries = useMemo(() => Array.from(new Set(applications.map((a) => a.country).filter(Boolean))).sort(), [applications]);
@@ -360,6 +398,8 @@ function ApplicationsContent() {
       return sortDir === "asc" ? cmp : -cmp;
     });
   }, [applications, projectId, filters, search, sortField, sortDir]);
+
+  const paginated = useMemo(() => list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [list, page]);
 
   // Active filter chips
   const filterChips = useMemo(() => [
@@ -460,12 +500,25 @@ function ApplicationsContent() {
       <div className="flex gap-5 items-start">
 
         {/* Project sidebar */}
-        <div className="hidden sm:flex flex-col w-52 flex-shrink-0 bg-white rounded-2xl border border-border overflow-hidden sticky top-24 self-start">
-          <div className="px-3 py-3 border-b border-border">
-            <p className="text-[11px] font-semibold text-muted uppercase tracking-wider">Проекти</p>
+        <div className="hidden sm:flex flex-col w-52 flex-shrink-0 bg-white rounded-2xl border border-border overflow-hidden sticky top-24 self-start max-h-[calc(100vh-6rem)]">
+          <div className="px-3 py-3 border-b border-border flex-shrink-0">
+            <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">Проекти</p>
+            {projects.length > 5 && (
+              <div className="relative">
+                <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  value={sidebarSearch}
+                  onChange={(e) => setSidebarSearch(e.target.value)}
+                  placeholder="Пошук..."
+                  className="w-full pl-7 pr-2 py-1.5 text-xs rounded-lg border border-border bg-muted-bg focus:outline-none focus:border-primary transition-all"
+                />
+              </div>
+            )}
           </div>
-          <div className="p-2 flex flex-col gap-0.5">
-            {[{ id: "all", title: "Всі заявки" }, ...projects].map((p) => {
+          <div className="p-2 flex flex-col gap-0.5 overflow-y-auto flex-1 min-h-0">
+            {[{ id: "all", title: "Всі заявки" }, ...projects.filter((p) => !sidebarSearch || p.title.toLowerCase().includes(sidebarSearch.toLowerCase()))].map((p) => {
               const apps = appsForProject(p.id);
               const newCount = apps.filter((a) => a.status === "new").length;
               const selected = projectId === p.id;
@@ -635,7 +688,7 @@ function ApplicationsContent() {
               </div>
 
               {/* Rows */}
-              {list.map((app, i) => {
+              {paginated.map((app, i) => {
                 const isOpen = openId === app.id;
                 const isChecked = selectedIds.has(app.id);
                 return (
@@ -682,12 +735,19 @@ function ApplicationsContent() {
               })}
 
               {/* Footer */}
-              <div className="flex items-center justify-between px-4 py-2.5 bg-muted-bg/60 border-t border-border">
-                <p className="text-xs text-muted">
-                  {list.length} {list.length === 1 ? "заявка" : list.length < 5 ? "заявки" : "заявок"}
-                  {list.length !== applications.length && ` з ${applications.length}`}
-                </p>
-                {selectedCount > 0 && <p className="text-xs font-semibold text-primary">Обрано: {selectedCount}</p>}
+              <div className="px-4 py-2.5 bg-muted-bg/60 border-t border-border">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <p className="text-xs text-muted">
+                    {list.length > PAGE_SIZE
+                      ? `Показано ${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, list.length)} з ${list.length}`
+                      : `${list.length} ${list.length === 1 ? "заявка" : list.length < 5 ? "заявки" : "заявок"}${list.length !== applications.length ? ` з ${applications.length}` : ""}`
+                    }
+                  </p>
+                  <div className="flex items-center gap-3">
+                    {selectedCount > 0 && <p className="text-xs font-semibold text-primary">Обрано: {selectedCount}</p>}
+                    <Pagination total={list.length} page={page} perPage={PAGE_SIZE} onChange={setPage} />
+                  </div>
+                </div>
               </div>
             </div>
           )}
