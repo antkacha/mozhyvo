@@ -11,7 +11,19 @@ export interface OrgProfile {
   phone?: string;
   contactEmail: string;
   description: string;
+  mission?: string;
+  founded?: string;
   logo: string | null;
+  brandColor: string;
+  focusAreas: string[];
+  socials: {
+    telegram?: string;
+    instagram?: string;
+    facebook?: string;
+    linkedin?: string;
+    twitter?: string;
+    youtube?: string;
+  };
   status: "pending" | "verified" | "rejected";
   createdAt: string;
 }
@@ -26,7 +38,12 @@ export const DEMO_ORG_PROFILE: OrgProfile = {
   contactEmail: "org@mozhyvo.org",
   description:
     "Ми підтримуємо молодих українців у пошуку можливостей для навчання, розвитку та реалізації свого потенціалу. Організовуємо обміни, тренінги та конкурси для молоді від 16 до 30 років.",
+  mission: "",
+  founded: "",
   logo: null,
+  brandColor: "#3B4FE8",
+  focusAreas: [],
+  socials: {},
   status: "pending",
   createdAt: "2025-05-10",
 };

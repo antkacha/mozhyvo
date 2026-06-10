@@ -224,6 +224,9 @@ export default function RegisterPage() {
       contactEmail: email,
       description: orgDescription,
       logo: orgLogo,
+      brandColor: "#3B4FE8",
+      focusAreas: [],
+      socials: {},
       status: "pending",
       createdAt: new Date().toISOString().split("T")[0],
     };
