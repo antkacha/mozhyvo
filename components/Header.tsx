@@ -39,6 +39,8 @@ export default function Header() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile } = useProfile();
   const isAdmin = profile.role === "admin";
+  const isOrg = user?.user_metadata?.role === "org" || user?.user_metadata?.role === "coordinator";
+  const cabinetHref = isOrg ? "/dashboard" : "/cabinet";
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
@@ -109,9 +111,9 @@ export default function Header() {
             {!authLoading && user ? (
               <>
                 <Link
-                  href="/cabinet"
+                  href={cabinetHref}
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all duration-150 ${
-                    isActive("/cabinet")
+                    isActive(cabinetHref)
                       ? "border-primary text-primary bg-primary-light"
                       : "border-border text-foreground hover:border-primary/50 hover:text-primary"
                   }`}
@@ -210,11 +212,11 @@ export default function Header() {
               {!authLoading && user ? (
                 <>
                   <Link
-                    href="/cabinet"
+                    href={cabinetHref}
                     className="text-sm font-medium px-4 py-2.5 rounded-xl border border-border text-foreground text-center hover:border-primary hover:text-primary transition-all"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Мій кабінет
+                    {isOrg ? "Панель організації" : "Мій кабінет"}
                   </Link>
                   {isAdmin && (
                     <Link
