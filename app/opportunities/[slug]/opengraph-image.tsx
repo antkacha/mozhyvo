@@ -21,7 +21,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 const FUNDING_LABEL: Record<string, string> = {
-  "fully-funded":      "✓ Повне фінансування",
+  "fully-funded":      "Повне фінансування",
   "partially-funded":  "Часткове фінансування",
   "self-funded":       "Без фінансування",
 };

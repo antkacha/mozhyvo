@@ -50,7 +50,7 @@ export default function Image() {
               fontWeight: 600,
             }}
           >
-            ✦ Платформа можливостей
+            Платформа можливостей
           </div>
         </div>
 

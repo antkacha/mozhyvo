@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,7 +33,7 @@ const STEPS = ["Інтереси", "Освіта", "Мови"] as const;
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { save } = useProfile();
 
   const [step, setStep] = useState(0);
@@ -43,10 +43,13 @@ export default function OnboardingPage() {
   const [languages, setLanguages]   = useState<string[]>([]);
   const [saving, setSaving]         = useState(false);
 
-  if (!user) {
-    router.replace("/register");
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/register");
+    }
+  }, [loading, user, router]);
+
+  if (loading || !user) return null;
 
   function toggleInterest(v: string) {
     setInterests((p) => p.includes(v) ? p.filter((i) => i !== v) : [...p, v]);
