@@ -125,8 +125,8 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   const [customQuestions, setCustomQuestions] = useState<FormQuestion[]>([]);
 
   useEffect(() => {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(opp.slug);
-    if (!isUuid) return;
+    // Skip static text slugs like "erasmus-plus"; fetch for any UUID-based ID
+    if (!/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(opp.slug)) return;
     const supabase = createClient();
     supabase
       .from("org_projects")

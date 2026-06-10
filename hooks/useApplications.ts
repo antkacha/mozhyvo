@@ -122,9 +122,8 @@ export function useApplications() {
         const newApp = fromRow(data);
         setApplications((prev) => [newApp, ...prev]);
 
-        // If the slug is a UUID (org project), also save to org_applications
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(app.opportunitySlug);
-        if (isUuid) {
+        // Try to find a matching org project (works for any ID format: plain UUID, proj-*, etc.)
+        {
           const { data: project } = await supabase
             .from("org_projects")
             .select("org_id")

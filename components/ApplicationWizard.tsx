@@ -8,7 +8,8 @@ import { createClient } from "@/lib/supabase/client";
 import type { FormQuestion } from "@/hooks/useOrgProjects";
 import type { Opportunity } from "@/lib/data";
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Matches plain UUIDs and prefixed IDs like proj-*, org-*, etc.
+const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DRAFT_KEY = (slug: string) => `mozhyvo_draft_${slug}`;
 
 interface FormState {
