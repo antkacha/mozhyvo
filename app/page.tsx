@@ -125,7 +125,7 @@ export default function Home() {
 
               {/* Card 1 — Erasmus, indigo */}
               <div className="absolute z-0 animate-float1" style={{ top: "80px", left: "10px", width: "278px" }}>
-                <div className="bg-primary rounded-2xl p-5 shadow-2xl shadow-primary/40 text-white">
+                <div className="rounded-2xl p-5 shadow-2xl text-white" style={{ background: "linear-gradient(135deg, #1a2fa8 0%, #5b21b6 100%)", boxShadow: "0 20px 40px rgba(0,0,0,0.35)" }}>
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/15">
                       🎓 Стипендія
