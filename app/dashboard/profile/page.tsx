@@ -132,9 +132,9 @@ function PreviewCard({
 
       <div className="px-5 pb-5">
         {/* Logo overlapping cover */}
-        <div className="flex items-end justify-between -mt-7 mb-3">
+        <div className="relative z-10 flex items-end justify-between -mt-7 mb-3">
           <div
-            className="w-14 h-14 rounded-xl border-4 border-white shadow-md flex items-center justify-center text-white font-black text-sm overflow-hidden flex-shrink-0"
+            className="w-14 h-14 rounded-xl border-4 border-white shadow-md flex items-center justify-center text-white font-black text-sm overflow-hidden flex-shrink-0 bg-white"
             style={{ background: form.logo ? undefined : form.brandColor }}
           >
             {form.logo ? (
