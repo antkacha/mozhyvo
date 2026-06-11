@@ -5,7 +5,6 @@ import Link from "next/link";
 import type { Opportunity } from "@/lib/data";
 import { typeColors, fundingLabels, formatLabels } from "@/lib/data";
 import { useSaved } from "@/hooks/useSaved";
-import ApplicationWizard from "@/components/ApplicationWizard";
 import { getDaysUntilDeadline } from "@/lib/recommendations";
 import { orgNameToSlug } from "@/lib/organizations";
 
@@ -68,8 +67,6 @@ function ShareButton({ title, url }: { title: string; url: string }) {
 
 export default function OpportunityClient({ opp, related }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("Опис");
-  const [wizardOpen, setWizardOpen] = useState(false);
-  const [applied, setApplied] = useState(false);
   const { isSaved, toggle, ready: savedReady } = useSaved();
 
   const isExternal = opp.applyUrl.startsWith("http");
@@ -208,12 +205,12 @@ export default function OpportunityClient({ opp, related }: Props) {
                         Подати заявку →
                       </a>
                     ) : (
-                      <button
-                        onClick={() => setWizardOpen(true)}
-                        className="px-8 py-3.5 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 text-sm"
+                      <Link
+                        href={`/opportunities/${opp.slug}/apply`}
+                        className="inline-block px-8 py-3.5 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 text-sm"
                       >
                         Почати заявку →
-                      </button>
+                      </Link>
                     )}
                   </div>
                 )}
@@ -279,11 +276,6 @@ export default function OpportunityClient({ opp, related }: Props) {
                     <div className="flex items-center justify-center gap-2 w-full py-3 px-6 bg-muted-bg text-muted font-semibold rounded-xl text-sm border border-border">
                       Прийом завершено
                     </div>
-                  ) : applied ? (
-                    <div className="flex items-center justify-center gap-2 w-full py-3 px-6 bg-green-50 text-green-700 font-semibold rounded-xl text-sm border border-green-200">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                      Заявку подано
-                    </div>
                   ) : isExternal ? (
                     <a
                       href={opp.applyUrl}
@@ -294,12 +286,12 @@ export default function OpportunityClient({ opp, related }: Props) {
                       Заповнити форму →
                     </a>
                   ) : (
-                    <button
-                      onClick={() => setWizardOpen(true)}
+                    <Link
+                      href={`/opportunities/${opp.slug}/apply`}
                       className="block w-full text-center py-3 px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 text-sm"
                     >
                       Подати заявку →
-                    </button>
+                    </Link>
                   )}
                   <button
                     onClick={() => toggle(opp.slug)}
@@ -396,30 +388,6 @@ export default function OpportunityClient({ opp, related }: Props) {
         )}
       </div>
 
-      {/* Application wizard modal */}
-      {wizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setWizardOpen(false)} />
-          <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-3xl rounded-t-3xl max-h-[92vh] overflow-y-auto shadow-2xl">
-            <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-border px-6 py-5 flex items-start justify-between z-10 rounded-t-3xl">
-              <div>
-                <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-0.5">Заявка на участь</p>
-                <h2 className="text-base font-bold text-foreground leading-snug line-clamp-1">{opp.title}</h2>
-              </div>
-              <button onClick={() => setWizardOpen(false)} className="ml-4 p-2 rounded-xl hover:bg-muted-bg transition-all text-muted hover:text-foreground flex-shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="px-6 pb-8 pt-6">
-              <ApplicationWizard
-                opp={opp}
-                onClose={() => setWizardOpen(false)}
-                onSuccess={() => { setWizardOpen(false); setApplied(true); }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

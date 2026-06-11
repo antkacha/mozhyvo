@@ -82,29 +82,43 @@ export default async function ApplyPage({ params }: { params: { slug: string } }
   if (opp.applyUrl.startsWith("http")) redirect(opp.applyUrl);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
-      {/* Back */}
-      <Link
-        href={`/opportunities/${opp.slug}`}
-        className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-primary transition-colors mb-8"
-      >
-        ← Повернутись до програми
-      </Link>
-
-      {/* Header */}
-      <div className="mb-8">
-        <p className="text-sm font-medium text-muted mb-1">{opp.org}</p>
-        <h1 className="text-2xl font-extrabold text-foreground leading-tight mb-2">
-          {opp.title}
-        </h1>
-        <div className="flex items-center gap-3 text-sm text-muted">
-          <span>{opp.flag} {opp.location}</span>
-          <span>·</span>
-          <span>Дедлайн: {opp.deadlineDisplay}</span>
-        </div>
+    <div className="min-h-screen bg-[#f0f2f5] pb-16">
+      {/* Back link */}
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-6 pb-2">
+        <Link
+          href={`/opportunities/${opp.slug}`}
+          className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-primary transition-colors font-medium"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Повернутись до програми
+        </Link>
       </div>
 
-      <ApplyForm opp={opp} />
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 flex flex-col gap-4">
+        {/* Header card — Google Forms-style colored banner */}
+        <div className="rounded-2xl overflow-hidden shadow-sm border border-primary/10">
+          <div className="h-2 bg-primary w-full" />
+          <div className="bg-white px-8 py-7">
+            <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">{opp.org}</p>
+            <h1 className="text-2xl font-black text-foreground leading-tight mb-3">{opp.title}</h1>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+              <span>{opp.flag} {opp.location}</span>
+              <span className="text-border">·</span>
+              <span>{opp.typeName}</span>
+              <span className="text-border">·</span>
+              <span>Дедлайн: <span className="font-semibold text-foreground">{opp.deadlineDisplay}</span></span>
+            </div>
+            <p className="text-xs text-muted mt-4 pt-4 border-t border-border">
+              * — обов&apos;язкові поля
+            </p>
+          </div>
+        </div>
+
+        {/* Form card */}
+        <ApplyForm opp={opp} />
+      </div>
     </div>
   );
 }

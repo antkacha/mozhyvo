@@ -265,7 +265,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   // Already applied
   if (ready && hasApplied(opp.slug)) {
     return (
-      <div className="text-center py-16">
+      <div className="bg-white rounded-2xl shadow-sm border border-border px-8 py-16 text-center">
         <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
           <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -290,7 +290,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   // Success state
   if (done) {
     return (
-      <div className="text-center py-16">
+      <div className="bg-white rounded-2xl shadow-sm border border-border px-8 py-16 text-center">
         <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
           <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -313,7 +313,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   }
 
   return (
-    <div>
+    <div className="bg-white rounded-2xl shadow-sm border border-border px-8 py-8">
       {/* Progress */}
       <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1">
         {STEPS.map((label, i) => (
