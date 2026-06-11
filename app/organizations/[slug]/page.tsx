@@ -156,7 +156,7 @@ type SupabaseOrg = {
 type SupabaseProject = {
   id: string; title: string; type: string; country: string; flag: string;
   deadline: string | null; funding: string | null; status: string;
-  short_description: string | null; slug: string | null;
+  short_description: string | null;
 };
 
 function DynamicOrgPage({ org, projects }: { org: SupabaseOrg; projects: SupabaseProject[] }) {
@@ -314,7 +314,7 @@ function DynamicOrgPage({ org, projects }: { org: SupabaseOrg; projects: Supabas
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {activeProjects.map((p) => (
-                <Link key={p.id} href={p.slug ? `/opportunities/${p.slug}` : `/opportunities`}
+                <Link key={p.id} href={`/opportunities/${p.id}`}
                   className="bg-white rounded-2xl border border-border p-5 hover:shadow-md hover:border-primary/30 transition-all group">
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-light text-primary">{p.type}</span>
@@ -385,7 +385,7 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
   // 3. Fetch org's published projects
   const { data: projects } = await supabase
     .from("org_projects")
-    .select("id, title, type, country, flag, deadline, funding, status, short_description, slug")
+    .select("id, title, type, country, flag, deadline, funding, status, short_description")
     .eq("org_id", org.id)
     .eq("status", "published")
     .order("created_at", { ascending: false });
