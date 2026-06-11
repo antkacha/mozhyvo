@@ -127,7 +127,7 @@ function PreviewCard({
         coverImage={form.coverImage}
         coverVideo={form.coverVideo}
         brandColor={form.brandColor}
-        height="h-24"
+        height="h-16"
       />
 
       <div className="px-5 pb-5">
@@ -362,7 +362,7 @@ function ProfileContent() {
                 </label>
 
                 <div
-                  className="relative rounded-2xl overflow-hidden h-36 cursor-pointer group"
+                  className="relative rounded-2xl overflow-hidden h-24 cursor-pointer group"
                   onClick={() => setCoverModalOpen(true)}
                 >
                   <CoverDisplay
