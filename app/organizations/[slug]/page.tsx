@@ -87,7 +87,7 @@ function StaticOrgPage({ slug }: { slug: string }) {
   const activeSocials = Object.entries(org.socials).filter(([, url]) => !!url) as [string, string][];
 
   return (
-    <>
+    <div className="page-transition">
       <div className="h-44 sm:h-52 w-full"
         style={{ background: `linear-gradient(135deg, ${org.coverFrom} 0%, ${org.coverTo} 100%)` }} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -140,7 +140,7 @@ function StaticOrgPage({ slug }: { slug: string }) {
         {orgOpps.length > 0 && (<section className="pb-16"><h2 className="text-2xl font-black text-foreground mb-6">Активні програми</h2><div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">{orgOpps.map((opp, i) => (<OpportunityCard key={opp.slug} opp={opp} index={i} />))}</div></section>)}
       </div>
       <div className="border-t border-border"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"><Link href="/opportunities" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-primary transition-colors font-medium"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>Всі можливості</Link></div></div>
-    </>
+    </div>
   );
 }
 
@@ -171,7 +171,7 @@ function DynamicOrgPage({ org, projects }: { org: SupabaseOrg; projects: Supabas
   const initials = org.name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
   return (
-    <>
+    <div className="page-transition">
       {/* Cover */}
       <div className="h-44 sm:h-52 w-full relative overflow-hidden" style={coverStyle}>
         <div className="absolute inset-0 pointer-events-none"
@@ -349,7 +349,7 @@ function DynamicOrgPage({ org, projects }: { org: SupabaseOrg; projects: Supabas
           </Link>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
