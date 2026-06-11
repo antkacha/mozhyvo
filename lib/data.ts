@@ -16,6 +16,7 @@ export interface Opportunity {
   type: OpportunityType;
   typeName: string;
   org: string;
+  orgSlug?: string;
   title: string;
   shortDescription: string;
   fullDescription: string;

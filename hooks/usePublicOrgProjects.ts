@@ -13,7 +13,7 @@ export function usePublicOrgProjects() {
     async function load() {
       const { data } = await supabase
         .from("org_projects")
-        .select("*, orgs!inner(name, status)")
+        .select("*, orgs!inner(name, status, slug)")
         .eq("status", "published")
         .eq("orgs.status", "verified")
         .order("created_at", { ascending: false });
@@ -21,12 +21,13 @@ export function usePublicOrgProjects() {
       if (!data) { setReady(true); return; }
 
       const mapped: Opportunity[] = data.map((row) => {
-        const org = row.orgs as { name: string };
+        const org = row.orgs as { name: string; slug?: string };
         return {
           slug:             row.id as string,
           type:             (row.type as Opportunity["type"]) ?? "exchange",
           typeName:         (row.type_name as string) ?? "",
           org:              org?.name ?? "",
+          orgSlug:          org?.slug ?? undefined,
           title:            (row.title as string) ?? "",
           shortDescription: (row.short_description as string) ?? "",
           fullDescription:  (row.full_description as string) ?? "",

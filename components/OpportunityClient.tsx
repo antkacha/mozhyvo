@@ -76,7 +76,7 @@ export default function OpportunityClient({ opp, related }: Props) {
   const saved = isSaved(opp.slug);
   const days = getDaysUntilDeadline(opp.deadline);
   const expired = days < 0;
-  const orgSlug = orgNameToSlug[opp.org];
+  const orgSlug = opp.orgSlug ?? orgNameToSlug[opp.org];
 
   const borderColor: Record<string, string> = {
     scholarship: "border-l-primary", internship: "border-l-blue-500",

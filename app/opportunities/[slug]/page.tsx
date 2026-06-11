@@ -25,18 +25,19 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
     const supabase = createPublicClient();
     const { data } = await supabase
       .from("org_projects")
-      .select("*, orgs!inner(name, status)")
+      .select("*, orgs!inner(name, status, slug)")
       .eq("id", id)
       .eq("status", "published")
       .maybeSingle();
     if (!data) return null;
-    const org = data.orgs as { name: string; status: string };
+    const org = data.orgs as { name: string; status: string; slug?: string };
     if (org.status !== "verified") return null;
     return {
       slug:             data.id as string,
       type:             (data.type as Opportunity["type"]) ?? "exchange",
       typeName:         (data.type_name as string) ?? "",
       org:              org.name ?? "",
+      orgSlug:          org.slug ?? undefined,
       title:            (data.title as string) ?? "",
       shortDescription: (data.short_description as string) ?? "",
       fullDescription:  (data.full_description as string) ?? "",
@@ -167,9 +168,9 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
                 </span>
               </div>
 
-              {orgNameToSlug[opp.org] ? (
+              {(opp.orgSlug ?? orgNameToSlug[opp.org]) ? (
                 <Link
-                  href={`/organizations/${orgNameToSlug[opp.org]}`}
+                  href={`/organizations/${opp.orgSlug ?? orgNameToSlug[opp.org]}`}
                   className="text-sm font-semibold text-primary/60 uppercase tracking-widest mb-3 hover:text-primary transition-colors inline-block"
                 >
                   {opp.org}

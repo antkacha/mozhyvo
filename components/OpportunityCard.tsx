@@ -36,7 +36,7 @@ export default function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; 
   const expiring = isExpiringSoon(opp.deadline);
   const { isSaved, toggle, ready } = useSaved();
   const saved = isSaved(opp.slug);
-  const orgSlug = orgNameToSlug[opp.org];
+  const orgSlug = opp.orgSlug ?? orgNameToSlug[opp.org];
 
   return (
     <div
