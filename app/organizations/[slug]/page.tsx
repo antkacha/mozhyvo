@@ -360,14 +360,25 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
   // 1. Try static org
   if (orgsBySlug[slug]) return <StaticOrgPage slug={slug} />;
 
-  // 2. Try Supabase org by slug or id
+  // 2. Try Supabase org by slug
   const supabase = createClient();
-  const { data: org } = await supabase
+  let { data: org } = await supabase
     .from("orgs")
     .select("*")
-    .or(`slug.eq.${slug},id.eq.${slug}`)
+    .eq("slug", slug)
     .eq("status", "verified")
     .maybeSingle();
+
+  // 3. Fallback: try by UUID id (only if slug looks like a UUID)
+  if (!org && /^[0-9a-f-]{36}$/i.test(slug)) {
+    const { data } = await supabase
+      .from("orgs")
+      .select("*")
+      .eq("id", slug)
+      .eq("status", "verified")
+      .maybeSingle();
+    org = data;
+  }
 
   if (!org) notFound();
 
