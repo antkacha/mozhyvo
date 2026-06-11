@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { slugify } from "@/lib/slugify";
 
 // Module-level cache — shared across all hook instances in the same browser session.
 // This means the second call to useOrgSession() returns data synchronously from cache
@@ -121,11 +122,16 @@ export function useOrgSession() {
     // First login after email confirmation — bootstrap org from auth metadata
     const meta = user.user_metadata ?? {};
     if ((meta.role === "org" || meta.role === "coordinator") && meta.org_name) {
+      const orgName = meta.org_name as string;
+      const baseSlug = slugify(orgName);
+      const uniqueSlug = `${baseSlug}-${user.id.slice(0, 6)}`;
+
       const { data: created } = await supabase
         .from("orgs")
         .insert({
           user_id:       user.id,
-          name:          meta.org_name as string,
+          name:          orgName,
+          slug:          uniqueSlug,
           type:          (meta.org_type as string) ?? "",
           country:       (meta.org_country as string) ?? "",
           city:          (meta.org_city as string) ?? "",

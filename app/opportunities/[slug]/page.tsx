@@ -25,19 +25,19 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
     const supabase = createPublicClient();
     const { data } = await supabase
       .from("org_projects")
-      .select("*, orgs!inner(name, status, slug)")
+      .select("*, orgs!inner(id, name, status, slug)")
       .eq("id", id)
       .eq("status", "published")
       .maybeSingle();
     if (!data) return null;
-    const org = data.orgs as { name: string; status: string; slug?: string };
+    const org = data.orgs as { id: string; name: string; status: string; slug?: string };
     if (org.status !== "verified") return null;
     return {
       slug:             data.id as string,
       type:             (data.type as Opportunity["type"]) ?? "exchange",
       typeName:         (data.type_name as string) ?? "",
       org:              org.name ?? "",
-      orgSlug:          org.slug ?? undefined,
+      orgSlug:          org.slug || org.id,
       title:            (data.title as string) ?? "",
       shortDescription: (data.short_description as string) ?? "",
       fullDescription:  (data.full_description as string) ?? "",
