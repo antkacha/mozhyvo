@@ -15,6 +15,7 @@ function notifyListeners() { _listeners.forEach((fn) => fn()); }
 export interface OrgProfile {
   id: string;
   userId: string;
+  slug: string;
   name: string;
   type: string;
   country: string;
@@ -46,6 +47,7 @@ function fromRow(row: Record<string, unknown>): OrgProfile {
   return {
     id:           (row.id as string) ?? "",
     userId:       (row.user_id as string) ?? "",
+    slug:         (row.slug as string) ?? "",
     name:         (row.name as string) ?? "",
     type:         (row.type as string) ?? "",
     country:      (row.country as string) ?? "",

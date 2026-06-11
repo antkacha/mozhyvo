@@ -192,6 +192,16 @@ function Sidebar() {
               </Link>
             );
           })}
+          {org.slug && (
+            <Link
+              href={`/organizations/${org.slug}`}
+              target="_blank"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-foreground hover:bg-muted-bg transition-all"
+            >
+              <IconExternal className="w-4 h-4 flex-shrink-0" />
+              Публічний профіль
+            </Link>
+          )}
           <Link
             href="/"
             className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-foreground hover:bg-muted-bg transition-all"
