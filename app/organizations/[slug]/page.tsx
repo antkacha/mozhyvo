@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { organizations, orgsBySlug, orgNameToSlug } from "@/lib/organizations";
+import { orgsBySlug, orgNameToSlug } from "@/lib/organizations";
 import { opportunities } from "@/lib/data";
 import OpportunityCard from "@/components/OpportunityCard";
 
