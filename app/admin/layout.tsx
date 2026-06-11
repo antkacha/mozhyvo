@@ -24,6 +24,8 @@ const NAV = [
   },
 ];
 
+const MOZHYVO_NAV = { href: "/dashboard", label: "Кабінет МОЖUВО" };
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
   const { profile, ready: profileReady } = useProfile();
@@ -77,7 +79,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        <div className="px-4 py-4 border-t border-border space-y-1">
+        <div className="px-3 py-3 border-t border-border space-y-1">
+          <Link href={MOZHYVO_NAV.href}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold bg-primary-light text-primary hover:bg-primary/15 transition-all">
+            <span className="text-sm">⚡</span>
+            {MOZHYVO_NAV.label}
+          </Link>
           <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-muted hover:bg-muted-bg transition-all">
             ← На сайт
           </Link>
