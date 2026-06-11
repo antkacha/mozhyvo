@@ -7,6 +7,7 @@ import { typeColors, fundingLabels, formatLabels } from "@/lib/data";
 import { useSaved } from "@/hooks/useSaved";
 import ApplicationWizard from "@/components/ApplicationWizard";
 import { getDaysUntilDeadline } from "@/lib/recommendations";
+import { orgNameToSlug } from "@/lib/organizations";
 
 const TABS = ["Опис", "Вимоги", "Як подати", "FAQ"] as const;
 type Tab = (typeof TABS)[number];
@@ -75,6 +76,7 @@ export default function OpportunityClient({ opp, related }: Props) {
   const saved = isSaved(opp.slug);
   const days = getDaysUntilDeadline(opp.deadline);
   const expired = days < 0;
+  const orgSlug = orgNameToSlug[opp.org];
 
   const borderColor: Record<string, string> = {
     scholarship: "border-l-primary", internship: "border-l-blue-500",
@@ -319,6 +321,22 @@ export default function OpportunityClient({ opp, related }: Props) {
               <div className="bg-white border border-border rounded-2xl p-5 shadow-sm">
                 <p className="text-sm font-bold text-foreground mb-4">Деталі програми</p>
                 <div className="flex flex-col gap-0">
+                  {/* Org row — clickable if slug exists */}
+                  {opp.org && (
+                    <div className="flex items-start justify-between gap-3 py-2.5 border-b border-gray-100">
+                      <span className="text-xs text-muted flex-shrink-0">Організатор</span>
+                      {orgSlug ? (
+                        <Link
+                          href={`/organizations/${orgSlug}`}
+                          className="text-xs font-semibold text-primary hover:underline text-right"
+                        >
+                          {opp.org}
+                        </Link>
+                      ) : (
+                        <span className="text-xs font-semibold text-gray-800 text-right">{opp.org}</span>
+                      )}
+                    </div>
+                  )}
                   {([
                     { label: "Тип",         value: opp.typeName },
                     { label: "Формат",      value: formatLabels[opp.format] },
@@ -360,7 +378,14 @@ export default function OpportunityClient({ opp, related }: Props) {
                     )}
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-muted mb-1 uppercase tracking-wide">{r.org}</p>
+                    {(() => { const s = orgNameToSlug[r.org]; return s ? (
+                      <Link href={`/organizations/${s}`} onClick={(e) => e.stopPropagation()}
+                        className="text-xs font-semibold text-muted mb-1 uppercase tracking-wide hover:text-primary transition-colors block">
+                        {r.org}
+                      </Link>
+                    ) : (
+                      <p className="text-xs font-semibold text-muted mb-1 uppercase tracking-wide">{r.org}</p>
+                    ); })()}
                     <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">{r.title}</p>
                   </div>
                   <p className="text-xs text-muted mt-auto">{r.flag} {r.location} · {r.deadlineDisplay}</p>
