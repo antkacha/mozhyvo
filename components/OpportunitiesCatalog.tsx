@@ -28,10 +28,6 @@ type SortValue = typeof SORT_OPTIONS[number]["value"];
 const ALL_TYPES    = Object.keys(typeNames) as OpportunityType[];
 const ALL_FORMATS  = ["online", "offline", "hybrid"] as FormatType[];
 const ALL_FUNDINGS = ["fully-funded", "partially-funded", "self-funded"] as FundingType[];
-const ALL_COUNTRIES = Array.from(new Set(opportunities.map((o) => o.country))).sort();
-const ALL_LANGUAGES = Array.from(
-  new Set(opportunities.flatMap((o) => o.languages.map((l) => l.split(" ")[0])))
-).sort();
 
 // ── Checkbox row ────────────────────────────────────────────────────
 function CheckRow({
@@ -169,6 +165,16 @@ export default function OpportunitiesCatalog() {
   // Merge static + Supabase org projects
   const allOpportunities = useMemo(() => [...opportunities, ...orgProjects], [orgProjects]);
 
+  // Derived filter options — computed from live data
+  const allCountries = useMemo(
+    () => Array.from(new Set(allOpportunities.map((o) => o.country).filter(Boolean))).sort(),
+    [allOpportunities]
+  );
+  const allLanguages = useMemo(
+    () => Array.from(new Set(allOpportunities.flatMap((o) => o.languages.map((l) => l.split(" ")[0])))).sort(),
+    [allOpportunities]
+  );
+
   // Filtered + sorted list
   const filtered = useMemo(() => {
     let result = allOpportunities.filter((o) => {
@@ -221,7 +227,7 @@ export default function OpportunitiesCatalog() {
         <Section title="Тип">
           {ALL_TYPES.map((t) => (
             <CheckRow key={t} label={typeNames[t]}
-              count={opportunities.filter((o) => o.type === t).length}
+              count={allOpportunities.filter((o) => o.type === t).length}
               checked={types.includes(t)}
               onChange={() => toggle(types, setTypes, t)} />
           ))}
@@ -243,7 +249,7 @@ export default function OpportunitiesCatalog() {
         </Section>
         <Section title="Країна">
           <div className="max-h-44 overflow-y-auto flex flex-col gap-1.5 pr-1">
-            {ALL_COUNTRIES.map((c) => (
+            {allCountries.map((c) => (
               <CheckRow key={c} label={c}
                 count={filtered.filter((o) => o.country === c).length}
                 checked={countries.includes(c)}
@@ -253,7 +259,7 @@ export default function OpportunitiesCatalog() {
         </Section>
         <Section title="Мова">
           <div className="flex flex-wrap gap-1.5">
-            {ALL_LANGUAGES.map((l) => (
+            {allLanguages.map((l) => (
               <button
                 key={l}
                 onClick={() => toggle(languages, setLanguages, l)}
