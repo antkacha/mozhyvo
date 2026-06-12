@@ -99,11 +99,12 @@ export function useOrgApplications(orgId?: string, projectId?: string) {
 
         // Sync status change to user's applications table so they see their result
         if (data.status !== undefined && current) {
-          await supabase
+          const { error: syncError } = await supabase
             .from("applications")
             .update({ status: USER_STATUS[data.status] })
             .eq("opportunity_slug", current.projectId)
             .eq("email", current.email);
+          if (syncError) console.error("[status-sync] failed:", syncError.message, { projectId: current.projectId, email: current.email });
         }
       } else {
         throw new Error(error.message);
