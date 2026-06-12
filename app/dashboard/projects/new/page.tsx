@@ -15,6 +15,7 @@ const TYPE_OPTIONS = [
   { value: "competition", label: "Конкурс", desc: "Змагання та відбори" },
   { value: "hackathon", label: "Хакатон", desc: "Інтенсивні проектні заходи" },
   { value: "training", label: "Тренінг", desc: "Навчання та воркшопи" },
+  { value: "custom", label: "Інший", desc: "Вкажіть свій тип" },
 ];
 
 const COUNTRIES: { emoji: string; name: string }[] = [
@@ -156,6 +157,7 @@ type FormData = {
   deadline: string;
   startDate: string;
   endDate: string;
+  durationText: string;
   ageMin: string;
   ageMax: string;
   languages: string;
@@ -170,7 +172,7 @@ const INITIAL: FormData = {
   shortDescription: "", fullDescription: "",
   flag: "", country: "", city: "",
   format: "offline", funding: "fully-funded", fundingDetails: "",
-  deadline: "", startDate: "", endDate: "",
+  deadline: "", startDate: "", endDate: "", durationText: "",
   ageMin: "", ageMax: "", languages: "", tags: "",
   requirements: "", benefits: "",
   externalApplyUrl: "",
@@ -258,6 +260,7 @@ function NewProjectContent() {
   const [form, setForm] = useState<FormData>(INITIAL);
   const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
   const [applyMode, setApplyMode] = useState<"form" | "external">("form");
+  const [durationMode, setDurationMode] = useState<"dates" | "text">("dates");
   const [templateChosen, setTemplateChosen] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [saving, setSaving] = useState(false);
@@ -267,7 +270,7 @@ function NewProjectContent() {
     setForm((p) => {
       const n = { ...p, [field]: value };
       if (field === "type") {
-        n.typeName = TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value;
+        n.typeName = value === "custom" ? "" : (TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value);
       }
       return n;
     });
@@ -306,11 +309,13 @@ function NewProjectContent() {
       : form.country.trim();
 
     const fmt = (d: string) => new Date(d).toLocaleDateString("uk-UA", { day: "numeric", month: "short", year: "numeric" });
-    const duration = form.startDate && form.endDate
-      ? `${fmt(form.startDate)} — ${fmt(form.endDate)}`
-      : form.startDate ? `Від ${fmt(form.startDate)}`
-      : form.endDate   ? `До ${fmt(form.endDate)}`
-      : "";
+    const duration = durationMode === "text"
+      ? form.durationText.trim()
+      : form.startDate && form.endDate
+        ? `${fmt(form.startDate)} — ${fmt(form.endDate)}`
+        : form.startDate ? `Від ${fmt(form.startDate)}`
+        : form.endDate   ? `До ${fmt(form.endDate)}`
+        : "";
 
     setSubmitError(null);
     try {
@@ -472,6 +477,15 @@ function NewProjectContent() {
                 </button>
               ))}
             </div>
+            {form.type === "custom" && (
+              <input
+                value={form.typeName}
+                onChange={(e) => set("typeName", e.target.value)}
+                placeholder="Наприклад: Менторська програма, Літня школа..."
+                className={`${input} mt-3`}
+                autoFocus
+              />
+            )}
           </div>
 
           <div>
@@ -537,25 +551,37 @@ function NewProjectContent() {
             <div />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={label}>Дата початку</label>
+          <div>
+            <label className={label}>Тривалість проекту</label>
+            <div className="flex gap-1 bg-muted-bg rounded-xl p-1 mb-3 w-fit">
+              {([ ["dates", "Дати"], ["text", "Тривалість"] ] as const).map(([val, lbl]) => (
+                <button key={val} type="button" onClick={() => setDurationMode(val)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    durationMode === val ? "bg-white text-foreground shadow-sm" : "text-muted hover:text-foreground"
+                  }`}>
+                  {lbl}
+                </button>
+              ))}
+            </div>
+            {durationMode === "dates" ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={label}>Дата початку</label>
+                  <input type="date" value={form.startDate} onChange={(e) => set("startDate", e.target.value)} className={input} />
+                </div>
+                <div>
+                  <label className={label}>Дата закінчення</label>
+                  <input type="date" value={form.endDate} onChange={(e) => set("endDate", e.target.value)} className={input} />
+                </div>
+              </div>
+            ) : (
               <input
-                type="date"
-                value={form.startDate}
-                onChange={(e) => set("startDate", e.target.value)}
+                value={form.durationText}
+                onChange={(e) => set("durationText", e.target.value)}
+                placeholder="Наприклад: 2 тижні, 3 місяці, 1 рік..."
                 className={input}
               />
-            </div>
-            <div>
-              <label className={label}>Дата закінчення</label>
-              <input
-                type="date"
-                value={form.endDate}
-                onChange={(e) => set("endDate", e.target.value)}
-                className={input}
-              />
-            </div>
+            )}
           </div>
 
           <div>
