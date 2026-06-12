@@ -98,7 +98,11 @@ export default function RegisterPage() {
 
   const totalSteps = role === "org" ? 3 : 2;
 
-  const selectRole = (r: Role) => { setRole(r); setStep(2); };
+  const selectRole = (r: Role) => {
+    if (r === "org") { router.push("/org/register"); return; }
+    setRole(r);
+    setStep(2);
+  };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
