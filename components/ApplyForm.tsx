@@ -77,12 +77,6 @@ const EMPTY: FormData = {
   portfolioUrl: "",
 };
 
-const BASE_STEPS = [
-  "Особисті дані",
-  "Освіта та мови",
-  "Мотивація",
-  "Огляд заявки",
-];
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -138,28 +132,44 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
       });
   }, [opp.slug]);
 
-  // Standard blocks are already covered by base steps — only show truly custom questions
-  // trueCustomItems = sections + real questions (for rendering)
+  // Which standard blocks the org enabled
+  const enabledBlocks = useMemo(
+    () => new Set(customQuestions.filter((q) => q.type.startsWith("block_")).map((q) => q.type)),
+    [customQuestions]
+  );
+
+  // Sections + real questions (for rendering the custom step)
   const trueCustomItems = useMemo(
     () => customQuestions.filter((q) => !q.type.startsWith("block_")),
     [customQuestions]
   );
-  // trueCustomQuestions = only real questions (for step count, validation, review)
+  // Only real questions, no sections (for validation and review)
   const trueCustomQuestions = useMemo(
     () => trueCustomItems.filter((q) => q.type !== "section"),
     [trueCustomItems]
   );
 
-  const STEPS = useMemo(
-    () =>
-      trueCustomQuestions.length > 0
-        ? ["Особисті дані", "Освіта та мови", "Мотивація", "Додаткові питання", "Огляд заявки"]
-        : BASE_STEPS,
-    [trueCustomQuestions.length]
-  );
+  // Custom step label: use first section's name if the org named it
+  const customStepLabel = useMemo(() => {
+    const sec = trueCustomItems.find((q) => q.type === "section");
+    return sec?.label?.trim() || "Додаткові питання";
+  }, [trueCustomItems]);
+
+  // Build steps dynamically based on enabled blocks
+  const STEPS = useMemo(() => {
+    const steps: Array<{ id: string; label: string }> = [];
+    steps.push({ id: "personal", label: "Особисті дані" });
+    if (enabledBlocks.has("block_education")) steps.push({ id: "education", label: "Освіта та мови" });
+    if (enabledBlocks.has("block_motivation") || enabledBlocks.has("block_documents")) {
+      steps.push({ id: "motivation", label: enabledBlocks.has("block_motivation") ? "Мотивація" : "Документи" });
+    }
+    if (trueCustomQuestions.length > 0) steps.push({ id: "custom", label: customStepLabel });
+    steps.push({ id: "review", label: "Огляд заявки" });
+    return steps;
+  }, [enabledBlocks, trueCustomQuestions.length, customStepLabel]);
 
   const REVIEW_STEP = STEPS.length - 1;
-  const CUSTOM_STEP = trueCustomQuestions.length > 0 ? 3 : -1;
+  const CUSTOM_STEP_IDX = STEPS.findIndex((s) => s.id === "custom");
 
   const [step, setStep] = useState(0);
   const [data, setData] = useState<FormData>(EMPTY);
@@ -196,20 +206,21 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   // Per-step validation
   const validate = (s: number): Partial<FormData> => {
     const e: Partial<FormData> = {};
-    if (s === 0) {
+    const sid = STEPS[s]?.id;
+    if (sid === "personal") {
       if (!data.firstName.trim()) e.firstName = "Вкажи ім'я";
       if (!data.lastName.trim()) e.lastName = "Вкажи прізвище";
       if (!data.email.includes("@")) e.email = "Невірний email";
-      if (!data.country) e.country = "Обери країну";
+      if (enabledBlocks.has("block_contacts") && !data.country) e.country = "Обери країну";
     }
-    if (s === 1) {
+    if (sid === "education") {
       if (!data.institution.trim()) e.institution = "Вкажи заклад";
       if (!data.degree) e.degree = "Обери ступінь";
       if (data.languages.length === 0)
         (e as Record<string, string>).languages = "Додай хоча б одну мову";
     }
-    if (s === 2) {
-      if (data.motivation.trim().length < 50)
+    if (sid === "motivation") {
+      if (enabledBlocks.has("block_motivation") && data.motivation.trim().length < 50)
         e.motivation = "Мотиваційний лист — мінімум 50 символів";
       if (data.cvUrl && !/^https?:\/\/.+/.test(data.cvUrl))
         e.cvUrl = "Вкажи повне посилання (https://...)";
@@ -232,7 +243,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   }
 
   const next = () => {
-    if (step === CUSTOM_STEP) {
+    if (step === CUSTOM_STEP_IDX) {
       const e = validateCustom();
       if (Object.keys(e).length > 0) { setCustomErrors(e); return; }
       setCustomErrors({});
@@ -328,8 +339,8 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
     <div className="bg-white rounded-2xl shadow-sm border border-border px-8 py-8">
       {/* Progress */}
       <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1">
-        {STEPS.map((label, i) => (
-          <div key={i} className="flex items-center gap-2 flex-shrink-0">
+        {STEPS.map((s, i) => (
+          <div key={s.id} className="flex items-center gap-2 flex-shrink-0">
             <div className="flex items-center gap-2">
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
@@ -349,7 +360,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
                 )}
               </div>
               <span className={`text-xs font-medium hidden sm:block ${i === step ? "text-foreground" : "text-muted"}`}>
-                {label}
+                {s.label}
               </span>
             </div>
             {i < STEPS.length - 1 && (
@@ -360,12 +371,11 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
       </div>
 
       <div className="bg-white rounded-2xl border border-border shadow-sm p-8">
-        <h2 className="text-lg font-bold text-foreground mb-1">{STEPS[step]}</h2>
+        <h2 className="text-lg font-bold text-foreground mb-1">{STEPS[step]?.label}</h2>
         <p className="text-sm text-muted mb-6">Крок {step + 1} з {STEPS.length}</p>
 
-
-        {/* ── Step 0: Personal ── */}
-        {step === 0 && (
+        {/* ── Personal data ── */}
+        {STEPS[step]?.id === "personal" && (
           <div className="flex flex-col gap-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Field label="Ім'я" required error={errors.firstName}>
@@ -378,20 +388,24 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
             <Field label="Email" required error={errors.email}>
               <input type="email" value={data.email} onChange={(e) => set("email", e.target.value)} placeholder="your@email.com" autoComplete="email" className={inputCls(errors.email)} />
             </Field>
-            <Field label="Номер телефону" hint="Міжнародний формат, наприклад +380501234567">
-              <input type="tel" value={data.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+380 50 123 4567" className={inputCls()} />
-            </Field>
-            <Field label="Країна проживання" required error={errors.country}>
-              <select value={data.country} onChange={(e) => set("country", e.target.value)} className={inputCls(errors.country)}>
-                <option value="">Оберіть країну...</option>
-                {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </Field>
+            {enabledBlocks.has("block_contacts") && (
+              <>
+                <Field label="Номер телефону" hint="Міжнародний формат, наприклад +380501234567">
+                  <input type="tel" value={data.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+380 50 123 4567" className={inputCls()} />
+                </Field>
+                <Field label="Країна проживання" required error={errors.country}>
+                  <select value={data.country} onChange={(e) => set("country", e.target.value)} className={inputCls(errors.country)}>
+                    <option value="">Оберіть країну...</option>
+                    {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </Field>
+              </>
+            )}
           </div>
         )}
 
-        {/* ── Step 1: Education ── */}
-        {step === 1 && (
+        {/* ── Education ── */}
+        {STEPS[step]?.id === "education" && (
           <div className="flex flex-col gap-5">
             <Field label="Заклад навчання" required error={errors.institution}>
               <input type="text" value={data.institution} onChange={(e) => set("institution", e.target.value)} placeholder="Київський університет імені Бориса Грінченка" className={inputCls(errors.institution)} />
@@ -431,34 +445,40 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
           </div>
         )}
 
-        {/* ── Step 2: Motivation ── */}
-        {step === 2 && (
+        {/* ── Motivation / Documents ── */}
+        {STEPS[step]?.id === "motivation" && (
           <div className="flex flex-col gap-5">
-            <Field
-              label="Мотиваційний лист"
-              required
-              error={errors.motivation}
-              hint={`${data.motivation.length} / мінімум 50 символів`}
-            >
-              <textarea
-                value={data.motivation}
-                onChange={(e) => set("motivation", e.target.value)}
-                placeholder={`Розкажи, чому ця програма важлива для тебе, які у тебе цілі та чому ти підходиш для участі...\n\nЯк ця можливість допоможе тобі в розвитку?`}
-                rows={8}
-                className={`${inputCls(errors.motivation)} resize-none leading-relaxed`}
-              />
-            </Field>
-            <Field label="Посилання на CV" hint="Google Drive, Dropbox або інший публічний URL (необов'язково)" error={errors.cvUrl}>
-              <input type="url" value={data.cvUrl} onChange={(e) => set("cvUrl", e.target.value)} placeholder="https://drive.google.com/..." className={inputCls(errors.cvUrl)} />
-            </Field>
-            <Field label="Посилання на портфоліо" hint="GitHub, Behance, LinkedIn або особистий сайт (необов'язково)" error={errors.portfolioUrl}>
-              <input type="url" value={data.portfolioUrl} onChange={(e) => set("portfolioUrl", e.target.value)} placeholder="https://github.com/..." className={inputCls(errors.portfolioUrl)} />
-            </Field>
+            {enabledBlocks.has("block_motivation") && (
+              <Field
+                label="Мотиваційний лист"
+                required
+                error={errors.motivation}
+                hint={`${data.motivation.length} / мінімум 50 символів`}
+              >
+                <textarea
+                  value={data.motivation}
+                  onChange={(e) => set("motivation", e.target.value)}
+                  placeholder={`Розкажи, чому ця програма важлива для тебе, які у тебе цілі та чому ти підходиш для участі...\n\nЯк ця можливість допоможе тобі в розвитку?`}
+                  rows={8}
+                  className={`${inputCls(errors.motivation)} resize-none leading-relaxed`}
+                />
+              </Field>
+            )}
+            {enabledBlocks.has("block_documents") && (
+              <>
+                <Field label="Посилання на CV" hint="Google Drive, Dropbox або інший публічний URL (необов'язково)" error={errors.cvUrl}>
+                  <input type="url" value={data.cvUrl} onChange={(e) => set("cvUrl", e.target.value)} placeholder="https://drive.google.com/..." className={inputCls(errors.cvUrl)} />
+                </Field>
+                <Field label="Посилання на портфоліо" hint="GitHub, Behance, LinkedIn або особистий сайт (необов'язково)" error={errors.portfolioUrl}>
+                  <input type="url" value={data.portfolioUrl} onChange={(e) => set("portfolioUrl", e.target.value)} placeholder="https://github.com/..." className={inputCls(errors.portfolioUrl)} />
+                </Field>
+              </>
+            )}
           </div>
         )}
 
-        {/* ── Step 3 (optional): Custom questions ── */}
-        {step === CUSTOM_STEP && CUSTOM_STEP !== -1 && (
+        {/* ── Custom questions ── */}
+        {STEPS[step]?.id === "custom" && (
           <div className="flex flex-col gap-6">
             {trueCustomItems.map((q) => {
               if (q.type === "section") {
@@ -544,40 +564,50 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
           </div>
         )}
 
-        {/* ── Review step ── */}
-        {step === REVIEW_STEP && (
+        {/* ── Review ── */}
+        {STEPS[step]?.id === "review" && (
           <div className="flex flex-col gap-6">
             <div className="bg-muted-bg rounded-xl p-5">
               <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Особисті дані</p>
               <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
                 <span className="text-muted">Ім&apos;я</span><span className="text-foreground font-medium">{data.firstName} {data.lastName}</span>
                 <span className="text-muted">Email</span><span className="text-foreground font-medium">{data.email}</span>
-                <span className="text-muted">Телефон</span><span className="text-foreground font-medium">{data.phone || "—"}</span>
-                <span className="text-muted">Країна</span><span className="text-foreground font-medium">{data.country}</span>
+                {enabledBlocks.has("block_contacts") && (
+                  <>
+                    <span className="text-muted">Телефон</span><span className="text-foreground font-medium">{data.phone || "—"}</span>
+                    <span className="text-muted">Країна</span><span className="text-foreground font-medium">{data.country}</span>
+                  </>
+                )}
               </div>
             </div>
-            <div className="bg-muted-bg rounded-xl p-5">
-              <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Освіта та мови</p>
-              <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
-                <span className="text-muted">Заклад</span><span className="text-foreground font-medium">{data.institution}</span>
-                <span className="text-muted">Ступінь</span><span className="text-foreground font-medium">{data.degree}</span>
-                <span className="text-muted">Рік</span><span className="text-foreground font-medium">{data.graduationYear || "—"}</span>
-                <span className="text-muted">Мови</span><span className="text-foreground font-medium">{data.languages.join(", ")}</span>
-              </div>
-            </div>
-            <div className="bg-muted-bg rounded-xl p-5">
-              <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Мотивація</p>
-              <p className="text-sm text-foreground leading-relaxed line-clamp-4">{data.motivation}</p>
-              {(data.cvUrl || data.portfolioUrl) && (
-                <div className="mt-3 flex flex-col gap-1">
-                  {data.cvUrl && <a href={data.cvUrl} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">📄 CV</a>}
-                  {data.portfolioUrl && <a href={data.portfolioUrl} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">🔗 Портфоліо</a>}
+            {enabledBlocks.has("block_education") && (
+              <div className="bg-muted-bg rounded-xl p-5">
+                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Освіта та мови</p>
+                <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
+                  <span className="text-muted">Заклад</span><span className="text-foreground font-medium">{data.institution}</span>
+                  <span className="text-muted">Ступінь</span><span className="text-foreground font-medium">{data.degree}</span>
+                  <span className="text-muted">Рік</span><span className="text-foreground font-medium">{data.graduationYear || "—"}</span>
+                  <span className="text-muted">Мови</span><span className="text-foreground font-medium">{data.languages.join(", ")}</span>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+            {(enabledBlocks.has("block_motivation") || enabledBlocks.has("block_documents")) && (
+              <div className="bg-muted-bg rounded-xl p-5">
+                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Мотивація</p>
+                {enabledBlocks.has("block_motivation") && (
+                  <p className="text-sm text-foreground leading-relaxed line-clamp-4">{data.motivation}</p>
+                )}
+                {(data.cvUrl || data.portfolioUrl) && (
+                  <div className="mt-3 flex flex-col gap-1">
+                    {data.cvUrl && <a href={data.cvUrl} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">📄 CV</a>}
+                    {data.portfolioUrl && <a href={data.portfolioUrl} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">🔗 Портфоліо</a>}
+                  </div>
+                )}
+              </div>
+            )}
             {trueCustomQuestions.length > 0 && (
               <div className="bg-muted-bg rounded-xl p-5">
-                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Додаткові питання</p>
+                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">{customStepLabel}</p>
                 <div className="flex flex-col gap-3">
                   {trueCustomQuestions.map((q) => {
                     const val = customAnswers[q.id];

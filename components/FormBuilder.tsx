@@ -525,15 +525,15 @@ export default function FormBuilder({ questions, onChange }: FormBuilderProps) {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          <button onClick={() => setAddingType(true)}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-border text-sm font-semibold text-muted hover:border-primary/40 hover:text-primary hover:bg-primary-light/20 transition-all">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg>
-            Додати питання
-          </button>
           <button onClick={addSection}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-primary/20 text-sm font-semibold text-primary/60 hover:border-primary/50 hover:text-primary hover:bg-primary-light/20 transition-all">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8M4 18h12"/></svg>
             Додати розділ
+          </button>
+          <button onClick={() => setAddingType(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-border text-sm font-semibold text-muted hover:border-primary/40 hover:text-primary hover:bg-primary-light/20 transition-all">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg>
+            Додати питання
           </button>
         </div>
       )}
