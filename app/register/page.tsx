@@ -144,9 +144,13 @@ export default function RegisterPage() {
     setStatus("loading");
     setServerError("");
     const nameParts = name.trim().split(" ");
+    const firstName = nameParts[0] ?? "";
     const { data, error } = await supabase.auth.signUp({
       email, password,
-      options: { data: { first_name: nameParts[0] ?? "", last_name: nameParts.slice(1).join(" ") ?? "", role: "seeker" } },
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/cabinet`,
+        data: { first_name: firstName, last_name: nameParts.slice(1).join(" ") ?? "", role: "seeker" },
+      },
     });
     if (error) {
       setServerError(error.message === "User already registered" ? "Цей email вже зареєстрований. Спробуй увійти." : error.message);
@@ -155,8 +159,13 @@ export default function RegisterPage() {
       setServerError("Цей email вже зареєстрований. Перевір пошту або спробуй увійти.");
       setStatus("error");
     } else {
+      // Send branded verification email via Resend
+      fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, role: "user", firstName }),
+      }).catch(() => {});
       setStatus("success");
-      setTimeout(() => router.push("/onboarding"), 2000);
     }
   };
 
@@ -484,19 +493,31 @@ export default function RegisterPage() {
 
               {/* Success */}
               {status === "success" && (
-                <div className="text-center py-8">
-                  <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                <div className="text-center py-6">
+                  <div className="w-14 h-14 rounded-2xl bg-primary-light flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <p className="font-bold text-foreground text-lg">
-                    {role === "org" ? "Організацію зареєстровано!" : "Акаунт створено!"}
+                  <p className="font-bold text-foreground text-lg mb-2">Перевірте пошту!</p>
+                  <p className="text-sm text-muted leading-relaxed mb-5">
+                    Ми надіслали листа на <strong className="text-foreground">{email}</strong>.
+                    Перейдіть за посиланням у листі, щоб підтвердити акаунт.
                   </p>
-                  <p className="text-sm text-muted mt-2 leading-relaxed">
-                    {role === "org"
-                      ? "Ваш профіль передано на перевірку. Перенаправляємо до кабінету..."
-                      : "Перевір email — ми надіслали підтвердження."}
+                  <div className="flex flex-col gap-2 text-left bg-[#f7f8fc] rounded-2xl p-4">
+                    {[
+                      { icon: "✉️", text: "Відкрийте лист від Моживо у вашій пошті" },
+                      { icon: "🔗", text: "Натисніть кнопку «Підтвердити email»" },
+                      { icon: "🎉", text: "Готово — ви потрапите до кабінету" },
+                    ].map(({ icon, text }, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <span className="text-base">{icon}</span>
+                        <span className="text-xs text-muted">{text}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted mt-4">
+                    Не прийшло? Перевірте папку «Спам».
                   </p>
                 </div>
               )}
