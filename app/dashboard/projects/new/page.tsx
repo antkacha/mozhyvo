@@ -165,6 +165,7 @@ type FormData = {
   requirements: string;
   benefits: string;
   externalApplyUrl: string;
+  infoPackUrl: string;
 };
 
 const INITIAL: FormData = {
@@ -175,7 +176,7 @@ const INITIAL: FormData = {
   deadline: "", startDate: "", endDate: "", durationText: "",
   ageMin: "", ageMax: "", languages: [], tags: "",
   requirements: "", benefits: "",
-  externalApplyUrl: "",
+  externalApplyUrl: "", infoPackUrl: "",
 };
 
 const STEPS = ["Основна", "Місце і час", "Учасники", "Опис", "Заявка"];
@@ -378,6 +379,7 @@ function NewProjectContent() {
         status,
         formQuestions,
         externalApplyUrl: applyMode === "external" ? form.externalApplyUrl.trim() : "",
+        infoPackUrl: form.infoPackUrl.trim() || undefined,
       });
       router.push("/dashboard/projects");
     } catch (e) {
@@ -793,6 +795,23 @@ function NewProjectContent() {
               rows={4}
               placeholder={"Повне фінансування (переліт, проживання, харчування)\nСертифікат учасника\nМіжнародний нетворкінг"}
               className={`${input} resize-none font-mono text-xs`}
+            />
+          </div>
+
+          <div className="pt-2 border-t border-border">
+            <div className="flex items-center gap-2 mb-1">
+              <svg className="w-4 h-4 text-primary/60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <label className={label + " mb-0"}>Інфопак / деталі програми</label>
+              <span className="text-[10px] font-semibold text-muted bg-muted-bg px-2 py-0.5 rounded-full">необов&apos;язково</span>
+            </div>
+            <p className={hint + " mb-2"}>Посилання на PDF, Google Doc або сторінку з повною інформацією про програму. Відображатиметься як кнопка «Переглянути інфопак» на сторінці проекту.</p>
+            <input
+              value={form.infoPackUrl}
+              onChange={(e) => set("infoPackUrl", e.target.value)}
+              placeholder="https://drive.google.com/... або https://..."
+              className={input}
             />
           </div>
         </div>

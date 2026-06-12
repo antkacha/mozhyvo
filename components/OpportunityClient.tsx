@@ -306,6 +306,19 @@ export default function OpportunityClient({ opp, related }: Props) {
                     {saved ? "Збережено" : "Зберегти"}
                   </button>
                   <ShareButton title={opp.title} url={typeof window !== "undefined" ? window.location.href : ""} />
+                  {opp.infoPackUrl && (
+                    <a
+                      href={opp.infoPackUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 px-6 border border-border rounded-xl text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-all"
+                    >
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Переглянути інфопак
+                    </a>
+                  )}
                 </div>
               </div>
 
@@ -401,15 +414,20 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-muted-bg/50 transition-colors"
       >
         <span className="text-sm font-semibold text-foreground">{question}</span>
-        <svg className={`w-4 h-4 text-muted flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className={`w-4 h-4 text-muted flex-shrink-0 transition-transform duration-300 ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      {open && (
-        <div className="px-5 pb-4 text-sm text-muted leading-relaxed border-t border-border/50 pt-3">
-          {answer}
+      <div
+        className="grid transition-all duration-300 ease-in-out"
+        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">
+          <div className="px-5 pb-4 text-sm text-muted leading-relaxed border-t border-border/50 pt-3">
+            {answer}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

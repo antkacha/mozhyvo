@@ -50,6 +50,7 @@ export interface OrgProject {
   autoClose?: boolean;
   formQuestions?: FormQuestion[];
   externalApplyUrl?: string;
+  infoPackUrl?: string;
   views: number;
   saves: number;
   createdAt: string;
@@ -88,6 +89,7 @@ function fromRow(row: Record<string, unknown>): OrgProject {
     autoClose:        (row.auto_close as boolean) ?? false,
     formQuestions:    (row.form_questions as FormQuestion[]) ?? [],
     externalApplyUrl: (row.external_apply_url as string) || undefined,
+    infoPackUrl:      (row.info_pack_url as string) || undefined,
     views:            (row.views as number) ?? 0,
     saves:            (row.saves as number) ?? 0,
     createdAt:        (row.created_at as string) ?? "",
@@ -122,6 +124,7 @@ function toRow(data: Partial<OrgProject>): Record<string, unknown> {
   if (data.autoClose        !== undefined) row.auto_close        = data.autoClose;
   if (data.formQuestions    !== undefined) row.form_questions    = data.formQuestions;
   if (data.externalApplyUrl) row.external_apply_url = data.externalApplyUrl;
+  if (data.infoPackUrl)      row.info_pack_url      = data.infoPackUrl;
   return row;
 }
 

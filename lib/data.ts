@@ -38,6 +38,7 @@ export interface Opportunity {
   featured?: boolean;
   duration?: string;
   photo?: string;
+  infoPackUrl?: string;
 }
 
 export const typeNames: Record<OpportunityType, string> = {

@@ -57,6 +57,7 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
       tags:             (data.tags as string[]) ?? [],
       applyUrl:         (data.external_apply_url as string) || `/opportunities/${data.id}/apply`,
       duration:         (data.duration as string) ?? "",
+      infoPackUrl:      (data.info_pack_url as string) || undefined,
     };
   } catch {
     return null;
