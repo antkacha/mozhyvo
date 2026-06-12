@@ -17,11 +17,128 @@ const TYPE_OPTIONS = [
   { value: "training", label: "Тренінг" },
 ];
 
-const FLAG_OPTIONS = [
-  "🇺🇦 Україна", "🇵🇱 Польща", "🇩🇪 Німеччина", "🇫🇷 Франція",
-  "🇳🇱 Нідерланди", "🇦🇹 Австрія", "🇨🇿 Чехія", "🇸🇰 Словаччина",
-  "🇱🇹 Литва", "🇱🇻 Латвія", "🇪🇪 Естонія", "🇬🇧 Великобританія",
-  "🇺🇸 США", "🌍 Онлайн / міжнародний", "🇪🇺 Євросоюз",
+const COUNTRIES: { emoji: string; name: string }[] = [
+  { emoji: "🌍", name: "Онлайн / міжнародний" },
+  { emoji: "🇪🇺", name: "Євросоюз" },
+  { emoji: "🇦🇺", name: "Австралія" },
+  { emoji: "🇦🇹", name: "Австрія" },
+  { emoji: "🇦🇿", name: "Азербайджан" },
+  { emoji: "🇦🇱", name: "Албанія" },
+  { emoji: "🇩🇿", name: "Алжир" },
+  { emoji: "🇦🇴", name: "Ангола" },
+  { emoji: "🇦🇩", name: "Андорра" },
+  { emoji: "🇦🇷", name: "Аргентина" },
+  { emoji: "🇧🇩", name: "Бангладеш" },
+  { emoji: "🇧🇭", name: "Бахрейн" },
+  { emoji: "🇧🇪", name: "Бельгія" },
+  { emoji: "🇧🇾", name: "Білорусь" },
+  { emoji: "🇧🇬", name: "Болгарія" },
+  { emoji: "🇧🇴", name: "Болівія" },
+  { emoji: "🇧🇦", name: "Боснія і Герцеговина" },
+  { emoji: "🇧🇷", name: "Бразилія" },
+  { emoji: "🇻🇳", name: "В'єтнам" },
+  { emoji: "🇬🇧", name: "Велика Британія" },
+  { emoji: "🇻🇪", name: "Венесуела" },
+  { emoji: "🇦🇲", name: "Вірменія" },
+  { emoji: "🇬🇦", name: "Габон" },
+  { emoji: "🇬🇹", name: "Гватемала" },
+  { emoji: "🇬🇳", name: "Гвінея" },
+  { emoji: "🇭🇳", name: "Гондурас" },
+  { emoji: "🇬🇷", name: "Греція" },
+  { emoji: "🇬🇪", name: "Грузія" },
+  { emoji: "🇩🇰", name: "Данія" },
+  { emoji: "🇩🇴", name: "Домініканська Республіка" },
+  { emoji: "🇪🇪", name: "Естонія" },
+  { emoji: "🇪🇹", name: "Ефіопія" },
+  { emoji: "🇪🇬", name: "Єгипет" },
+  { emoji: "🇾🇪", name: "Ємен" },
+  { emoji: "🇿🇲", name: "Замбія" },
+  { emoji: "🇿🇼", name: "Зімбабве" },
+  { emoji: "🇮🇱", name: "Ізраїль" },
+  { emoji: "🇮🇳", name: "Індія" },
+  { emoji: "🇮🇩", name: "Індонезія" },
+  { emoji: "🇮🇶", name: "Ірак" },
+  { emoji: "🇮🇷", name: "Іран" },
+  { emoji: "🇮🇪", name: "Ірландія" },
+  { emoji: "🇮🇸", name: "Ісландія" },
+  { emoji: "🇪🇸", name: "Іспанія" },
+  { emoji: "🇮🇹", name: "Італія" },
+  { emoji: "🇯🇴", name: "Йорданія" },
+  { emoji: "🇰🇿", name: "Казахстан" },
+  { emoji: "🇰🇭", name: "Камбоджа" },
+  { emoji: "🇨🇲", name: "Камерун" },
+  { emoji: "🇨🇦", name: "Канада" },
+  { emoji: "🇶🇦", name: "Катар" },
+  { emoji: "🇰🇪", name: "Кенія" },
+  { emoji: "🇰🇬", name: "Киргизстан" },
+  { emoji: "🇨🇳", name: "Китай" },
+  { emoji: "🇨🇾", name: "Кіпр" },
+  { emoji: "🇨🇴", name: "Колумбія" },
+  { emoji: "🇽🇰", name: "Косово" },
+  { emoji: "🇨🇷", name: "Коста-Ріка" },
+  { emoji: "🇨🇺", name: "Куба" },
+  { emoji: "🇰🇼", name: "Кувейт" },
+  { emoji: "🇱🇻", name: "Латвія" },
+  { emoji: "🇱🇹", name: "Литва" },
+  { emoji: "🇱🇧", name: "Ліван" },
+  { emoji: "🇱🇾", name: "Лівія" },
+  { emoji: "🇱🇮", name: "Ліхтенштейн" },
+  { emoji: "🇱🇺", name: "Люксембург" },
+  { emoji: "🇲🇾", name: "Малайзія" },
+  { emoji: "🇲🇹", name: "Мальта" },
+  { emoji: "🇲🇦", name: "Марокко" },
+  { emoji: "🇲🇩", name: "Молдова" },
+  { emoji: "🇲🇨", name: "Монако" },
+  { emoji: "🇲🇳", name: "Монголія" },
+  { emoji: "🇲🇲", name: "М'янма" },
+  { emoji: "🇳🇵", name: "Непал" },
+  { emoji: "🇳🇱", name: "Нідерланди" },
+  { emoji: "🇳🇬", name: "Нігерія" },
+  { emoji: "🇳🇮", name: "Нікарагуа" },
+  { emoji: "🇩🇪", name: "Німеччина" },
+  { emoji: "🇳🇿", name: "Нова Зеландія" },
+  { emoji: "🇳🇴", name: "Норвегія" },
+  { emoji: "🇦🇪", name: "ОАЕ" },
+  { emoji: "🇵🇰", name: "Пакистан" },
+  { emoji: "🇵🇸", name: "Палестина" },
+  { emoji: "🇵🇦", name: "Панама" },
+  { emoji: "🇵🇾", name: "Парагвай" },
+  { emoji: "🇵🇪", name: "Перу" },
+  { emoji: "🇲🇰", name: "Північна Македонія" },
+  { emoji: "🇵🇱", name: "Польща" },
+  { emoji: "🇵🇹", name: "Португалія" },
+  { emoji: "🇷🇴", name: "Румунія" },
+  { emoji: "🇸🇦", name: "Саудівська Аравія" },
+  { emoji: "🇸🇳", name: "Сенегал" },
+  { emoji: "🇷🇸", name: "Сербія" },
+  { emoji: "🇸🇾", name: "Сирія" },
+  { emoji: "🇸🇬", name: "Сінгапур" },
+  { emoji: "🇸🇰", name: "Словаччина" },
+  { emoji: "🇸🇮", name: "Словенія" },
+  { emoji: "🇸🇴", name: "Сомалі" },
+  { emoji: "🇸🇩", name: "Судан" },
+  { emoji: "🇺🇸", name: "США" },
+  { emoji: "🇹🇯", name: "Таджикистан" },
+  { emoji: "🇹🇭", name: "Таїланд" },
+  { emoji: "🇹🇿", name: "Танзанія" },
+  { emoji: "🇹🇳", name: "Туніс" },
+  { emoji: "🇹🇷", name: "Туреччина" },
+  { emoji: "🇹🇲", name: "Туркменістан" },
+  { emoji: "🇺🇬", name: "Уганда" },
+  { emoji: "🇭🇺", name: "Угорщина" },
+  { emoji: "🇺🇿", name: "Узбекистан" },
+  { emoji: "🇺🇦", name: "Україна" },
+  { emoji: "🇺🇾", name: "Уругвай" },
+  { emoji: "🇵🇭", name: "Філіппіни" },
+  { emoji: "🇫🇮", name: "Фінляндія" },
+  { emoji: "🇫🇷", name: "Франція" },
+  { emoji: "🇭🇷", name: "Хорватія" },
+  { emoji: "🇨🇿", name: "Чехія" },
+  { emoji: "🇨🇱", name: "Чілі" },
+  { emoji: "🇨🇭", name: "Швейцарія" },
+  { emoji: "🇸🇪", name: "Швеція" },
+  { emoji: "🇱🇰", name: "Шрі-Ланка" },
+  { emoji: "🇯🇵", name: "Японія" },
 ];
 
 type FormState = OrgProject & { requirementsText: string; benefitsText: string; languagesText: string; tagsText: string };
@@ -194,20 +311,23 @@ function EditProjectContent() {
         {/* Місце і час */}
         <section className={section}>
           <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Місце і терміни</h2>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className={label}>Прапор</label>
-              <select
-                value={FLAG_OPTIONS.find((f) => f.startsWith(form.flag)) ?? FLAG_OPTIONS[0]}
-                onChange={(e) => set("flag", e.target.value.split(" ")[0])}
-                className={input}
-              >
-                {FLAG_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={label}>Країна</label>
-              <input value={form.country} onChange={(e) => set("country", e.target.value)} className={input} />
+              <select
+                value={form.flag}
+                onChange={(e) => {
+                  const c = COUNTRIES.find((c) => c.emoji === e.target.value);
+                  set("flag", e.target.value);
+                  if (c) set("country", c.name);
+                }}
+                className={input}
+              >
+                <option value="">Оберіть країну...</option>
+                {COUNTRIES.map((c) => (
+                  <option key={c.emoji} value={c.emoji}>{c.emoji} {c.name}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className={label}>Місто</label>
