@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const platformLinks = [
   { label: "Можливості",       href: "/opportunities" },
@@ -63,15 +64,8 @@ export default function Footer() {
 
           {/* Brand — spans 2 cols on lg */}
           <div className="lg:col-span-2 flex flex-col gap-5">
-            <Link href="/" className="flex items-center gap-2.5 group w-fit">
-              <div className="w-8 h-8 bg-white/15 rounded-xl grid place-items-center flex-shrink-0 group-hover:bg-white/25 transition-colors">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M8 1.5L10.5 6.5H15L11 9.5L12.5 14.5L8 11.5L3.5 14.5L5 9.5L1 6.5H5.5L8 1.5Z" fill="white" />
-                </svg>
-              </div>
-              <span className="text-[17px] font-black tracking-tight text-white group-hover:text-white/80 transition-colors">
-                Моживо
-              </span>
+            <Link href="/" className="group w-fit">
+              <Image src="/logo.png" alt="Моживо" width={120} height={40} className="h-8 w-auto brightness-0 invert group-hover:opacity-80 transition-opacity" />
             </Link>
 
             <p className="text-sm text-white/55 leading-relaxed max-w-sm">

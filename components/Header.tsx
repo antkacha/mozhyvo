@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSaved } from "@/hooks/useSaved";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,17 +17,7 @@ const navLinks = [
 
 function LogoMark({ size = 32 }: { size?: number }) {
   return (
-    <div
-      className="bg-primary rounded-xl grid place-items-center flex-shrink-0 shadow-sm"
-      style={{ width: size, height: size }}
-    >
-      <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 16 16" fill="none">
-        <path
-          d="M8 1.5L10.5 6.5H15L11 9.5L12.5 14.5L8 11.5L3.5 14.5L5 9.5L1 6.5H5.5L8 1.5Z"
-          fill="white"
-        />
-      </svg>
-    </div>
+    <Image src="/logo-icon.png" alt="Моживо" width={size} height={size} className="flex-shrink-0" style={{ width: size, height: size }} />
   );
 }
 
@@ -52,13 +43,10 @@ export default function Header() {
         <div className="bg-white/92 backdrop-blur-xl border border-border/70 rounded-2xl shadow-lg shadow-black/[0.05] flex items-center justify-between px-5 h-14">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
+          <Link href="/" className="flex items-center group">
             <div className="group-hover:scale-95 transition-transform duration-150">
-              <LogoMark />
+              <Image src="/logo.png" alt="Моживо" width={120} height={40} className="h-8 w-auto" />
             </div>
-            <span className="text-[17px] font-black tracking-tight text-foreground group-hover:text-primary transition-colors duration-200">
-              Моживо
-            </span>
           </Link>
 
           {/* Desktop nav */}
