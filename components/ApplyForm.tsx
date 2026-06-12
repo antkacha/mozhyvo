@@ -298,23 +298,24 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   // Already applied
   if (ready && hasApplied(opp.slug)) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-border px-8 py-16 text-center">
-        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
-          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <h2 className="text-xl font-bold text-foreground mb-2">Ти вже подав заявку</h2>
-        <p className="text-muted mb-6">
-          Ти вже відгукнувся на цю програму. Переглянути статус можна в профілі.
-        </p>
-        <div className="flex gap-3 justify-center">
-          <Link href="/profile" className="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all">
-            Мій профіль
-          </Link>
-          <Link href="/opportunities" className="px-5 py-2.5 border border-border rounded-xl text-sm font-medium hover:border-primary hover:text-primary transition-all">
-            Інші можливості
-          </Link>
+      <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="h-1 bg-green-500 w-full" />
+        <div className="px-8 py-14 text-center">
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-foreground mb-2">Ти вже подав заявку</h2>
+          <p className="text-muted mb-6">Ти вже відгукнувся на цю програму. Переглянути статус можна в кабінеті.</p>
+          <div className="flex gap-3 justify-center">
+            <Link href="/cabinet/applications" className="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all">
+              Мої заявки
+            </Link>
+            <Link href="/opportunities" className="px-5 py-2.5 border border-border rounded-xl text-sm font-medium hover:border-primary hover:text-primary transition-all">
+              Інші можливості
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -323,66 +324,79 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   // Success state
   if (done) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-border px-8 py-16 text-center">
-        <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-          <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <h2 className="text-2xl font-extrabold text-foreground mb-2">Заявку подано! 🎉</h2>
-        <p className="text-muted max-w-sm mx-auto mb-8 leading-relaxed">
-          Твою заявку на <strong>{opp.title}</strong> надіслано. Координатор розгляне її найближчим часом.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/profile" className="px-6 py-3 bg-primary text-white rounded-2xl font-semibold text-sm hover:bg-primary-dark transition-all shadow-sm shadow-primary/20">
-            Переглянути в профілі
-          </Link>
-          <Link href="/opportunities" className="px-6 py-3 border border-border rounded-2xl text-sm font-semibold hover:border-primary hover:text-primary transition-all">
-            Знайти ще можливості
-          </Link>
+      <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="h-1 bg-green-500 w-full" />
+        <div className="px-8 py-14 text-center">
+          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-black text-foreground mb-2">Заявку подано! 🎉</h2>
+          <p className="text-muted max-w-sm mx-auto mb-8 leading-relaxed">
+            Твою заявку на <strong>{opp.title}</strong> надіслано. Координатор розгляне її найближчим часом.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/cabinet/applications" className="px-6 py-3 bg-primary text-white rounded-2xl font-semibold text-sm hover:bg-primary-dark transition-all shadow-sm shadow-primary/20">
+              Переглянути заявку
+            </Link>
+            <Link href="/opportunities" className="px-6 py-3 border border-border rounded-2xl text-sm font-semibold hover:border-primary hover:text-primary transition-all">
+              Знайти ще можливості
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-border px-8 py-8">
-      {/* Progress */}
-      <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1">
-        {STEPS.map((s, i) => (
-          <div key={s.id} className="flex items-center gap-2 flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
-                  i < step
-                    ? "bg-primary text-white"
-                    : i === step
-                    ? "bg-primary text-white ring-4 ring-primary/20"
-                    : "bg-muted-bg text-muted border border-border"
-                }`}
-              >
-                {i < step ? (
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  i + 1
-                )}
+    <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+
+      {/* Progress bar — sticky header inside card */}
+      <div className="px-6 py-4 border-b border-border bg-muted-bg/40">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+          {STEPS.map((s, i) => (
+            <div key={s.id} className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
+                    i < step
+                      ? "bg-primary text-white"
+                      : i === step
+                      ? "bg-primary text-white ring-4 ring-primary/20"
+                      : "bg-white text-muted border border-border"
+                  }`}
+                >
+                  {i < step ? (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : i + 1}
+                </div>
+                <span className={`text-xs font-semibold hidden sm:block whitespace-nowrap ${i === step ? "text-foreground" : "text-muted"}`}>
+                  {s.label}
+                </span>
               </div>
-              <span className={`text-xs font-medium hidden sm:block ${i === step ? "text-foreground" : "text-muted"}`}>
-                {s.label}
-              </span>
+              {i < STEPS.length - 1 && (
+                <div className={`w-6 h-0.5 flex-shrink-0 rounded-full transition-all ${i < step ? "bg-primary" : "bg-border"}`} />
+              )}
             </div>
-            {i < STEPS.length - 1 && (
-              <div className={`w-8 h-0.5 flex-shrink-0 transition-all ${i < step ? "bg-primary" : "bg-border"}`} />
-            )}
-          </div>
-        ))}
+          ))}
+          <span className="ml-auto text-xs text-muted font-medium flex-shrink-0 pl-2">{step + 1}/{STEPS.length}</span>
+        </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border shadow-sm p-8">
-        <h2 className="text-lg font-bold text-foreground mb-1">{STEPS[step]?.label}</h2>
-        <p className="text-sm text-muted mb-6">Крок {step + 1} з {STEPS.length}</p>
+      {/* Step content */}
+      <div className="px-8 py-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+            {step + 1}
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-foreground leading-tight">{STEPS[step]?.label}</h2>
+            <p className="text-xs text-muted mt-0.5">Крок {step + 1} з {STEPS.length}</p>
+          </div>
+        </div>
 
         {/* ── Personal data ── */}
         {STEPS[step]?.id === "personal" && (
@@ -650,7 +664,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
           )}
 
           {step < STEPS.length - 1 ? (
-            <button onClick={next} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all">
+            <button onClick={next} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all shadow-sm shadow-primary/20">
               Далі
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -660,7 +674,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting ? (
                 <>
