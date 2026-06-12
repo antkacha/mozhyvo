@@ -160,7 +160,7 @@ type FormData = {
   durationText: string;
   ageMin: string;
   ageMax: string;
-  languages: string;
+  languages: string[];
   tags: string;
   requirements: string;
   benefits: string;
@@ -173,7 +173,7 @@ const INITIAL: FormData = {
   flag: "", country: "", city: "",
   format: "offline", funding: "fully-funded", fundingDetails: "",
   deadline: "", startDate: "", endDate: "", durationText: "",
-  ageMin: "", ageMax: "", languages: "", tags: "",
+  ageMin: "", ageMax: "", languages: [], tags: "",
   requirements: "", benefits: "",
   externalApplyUrl: "",
 };
@@ -191,7 +191,7 @@ const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormD
       shortDescription: "Двотижневий міжнародний обмін для молодих активістів.",
       format: "offline", funding: "fully-funded",
       fundingDetails: "Перельоти, проживання, харчування",
-      languages: "Англійська",
+      languages: ["Англійська"],
       ageMin: "18", ageMax: "28",
       requirements: "Вік 18–28 років\nРівень англійської B1+\nДосвід громадянської діяльності",
       benefits: "Повне фінансування\nСертифікат учасника\nМіжнародний нетворкінг",
@@ -207,7 +207,7 @@ const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormD
       shortDescription: "Щорічна стипендія для студентів та молодих дослідників.",
       format: "offline", funding: "fully-funded",
       fundingDetails: "Щомісячна стипендія + навчання",
-      languages: "Англійська, Українська",
+      languages: ["Англійська", "Українська"],
       ageMin: "18", ageMax: "35",
       requirements: "Студент або аспірант\nВисокий академічний рейтинг\nРекомендаційний лист",
       benefits: "Щомісячна стипендія\nНаукове керівництво\nПублікації у збірках",
@@ -223,7 +223,7 @@ const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormD
       shortDescription: "Міжнародна волонтерська програма для молодих людей.",
       format: "offline", funding: "fully-funded",
       fundingDetails: "Проживання, харчування та кишенькові кошти",
-      languages: "Англійська",
+      languages: ["Англійська"],
       ageMin: "18", ageMax: "30",
       requirements: "Вік 18–30 років\nМотивація та готовність волонтерити\nБазова англійська",
       benefits: "Безкоштовне проживання\nКишенькові кошти\nСертифікат YouthPass",
@@ -239,12 +239,35 @@ const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormD
       shortDescription: "Конкурс мікрогрантів для соціальних ініціатив молоді.",
       format: "online", funding: "fully-funded",
       fundingDetails: "До 5 000 грн на реалізацію проєкту",
-      languages: "Українська",
+      languages: ["Українська"],
       ageMin: "16", ageMax: "30",
       requirements: "Вік 16–30 років\nГотова ідея соціального проєкту\nКоманда мінімум 2 особи",
       benefits: "Фінансування проєкту\nМенторська підтримка\nПублікація в медіа",
     },
   },
+];
+
+// English first, then alphabetical
+const PROJECT_LANGUAGES = [
+  "Англійська",
+  "Арабська",
+  "Грецька",
+  "Іспанська",
+  "Італійська",
+  "Китайська",
+  "Корейська",
+  "Нідерландська",
+  "Німецька",
+  "Польська",
+  "Португальська",
+  "Румунська",
+  "Турецька",
+  "Українська",
+  "Французька",
+  "Чеська",
+  "Шведська",
+  "Японська",
+  "Інша",
 ];
 
 function splitLines(s: string) {
@@ -275,6 +298,15 @@ function NewProjectContent() {
       return n;
     });
     if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
+  }
+
+  function toggleLanguage(lang: string) {
+    setForm((p) => ({
+      ...p,
+      languages: p.languages.includes(lang)
+        ? p.languages.filter((l) => l !== lang)
+        : [...p.languages, lang],
+    }));
   }
 
   function validateStep(s: number): boolean {
@@ -336,7 +368,7 @@ function NewProjectContent() {
         deadline,
         deadlineDisplay,
         duration,
-        languages: form.languages.split(",").map((s) => s.trim()).filter(Boolean),
+        languages: form.languages,
         tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
         requirements: splitLines(form.requirements),
         benefits: splitLines(form.benefits),
@@ -490,10 +522,11 @@ function NewProjectContent() {
 
           <div>
             <label className={label}>Короткий опис *</label>
+            <p className={hint + " mb-2"}>Це перше, що бачать учасники у каталозі. 1–2 конкретні речення: що це за програма і для кого вона.</p>
             <input
               value={form.shortDescription}
               onChange={(e) => set("shortDescription", e.target.value)}
-              placeholder="1–2 речення, які бачать у каталозі"
+              placeholder="Наприклад: Двотижневий міжнародний обмін для молодих активістів 18–28 років з повним фінансуванням."
               maxLength={200}
               className={`${input} ${errors.shortDescription ? err : ""}`}
             />
@@ -537,18 +570,16 @@ function NewProjectContent() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={label}>Дедлайн подачі *</label>
-              <input
-                type="date"
-                value={form.deadline}
-                onChange={(e) => set("deadline", e.target.value)}
-                className={`${input} ${errors.deadline ? err : ""}`}
-              />
-              {errors.deadline && <p className={`${hint} text-red-500`}>{errors.deadline}</p>}
-            </div>
-            <div />
+          <div>
+            <label className={label}>Дедлайн подачі *</label>
+            <p className={hint + " mb-2"}>Останній день прийому заявок. Після цієї дати форма автоматично закриється для нових учасників.</p>
+            <input
+              type="date"
+              value={form.deadline}
+              onChange={(e) => set("deadline", e.target.value)}
+              className={`${input} ${errors.deadline ? err : ""}`}
+            />
+            {errors.deadline && <p className={`${hint} text-red-500`}>{errors.deadline}</p>}
           </div>
 
           <div>
@@ -607,15 +638,17 @@ function NewProjectContent() {
 
       {/* Step 2: Учасники та фінансування */}
       {step === 2 && (
-        <div className="bg-white rounded-2xl border border-border p-6 flex flex-col gap-5">
+        <div className="bg-white rounded-2xl border border-border p-6 flex flex-col gap-6">
+
           <div>
             <label className={label}>Фінансування</label>
+            <p className={hint + " mb-2"}>Що покриває організація для учасників?</p>
             <div className="grid grid-cols-3 gap-2">
               {([
-                ["fully-funded", "Повне"],
-                ["partially-funded", "Часткове"],
-                ["self-funded", "Без фінансування"],
-              ] as const).map(([val, lbl]) => (
+                ["fully-funded", "Повне", "Організація покриває всі витрати"],
+                ["partially-funded", "Часткове", "Частину витрат покриває учасник"],
+                ["self-funded", "Без фінансування", "Учасник оплачує самостійно"],
+              ] as const).map(([val, lbl, desc]) => (
                 <button
                   key={val}
                   onClick={() => set("funding", val)}
@@ -624,6 +657,7 @@ function NewProjectContent() {
                       ? "border-primary bg-primary-light text-primary"
                       : "border-border hover:border-primary/40 text-muted"
                   }`}
+                  title={desc}
                 >
                   {lbl}
                 </button>
@@ -632,34 +666,63 @@ function NewProjectContent() {
           </div>
 
           <div>
-            <label className={label}>Деталі фінансування</label>
+            <label className={label}>Що включає фінансування</label>
+            <p className={hint + " mb-2"}>Перелічіть конкретно, що покривається — це впливає на рішення учасників</p>
             <input
               value={form.fundingDetails}
               onChange={(e) => set("fundingDetails", e.target.value)}
-              placeholder="Перельоти, проживання, харчування..."
+              placeholder="Наприклад: перельоти, проживання, харчування та кишенькові кошти"
               className={input}
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className={label}>Вік від</label>
-              <input type="number" value={form.ageMin} onChange={(e) => set("ageMin", e.target.value)} placeholder="18" className={input} />
-            </div>
-            <div>
-              <label className={label}>Вік до</label>
-              <input type="number" value={form.ageMax} onChange={(e) => set("ageMax", e.target.value)} placeholder="30" className={input} />
-            </div>
-            <div>
-              <label className={label}>Мови</label>
-              <input value={form.languages} onChange={(e) => set("languages", e.target.value)} placeholder="Англ, Польська" className={input} />
+          <div>
+            <label className={label}>Вікові обмеження</label>
+            <p className={hint + " mb-2"}>Залиште порожнім, якщо обмежень немає</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <input type="number" value={form.ageMin} onChange={(e) => set("ageMin", e.target.value)}
+                  placeholder="Від (наприклад 18)" className={input} />
+              </div>
+              <div>
+                <input type="number" value={form.ageMax} onChange={(e) => set("ageMax", e.target.value)}
+                  placeholder="До (наприклад 30)" className={input} />
+              </div>
             </div>
           </div>
 
           <div>
-            <label className={label}>Теги (через кому)</label>
-            <input value={form.tags} onChange={(e) => set("tags", e.target.value)} placeholder="Молодь, ЄС, Лідерство" className={input} />
-            <p className={hint}>Допомагають знаходити проект у пошуку</p>
+            <label className={label}>Мова проведення програми</label>
+            <p className={hint + " mb-3"}>Оберіть мову або мови, якими відбуватимуться заняття, комунікація та всі матеріали. Саме це вказує учасникам, чи підходить їм ця програма.</p>
+            <div className="flex flex-wrap gap-2">
+              {PROJECT_LANGUAGES.map((lang) => {
+                const selected = form.languages.includes(lang);
+                return (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => toggleLanguage(lang)}
+                    className={`px-3.5 py-1.5 rounded-xl text-sm font-medium border transition-all ${
+                      selected
+                        ? "bg-primary text-white border-primary"
+                        : "border-border text-muted hover:border-primary/40 hover:text-foreground bg-white"
+                    }`}
+                  >
+                    {lang}
+                  </button>
+                );
+              })}
+            </div>
+            {form.languages.length > 0 && (
+              <p className={hint + " mt-2"}>Обрано: {form.languages.join(", ")}</p>
+            )}
+          </div>
+
+          <div>
+            <label className={label}>Теги</label>
+            <p className={hint + " mb-2"}>Ключові слова через кому — допомагають учасникам знайти вашу програму у пошуку</p>
+            <input value={form.tags} onChange={(e) => set("tags", e.target.value)}
+              placeholder="Наприклад: Молодь, ЄС, Лідерство, Екологія" className={input} />
           </div>
         </div>
       )}
@@ -669,35 +732,36 @@ function NewProjectContent() {
         <div className="bg-white rounded-2xl border border-border p-6 flex flex-col gap-5">
           <div>
             <label className={label}>Повний опис програми</label>
+            <p className={hint + " mb-2"}>Розкажіть детально: що відбуватиметься, яка мета програми, як проходить відбір, що очікує учасників. Чим зрозуміліше — тим більше мотивованих заявок ви отримаєте.</p>
             <textarea
               value={form.fullDescription}
               onChange={(e) => set("fullDescription", e.target.value)}
-              rows={5}
-              placeholder="Детальний опис: цілі, формат, учасники, особливості..."
+              rows={6}
+              placeholder="Наприклад: Програма об'єднує молодих лідерів з 8 країн для спільної роботи над соціальними проектами. Протягом двох тижнів учасники..."
               className={`${input} resize-none`}
             />
           </div>
 
           <div>
             <label className={label}>Вимоги до учасників</label>
-            <p className={hint + " mb-1.5"}>Кожна вимога — з нового рядка</p>
+            <p className={hint + " mb-1.5"}>Кожна вимога — з нового рядка. Будьте конкретними: вік, рівень мови, досвід, громадянство тощо.</p>
             <textarea
               value={form.requirements}
               onChange={(e) => set("requirements", e.target.value)}
               rows={4}
-              placeholder={"Вік 18–28 років\nРівень англійської B1+\nДосвід волонтерства"}
+              placeholder={"Вік 18–28 років\nРівень англійської B1+\nДосвід волонтерства або громадської діяльності"}
               className={`${input} resize-none font-mono text-xs`}
             />
           </div>
 
           <div>
             <label className={label}>Що отримають учасники</label>
-            <p className={hint + " mb-1.5"}>Кожна перевага — з нового рядка</p>
+            <p className={hint + " mb-1.5"}>Кожна перевага — з нового рядка. Конкретні бенефіти: що покривається, які сертифікати, який досвід.</p>
             <textarea
               value={form.benefits}
               onChange={(e) => set("benefits", e.target.value)}
               rows={4}
-              placeholder={"Повне фінансування\nСертифікат Erasmus+\nНетворкінг з 8 країн"}
+              placeholder={"Повне фінансування (переліт, проживання, харчування)\nСертифікат учасника\nМіжнародний нетворкінг"}
               className={`${input} resize-none font-mono text-xs`}
             />
           </div>
