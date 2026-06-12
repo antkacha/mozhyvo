@@ -20,7 +20,7 @@ const contactItems = [
       </svg>
     ),
     label: "Email",
-    value: "hello@mozhyvo.ua",
+    value: "mozhyvo@gmail.com",
   },
   {
     icon: (

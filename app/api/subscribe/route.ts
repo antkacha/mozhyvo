@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       const resend = new Resend(resendKey);
 
       await resend.emails.send({
-        from:    "Моживо <hello@mozhyvo.ua>",
+        from:    "Моживо <mozhyvo@gmail.com>",
         to:      email,
         subject: "Ти підписався на Моживо 🎉",
         html: `

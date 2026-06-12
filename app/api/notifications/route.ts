@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { data, error } = await resend.emails.send({
-      from: "Моживо <noreply@mozhyvo.org>",
+      from: "Моживо <mozhyvo@gmail.com>",
       to,
       subject,
       html,

@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   if (org.contact_email && process.env.RESEND_API_KEY) {
     if (action === "verify") {
       await resend.emails.send({
-        from: "Моживо <noreply@mozhyvo.ua>",
+        from: "Моживо <mozhyvo@gmail.com>",
         to:   org.contact_email,
         subject: `✅ «${org.name}» верифіковано на Моживо`,
         html: `
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
               Відкрити кабінет →
             </a>
             <p style="font-size:12px;color:#9CA3AF;margin-top:32px">
-              Маєте питання? Напишіть нам: <a href="mailto:hello@mozhyvo.ua" style="color:#3B4FE8">hello@mozhyvo.ua</a>
+              Маєте питання? Напишіть нам: <a href="mailto:mozhyvo@gmail.com" style="color:#3B4FE8">mozhyvo@gmail.com</a>
             </p>
           </div>
         `,
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
     if (action === "reject" && rejectionReason) {
       await resend.emails.send({
-        from: "Моживо <noreply@mozhyvo.ua>",
+        from: "Моживо <mozhyvo@gmail.com>",
         to:   org.contact_email,
         subject: `Щодо верифікації «${org.name}» на Моживо`,
         html: `
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
             <p style="font-size:14px;color:#6B7280;line-height:1.6">
               Якщо ви вважаєте, що сталася помилка, або хочете надати додаткові документи — напишіть нам.
             </p>
-            <a href="mailto:hello@mozhyvo.ua" style="display:inline-block;margin-top:16px;background:#0F0F0F;color:white;padding:12px 28px;border-radius:50px;font-weight:700;font-size:14px;text-decoration:none">
+            <a href="mailto:mozhyvo@gmail.com" style="display:inline-block;margin-top:16px;background:#0F0F0F;color:white;padding:12px 28px;border-radius:50px;font-weight:700;font-size:14px;text-decoration:none">
               Написати адміністратору
             </a>
           </div>

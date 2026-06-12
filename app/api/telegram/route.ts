@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
   } else if (text === "/help") {
     await sendMessage(
       chatId,
-      `❓ <b>Допомога</b>\n\nМоживо — платформа можливостей для молоді України.\n\n<b>Команди бота:</b>\n/opportunities — гарячі можливості\n/deadlines — найближчі дедлайни\n/scholarships — стипендії\n/internships — стажування\n/subscribe — розсилка\n\n<b>Зворотний зв'язок:</b> hello@mozhyvo.ua\n<b>Сайт:</b> <a href="https://mozhyvo.ua">mozhyvo.ua</a>`,
+      `❓ <b>Допомога</b>\n\nМоживо — платформа можливостей для молоді України.\n\n<b>Команди бота:</b>\n/opportunities — гарячі можливості\n/deadlines — найближчі дедлайни\n/scholarships — стипендії\n/internships — стажування\n/subscribe — розсилка\n\n<b>Зворотний зв'язок:</b> mozhyvo@gmail.com\n<b>Сайт:</b> <a href="https://mozhyvo.ua">mozhyvo.ua</a>`,
     );
   } else {
     await sendMessage(
