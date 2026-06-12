@@ -187,7 +187,7 @@ export default function OrgRegisterPage() {
                 </div>
               </div>
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-700">
-                Якщо у нас виникнуть питання — зв'яжемось з вами на вказаний email.
+                Якщо у нас виникнуть питання — зв&apos;яжемось з вами на вказаний email.
               </div>
             </>
           ) : (
@@ -414,7 +414,7 @@ export default function OrgRegisterPage() {
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1.5">
                     Реєстраційний номер / ЄДРПОУ
-                    <span className="ml-1.5 text-xs font-normal text-muted">(необов'язково)</span>
+                    <span className="ml-1.5 text-xs font-normal text-muted">(необов&apos;язково)</span>
                   </label>
                   <input value={registrationNumber} onChange={(e) => setRegistrationNumber(e.target.value)} placeholder="12345678" className={inp} />
                   <p className="text-xs text-muted mt-1">Допомагає нам швидше перевірити вашу організацію</p>
@@ -539,7 +539,7 @@ export default function OrgRegisterPage() {
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                   <p className="text-xs font-semibold text-emerald-700 mb-1">Що буде далі?</p>
                   <p className="text-xs text-emerald-600 leading-relaxed">
-                    Після реєстрації ми переглянемо ваш профіль і соцмережі та зв'яжемося з вами на email протягом 5 робочих днів.
+                    Після реєстрації ми переглянемо ваш профіль і соцмережі та зв&apos;яжемося з вами на email протягом 5 робочих днів.
                   </p>
                 </div>
               </>
