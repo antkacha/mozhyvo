@@ -40,6 +40,8 @@ export interface OrgProfile {
     twitter?: string;
     youtube?: string;
   };
+  orgFormat: "official" | "informal";
+  registrationNumber: string;
   status: "pending" | "verified" | "rejected" | "blocked";
   createdAt: string;
 }
@@ -64,9 +66,11 @@ function fromRow(row: Record<string, unknown>): OrgProfile {
     coverVideo:   (row.cover_video_url as string | null) ?? null,
     brandColor:   (row.brand_color as string) ?? "#3B4FE8",
     focusAreas:   (row.focus_areas as string[]) ?? [],
-    socials:      (row.socials as OrgProfile["socials"]) ?? {},
-    status:       (row.status as OrgProfile["status"]) ?? "pending",
-    createdAt:    (row.created_at as string) ?? "",
+    socials:             (row.socials as OrgProfile["socials"]) ?? {},
+    orgFormat:           ((row.org_format as string) ?? "official") as OrgProfile["orgFormat"],
+    registrationNumber:  (row.registration_number as string) ?? "",
+    status:              (row.status as OrgProfile["status"]) ?? "pending",
+    createdAt:           (row.created_at as string) ?? "",
   };
 }
 
@@ -126,19 +130,28 @@ export function useOrgSession() {
       const baseSlug = slugify(orgName);
       const uniqueSlug = `${baseSlug}-${user.id.slice(0, 6)}`;
 
+      const orgFormat = (meta.org_format as string) ?? "official";
+      const socials: Record<string, string> = {};
+      if (meta.org_instagram) socials.instagram = `https://instagram.com/${meta.org_instagram}`;
+      if (meta.org_telegram)  socials.telegram  = `https://t.me/${meta.org_telegram}`;
+      if (meta.org_facebook)  socials.facebook  = `https://facebook.com/${meta.org_facebook}`;
+
       const { data: created } = await supabase
         .from("orgs")
         .insert({
-          user_id:       user.id,
-          name:          orgName,
-          slug:          uniqueSlug,
-          type:          (meta.org_type as string) ?? "",
-          country:       (meta.org_country as string) ?? "",
-          city:          (meta.org_city as string) ?? "",
-          website:       (meta.org_website as string) ?? "",
-          contact_email: user.email ?? "",
-          description:   (meta.org_description as string) ?? "",
-          status:        "pending",
+          user_id:             user.id,
+          name:                orgName,
+          slug:                uniqueSlug,
+          type:                (meta.org_type as string) ?? "",
+          country:             (meta.org_country as string) ?? "",
+          city:                (meta.org_city as string) ?? "",
+          website:             (meta.org_website as string) ?? "",
+          contact_email:       user.email ?? "",
+          description:         (meta.org_description as string) ?? "",
+          org_format:          orgFormat,
+          registration_number: (meta.org_registration_number as string) ?? "",
+          socials:             Object.keys(socials).length > 0 ? socials : {},
+          status:              "pending",
         })
         .select()
         .single();
