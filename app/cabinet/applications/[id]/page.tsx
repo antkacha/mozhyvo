@@ -28,7 +28,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-3 py-2.5 border-b border-gray-100 last:border-0">
       <span className="text-xs text-muted flex-shrink-0">{label}</span>
-      <span className="text-xs font-semibold text-foreground text-right">{value || "—"}</span>
+      <span className="text-xs font-semibold text-foreground text-right break-all min-w-0">{value || "—"}</span>
     </div>
   );
 }
@@ -154,10 +154,10 @@ export default function ApplicationDetailPage() {
         </div>
 
         {/* Two-column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 min-w-0">
 
           {/* Main content */}
-          <div className="lg:col-span-2 flex flex-col gap-5">
+          <div className="lg:col-span-2 flex flex-col gap-5 min-w-0 overflow-hidden">
 
             {/* Motivation */}
             {app.motivation && (
@@ -167,7 +167,7 @@ export default function ApplicationDetailPage() {
                   Мотиваційний лист
                 </h2>
                 <div className="border-l-4 border-primary/20 pl-4">
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{app.motivation}</p>
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words">{app.motivation}</p>
                 </div>
               </div>
             )}
@@ -189,7 +189,7 @@ export default function ApplicationDetailPage() {
                   <p className="text-xs text-muted mb-2">Мови</p>
                   <div className="flex flex-wrap gap-1.5">
                     {app.languages.map((l) => (
-                      <span key={l} className="text-xs font-medium bg-primary-light text-primary px-2.5 py-1 rounded-lg">{l}</span>
+                      <span key={l} className="text-xs font-medium bg-primary-light text-primary px-2.5 py-1 rounded-lg break-all">{l}</span>
                     ))}
                   </div>
                 </div>
@@ -243,7 +243,7 @@ export default function ApplicationDetailPage() {
                   {Object.entries(app.customAnswers).map(([question, answer]) => (
                     <div key={question} className="border-b border-border pb-4 last:border-0 last:pb-0">
                       <p className="text-xs font-semibold text-muted mb-1.5">{question}</p>
-                      <p className="text-sm text-foreground leading-relaxed">
+                      <p className="text-sm text-foreground leading-relaxed break-words">
                         {Array.isArray(answer) ? answer.join(", ") : answer || "—"}
                       </p>
                     </div>
@@ -254,7 +254,7 @@ export default function ApplicationDetailPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 min-w-0 overflow-hidden">
 
             {/* Personal info */}
             <div className="bg-white rounded-2xl border border-border p-5">
