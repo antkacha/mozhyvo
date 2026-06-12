@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   if (org.contact_email && process.env.RESEND_API_KEY) {
     if (action === "verify") {
       await resend.emails.send({
-        from: "Моживо <onboarding@resend.dev>",
+        from: "Моживо <noreply@mozhyvo.com>",
         to:   org.contact_email,
         subject: `✅ «${org.name}» верифіковано на Моживо`,
         html: `
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
     if (action === "reject" && rejectionReason) {
       await resend.emails.send({
-        from: "Моживо <onboarding@resend.dev>",
+        from: "Моживо <noreply@mozhyvo.com>",
         to:   org.contact_email,
         subject: `Щодо верифікації «${org.name}» на Моживо`,
         html: `
