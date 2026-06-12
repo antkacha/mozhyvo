@@ -23,6 +23,7 @@ export interface Application {
   motivation: string;
   cvUrl: string;
   portfolioUrl: string;
+  customAnswers?: Record<string, string | string[]>;
 }
 
 // Map Supabase snake_case row → camelCase Application
@@ -47,6 +48,7 @@ function fromRow(row: Record<string, unknown>): Application {
     motivation: row.motivation as string,
     cvUrl: row.cv_url as string,
     portfolioUrl: row.portfolio_url as string,
+    customAnswers: (row.custom_answers as Record<string, string | string[]>) || undefined,
   };
 }
 

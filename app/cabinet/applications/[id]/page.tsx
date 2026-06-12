@@ -231,6 +231,26 @@ export default function ApplicationDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* Custom answers */}
+            {app.customAnswers && Object.keys(app.customAnswers).length > 0 && (
+              <div className="bg-white rounded-2xl border border-border p-6">
+                <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-primary-light rounded-lg flex items-center justify-center text-sm">❓</span>
+                  Відповіді на питання організатора
+                </h2>
+                <div className="flex flex-col gap-4">
+                  {Object.entries(app.customAnswers).map(([question, answer]) => (
+                    <div key={question} className="border-b border-border pb-4 last:border-0 last:pb-0">
+                      <p className="text-xs font-semibold text-muted mb-1.5">{question}</p>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {Array.isArray(answer) ? answer.join(", ") : answer || "—"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
