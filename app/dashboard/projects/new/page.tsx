@@ -284,6 +284,7 @@ function NewProjectContent() {
   const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
   const [applyMode, setApplyMode] = useState<"form" | "external">("form");
   const [durationMode, setDurationMode] = useState<"dates" | "text">("dates");
+  const [deadlineMode, setDeadlineMode] = useState<"date" | "rolling" | "asap">("date");
   const [templateChosen, setTemplateChosen] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [saving, setSaving] = useState(false);
@@ -317,7 +318,7 @@ function NewProjectContent() {
     }
     if (s === 1) {
       if (!form.country.trim()) e.country = "Обов'язкове поле";
-      if (!form.deadline) e.deadline = "Обов'язкове поле";
+      if (deadlineMode === "date" && !form.deadline) e.deadline = "Обов'язкове поле";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -331,10 +332,10 @@ function NewProjectContent() {
     if (!validateStep(step) || !org) return;
     setSaving(true);
 
-    const deadline = form.deadline;
-    const deadlineDisplay = new Date(deadline).toLocaleDateString("uk-UA", {
-      day: "numeric", month: "short", year: "numeric",
-    });
+    const deadline = deadlineMode === "date" ? form.deadline : "";
+    const deadlineDisplay = deadlineMode === "rolling" ? "Набір триває"
+      : deadlineMode === "asap" ? "ASAP — якомога швидше"
+      : new Date(form.deadline).toLocaleDateString("uk-UA", { day: "numeric", month: "short", year: "numeric" });
     const flagEmoji = form.flag;
     const location = form.city.trim()
       ? `${form.city.trim()}, ${form.country.trim()}`
@@ -572,14 +573,43 @@ function NewProjectContent() {
 
           <div>
             <label className={label}>Дедлайн подачі *</label>
-            <p className={hint + " mb-2"}>Останній день прийому заявок. Після цієї дати форма автоматично закриється для нових учасників.</p>
-            <input
-              type="date"
-              value={form.deadline}
-              onChange={(e) => set("deadline", e.target.value)}
-              className={`${input} ${errors.deadline ? err : ""}`}
-            />
-            {errors.deadline && <p className={`${hint} text-red-500`}>{errors.deadline}</p>}
+            <p className={hint + " mb-3"}>Коли закінчується прийом заявок?</p>
+            <div className="flex gap-1 bg-muted-bg rounded-xl p-1 mb-3">
+              {([
+                ["date",    "Конкретна дата"],
+                ["rolling", "Набір триває"],
+                ["asap",    "ASAP"],
+              ] as const).map(([val, lbl]) => (
+                <button key={val} type="button" onClick={() => setDeadlineMode(val)}
+                  className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    deadlineMode === val ? "bg-white text-foreground shadow-sm" : "text-muted hover:text-foreground"
+                  }`}>
+                  {lbl}
+                </button>
+              ))}
+            </div>
+            {deadlineMode === "date" && (
+              <>
+                <input
+                  type="date"
+                  value={form.deadline}
+                  onChange={(e) => set("deadline", e.target.value)}
+                  className={`${input} ${errors.deadline ? err : ""}`}
+                />
+                {errors.deadline && <p className={`${hint} text-red-500`}>{errors.deadline}</p>}
+                <p className={hint}>Після цієї дати форма автоматично закриється для нових учасників.</p>
+              </>
+            )}
+            {deadlineMode === "rolling" && (
+              <div className="px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
+                Відображатиметься як <strong>«Набір триває»</strong> — підходить для програм з постійним відбором без фіксованого дедлайну.
+              </div>
+            )}
+            {deadlineMode === "asap" && (
+              <div className="px-4 py-3 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-700">
+                Відображатиметься як <strong>«ASAP — якомога швидше»</strong> — підходить, коли місця заповнюються швидко і важливо подати заявку негайно.
+              </div>
+            )}
           </div>
 
           <div>
