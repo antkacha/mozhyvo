@@ -1,211 +1,168 @@
 "use client";
 
-import { useState } from "react";
-import { opportunities as allOpps, typeColors } from "@/lib/data";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { typeColors } from "@/lib/data";
 import type { OpportunityType } from "@/lib/data";
 
-type ModStatus = "pending" | "approved" | "rejected";
-
-interface ModOpportunity {
-  slug: string;
+interface OrgProject {
+  id: string;
   title: string;
-  org: string;
   type: string;
-  typeName: string;
-  country: string;
+  type_name: string;
+  status: string;
   deadline: string;
-  deadlineDisplay: string;
-  modStatus: ModStatus;
-  submittedAt: string;
+  deadline_display: string;
+  country: string;
+  flag: string;
+  created_at: string;
+  orgs: { id: string; name: string; slug: string | null } | null;
 }
 
-// Simulate a moderation queue from static data
-const INITIAL: ModOpportunity[] = allOpps.slice(0, 10).map((o, i) => ({
-  slug:           o.slug,
-  title:          o.title,
-  org:            o.org,
-  type:           o.type,
-  typeName:       o.typeName,
-  country:        o.country,
-  deadline:       o.deadline,
-  deadlineDisplay:o.deadlineDisplay,
-  modStatus:      (["pending", "pending", "approved", "pending", "rejected", "approved", "pending", "approved", "pending", "approved"] as ModStatus[])[i],
-  submittedAt:    "2026-05-" + String(i + 10).padStart(2, "0"),
-}));
-
-const STATUS_MAP: Record<ModStatus, { label: string; cls: string }> = {
-  pending:  { label: "На модерації", cls: "bg-amber-50 text-amber-600" },
-  approved: { label: "Опубліковано", cls: "bg-green-50 text-green-700" },
-  rejected: { label: "Відхилено",    cls: "bg-red-50 text-red-500" },
+const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
+  published: { label: "Опубліковано", cls: "bg-green-50 text-green-700" },
+  draft:     { label: "Чернетка",     cls: "bg-muted-bg text-muted" },
+  pending:   { label: "На модерації", cls: "bg-amber-50 text-amber-600" },
+  archived:  { label: "Архів",        cls: "bg-gray-100 text-gray-500" },
 };
 
 export default function AdminOpportunitiesPage() {
-  const [items, setItems]         = useState<ModOpportunity[]>(INITIAL);
-  const [filter, setFilter]       = useState<"all" | ModStatus>("pending");
-  const [selected, setSelected]   = useState<string[]>([]);
-  const [rejectTarget, setRejectTarget] = useState<string | null>(null);
-  const [rejectReason, setRejectReason] = useState("");
-  const [preview, setPreview]     = useState<ModOpportunity | null>(null);
+  const [items, setItems]         = useState<OrgProject[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [filter, setFilter]       = useState<"all" | "published" | "draft" | "pending">("all");
+  const [deleteTarget, setDeleteTarget] = useState<OrgProject | null>(null);
+  const [deleting, setDeleting]   = useState(false);
 
-  const filtered = filter === "all" ? items : items.filter((i) => i.modStatus === filter);
-  const pendingCount = items.filter((i) => i.modStatus === "pending").length;
+  useEffect(() => {
+    fetch("/api/admin/opportunities")
+      .then((r) => r.json())
+      .then(({ opportunities }) => {
+        if (opportunities) setItems(opportunities);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-  function setMod(slug: string, status: ModStatus) {
-    setItems((prev) => prev.map((i) => i.slug === slug ? { ...i, modStatus: status } : i));
-    setSelected((prev) => prev.filter((s) => s !== slug));
-  }
+  const filtered = filter === "all" ? items : items.filter((i) => i.status === filter);
 
-  function bulkApprove() {
-    setItems((prev) => prev.map((i) => selected.includes(i.slug) ? { ...i, modStatus: "approved" } : i));
-    setSelected([]);
-  }
+  const counts = {
+    all:       items.length,
+    published: items.filter((i) => i.status === "published").length,
+    pending:   items.filter((i) => i.status === "pending").length,
+    draft:     items.filter((i) => i.status === "draft").length,
+  };
 
-  function handleReject(slug: string) {
-    setMod(slug, "rejected");
-    setRejectTarget(null);
-    setRejectReason("");
-  }
-
-  function toggleSelect(slug: string) {
-    setSelected((prev) => prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]);
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/opportunities/${deleteTarget.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setItems((prev) => prev.filter((i) => i.id !== deleteTarget.id));
+        setDeleteTarget(null);
+      } else {
+        const { error } = await res.json();
+        alert(`Помилка видалення: ${error}`);
+      }
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-foreground">Модерація можливостей</h1>
-          <p className="text-sm text-muted mt-0.5">{pendingCount} очікують перевірки</p>
+          <h1 className="text-2xl font-black text-foreground">Можливості</h1>
+          <p className="text-sm text-muted mt-0.5">{counts.all} всього · {counts.published} опубліковано</p>
         </div>
       </div>
 
-      {/* Bulk toolbar */}
-      {selected.length > 0 && (
-        <div className="bg-primary-light border border-primary/20 rounded-2xl px-5 py-3 flex items-center justify-between gap-4">
-          <p className="text-sm font-semibold text-primary">Обрано: {selected.length}</p>
-          <div className="flex gap-2">
-            <button onClick={bulkApprove}
-              className="px-4 py-2 bg-green-500 text-white text-xs font-semibold rounded-xl hover:bg-green-600 transition-all">
-              Схвалити все
-            </button>
-            <button onClick={() => setSelected([])}
-              className="px-4 py-2 border border-border text-muted text-xs rounded-xl hover:bg-muted-bg transition-all">
-              Скасувати
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Status tabs */}
       <div className="flex gap-1 bg-muted-bg rounded-2xl p-1">
-        {(["pending", "approved", "rejected", "all"] as const).map((s) => {
-          const count = s === "all" ? items.length : items.filter((i) => i.modStatus === s).length;
-          return (
-            <button key={s} onClick={() => setFilter(s)}
-              className={`flex-1 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${filter === s ? "bg-white text-foreground shadow-sm" : "text-muted hover:text-foreground"}`}>
-              {s === "all" ? "Всі" : STATUS_MAP[s].label} ({count})
-            </button>
-          );
-        })}
+        {(["all", "published", "pending", "draft"] as const).map((s) => (
+          <button key={s} onClick={() => setFilter(s)}
+            className={`flex-1 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${filter === s ? "bg-white text-foreground shadow-sm" : "text-muted hover:text-foreground"}`}>
+            {s === "all" ? "Всі" : STATUS_LABEL[s]?.label ?? s} ({counts[s] ?? 0})
+          </button>
+        ))}
       </div>
 
       {/* List */}
       <div className="flex flex-col gap-3">
-        {filtered.map((item) => (
-          <div key={item.slug}
-            className={`bg-white rounded-2xl border p-4 flex items-center gap-4 hover:shadow-sm transition-all ${
-              item.modStatus === "pending" ? "border-amber-200" : "border-border"
-            }`}>
-            {item.modStatus === "pending" && (
-              <input type="checkbox" checked={selected.includes(item.slug)}
-                onChange={() => toggleSelect(item.slug)}
-                className="w-4 h-4 accent-primary flex-shrink-0" />
-            )}
-            <div className="flex-1 min-w-0" onClick={() => setPreview(item)} role="button">
-              <div className="flex items-center gap-2 mb-1">
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${typeColors[item.type as OpportunityType]}`}>{item.typeName}</span>
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_MAP[item.modStatus].cls}`}>{STATUS_MAP[item.modStatus].label}</span>
-              </div>
-              <p className="text-sm font-bold text-foreground truncate">{item.title}</p>
-              <p className="text-xs text-muted">{item.org} · {item.country} · {item.deadlineDisplay}</p>
-            </div>
-            {item.modStatus === "pending" && (
-              <div className="flex gap-2 flex-shrink-0">
-                <button onClick={() => setMod(item.slug, "approved")}
-                  className="px-3 py-1.5 bg-green-500 text-white text-xs font-semibold rounded-xl hover:bg-green-600 transition-all">
-                  Схвалити
-                </button>
-                <button onClick={() => setRejectTarget(item.slug)}
-                  className="px-3 py-1.5 border border-red-200 text-red-500 text-xs font-semibold rounded-xl hover:bg-red-50 transition-all">
-                  Відхилити
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
-        {filtered.length === 0 && (
+        {loading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-20 bg-white rounded-2xl border border-border animate-pulse" />
+          ))
+        ) : filtered.length === 0 ? (
           <div className="text-center py-16 bg-white border border-border rounded-2xl">
-            <p className="text-3xl mb-2">✅</p>
+            <p className="text-3xl mb-2">📭</p>
             <p className="text-sm font-semibold text-foreground">Нічого немає</p>
           </div>
+        ) : (
+          filtered.map((item) => {
+            const st = STATUS_LABEL[item.status] ?? { label: item.status, cls: "bg-muted-bg text-muted" };
+            return (
+              <div key={item.id}
+                className="bg-white rounded-2xl border border-border p-4 flex items-center gap-4 hover:shadow-sm transition-all">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${typeColors[item.type as OpportunityType] ?? "bg-muted-bg text-muted"}`}>
+                      {item.type_name || item.type}
+                    </span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>
+                  </div>
+                  <p className="text-sm font-bold text-foreground truncate">{item.title}</p>
+                  <p className="text-xs text-muted">
+                    {item.orgs?.name ?? "—"} · {item.flag} {item.country} · {item.deadline_display || item.deadline}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Link href={`/opportunities/${item.id}`} target="_blank"
+                    className="px-3 py-1.5 border border-border text-muted text-xs font-medium rounded-xl hover:bg-muted-bg transition-all">
+                    ↗ Відкрити
+                  </Link>
+                  <button
+                    onClick={() => setDeleteTarget(item)}
+                    className="px-3 py-1.5 border border-red-200 text-red-500 text-xs font-semibold rounded-xl hover:bg-red-50 transition-all">
+                    Видалити
+                  </button>
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
 
-      {/* Reject modal */}
-      {rejectTarget && (
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setRejectTarget(null)} />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !deleting && setDeleteTarget(null)} />
           <div className="relative bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-base font-bold text-foreground mb-4">Причина відхилення</h3>
-            <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}
-              rows={4} placeholder="Вкажіть причину..."
-              className="w-full px-3.5 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none mb-4" />
-            <div className="flex gap-3 justify-end">
-              <button onClick={() => setRejectTarget(null)}
-                className="px-4 py-2 border border-border rounded-xl text-sm text-muted hover:bg-muted-bg transition-all">Скасувати</button>
-              <button onClick={() => handleReject(rejectTarget!)} disabled={!rejectReason.trim()}
-                className="px-4 py-2 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 disabled:opacity-40 transition-all">Відхилити</button>
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Preview modal */}
-      {preview && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setPreview(null)} />
-          <div className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-foreground line-clamp-1">{preview.title}</h3>
-              <button onClick={() => setPreview(null)} className="p-1.5 rounded-lg hover:bg-muted-bg text-muted">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            <h3 className="text-base font-bold text-foreground text-center mb-1">Видалити можливість?</h3>
+            <p className="text-sm text-muted text-center mb-1">{deleteTarget.title}</p>
+            <p className="text-xs text-muted text-center mb-6">{deleteTarget.orgs?.name}</p>
+            <p className="text-xs text-red-500 bg-red-50 rounded-xl px-4 py-2.5 text-center mb-5">
+              Це незворотна дія. Усі заявки на цю програму також буде видалено.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteTarget(null)} disabled={deleting}
+                className="flex-1 py-2.5 border border-border rounded-xl text-sm font-medium text-muted hover:bg-muted-bg transition-all disabled:opacity-40">
+                Скасувати
               </button>
-            </div>
-            <div className="space-y-3 text-sm">
-              {[
-                { label: "Організація", value: preview.org },
-                { label: "Тип",         value: preview.typeName },
-                { label: "Країна",      value: preview.country },
-                { label: "Дедлайн",     value: preview.deadlineDisplay },
-                { label: "Подано",      value: preview.submittedAt },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex justify-between gap-3">
-                  <span className="text-muted">{label}</span>
-                  <span className="font-medium text-foreground">{value}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-5 flex gap-3">
-              <a href={`/opportunities/${preview.slug}`} target="_blank" rel="noreferrer"
-                className="flex-1 text-center py-2.5 border border-border rounded-xl text-sm font-medium hover:bg-muted-bg transition-all">
-                Відкрити сторінку ↗
-              </a>
-              {preview.modStatus === "pending" && (
-                <button onClick={() => { setMod(preview.slug, "approved"); setPreview(null); }}
-                  className="flex-1 py-2.5 bg-green-500 text-white rounded-xl text-sm font-semibold hover:bg-green-600 transition-all">
-                  Схвалити
-                </button>
-              )}
+              <button onClick={confirmDelete} disabled={deleting}
+                className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                {deleting ? (
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : "Так, видалити"}
+              </button>
             </div>
           </div>
         </div>
