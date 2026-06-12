@@ -168,7 +168,6 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
     return steps;
   }, [enabledBlocks, trueCustomQuestions.length, customStepLabel]);
 
-  const REVIEW_STEP = STEPS.length - 1;
   const CUSTOM_STEP_IDX = STEPS.findIndex((s) => s.id === "custom");
 
   const [step, setStep] = useState(0);
