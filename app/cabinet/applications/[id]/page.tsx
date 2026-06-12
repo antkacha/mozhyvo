@@ -1,25 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, notFound } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useApplications } from "@/hooks/useApplications";
 import StatusBadge from "@/components/StatusBadge";
-import type { Application } from "@/hooks/useApplications";
 
 export default function ApplicationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { applications, ready } = useApplications();
-  const [app, setApp] = useState<Application | null>(null);
 
-  useEffect(() => {
-    if (ready) {
-      const found = applications.find((a) => a.id === id);
-      setApp(found ?? null);
-    }
-  }, [ready, applications, id]);
+  const app = ready ? (applications.find((a) => a.id === id) ?? null) : undefined;
 
-  if (!ready) {
+  if (!ready || app === undefined) {
     return (
       <div className="min-h-screen bg-[#f0f2f5] flex items-center justify-center">
         <div className="w-8 h-8 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -27,7 +19,19 @@ export default function ApplicationDetailPage() {
     );
   }
 
-  if (ready && !app) return notFound();
+  if (!app) {
+    return (
+      <div className="min-h-screen bg-[#f0f2f5] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-4xl mb-3">📭</p>
+          <p className="text-lg font-bold text-foreground mb-2">Заявку не знайдено</p>
+          <Link href="/cabinet/applications" className="text-sm text-primary hover:underline">
+            ← Повернутись до заявок
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f0f2f5] pb-16">
