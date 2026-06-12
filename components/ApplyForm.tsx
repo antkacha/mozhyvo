@@ -149,13 +149,24 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
     [trueCustomItems]
   );
 
-  // Custom step label: use first section's name if the org named it
-  const customStepLabel = useMemo(() => {
-    const sec = trueCustomItems.find((q) => q.type === "section");
-    return sec?.label?.trim() || "Додаткові питання";
+  // Group custom items by sections — each section becomes its own step
+  const customGroups = useMemo(() => {
+    const groups: { id: string; label: string; questions: FormQuestion[] }[] = [];
+    let current: (typeof groups)[0] | null = null;
+    for (const item of trueCustomItems) {
+      if (item.type === "section") {
+        if (current && current.questions.length > 0) groups.push(current);
+        current = { id: `csec_${item.id}`, label: item.label?.trim() || "Додаткові питання", questions: [] };
+      } else {
+        if (!current) current = { id: "csec_default", label: "Додаткові питання", questions: [] };
+        current.questions.push(item);
+      }
+    }
+    if (current && current.questions.length > 0) groups.push(current);
+    return groups;
   }, [trueCustomItems]);
 
-  // Build steps dynamically based on enabled blocks
+  // Build steps dynamically based on enabled blocks + org's custom sections
   const STEPS = useMemo(() => {
     const steps: Array<{ id: string; label: string }> = [];
     steps.push({ id: "personal", label: "Особисті дані" });
@@ -163,12 +174,10 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
     if (enabledBlocks.has("block_motivation") || enabledBlocks.has("block_documents")) {
       steps.push({ id: "motivation", label: enabledBlocks.has("block_motivation") ? "Мотивація" : "Документи" });
     }
-    if (trueCustomQuestions.length > 0) steps.push({ id: "custom", label: customStepLabel });
+    customGroups.forEach((g) => steps.push({ id: g.id, label: g.label }));
     steps.push({ id: "review", label: "Огляд заявки" });
     return steps;
-  }, [enabledBlocks, trueCustomQuestions.length, customStepLabel]);
-
-  const CUSTOM_STEP_IDX = STEPS.findIndex((s) => s.id === "custom");
+  }, [enabledBlocks, customGroups]);
 
   const [step, setStep] = useState(0);
   const [data, setData] = useState<FormData>(EMPTY);
@@ -229,9 +238,9 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
     return e;
   };
 
-  function validateCustom(): Record<string, string> {
+  function validateCustomGroup(questions: FormQuestion[]): Record<string, string> {
     const e: Record<string, string> = {};
-    trueCustomQuestions.forEach((q) => {
+    questions.forEach((q) => {
       if (!q.required) return;
       const val = customAnswers[q.id];
       if (!val || (Array.isArray(val) ? val.length === 0 : val.trim() === "")) {
@@ -242,8 +251,10 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   }
 
   const next = () => {
-    if (step === CUSTOM_STEP_IDX) {
-      const e = validateCustom();
+    const sid = STEPS[step]?.id;
+    const group = customGroups.find((g) => g.id === sid);
+    if (group) {
+      const e = validateCustomGroup(group.questions);
       if (Object.keys(e).length > 0) { setCustomErrors(e); return; }
       setCustomErrors({});
       setStep((s) => s + 1);
@@ -477,17 +488,12 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
         )}
 
         {/* ── Custom questions ── */}
-        {STEPS[step]?.id === "custom" && (
+        {(() => {
+          const group = customGroups.find((g) => g.id === STEPS[step]?.id);
+          if (!group) return null;
+          return (
           <div className="flex flex-col gap-6">
-            {trueCustomItems.map((q) => {
-              if (q.type === "section") {
-                return (
-                  <div key={q.id} className="pt-2 pb-1 border-b-2 border-primary/20 -mb-2">
-                    <h3 className="text-base font-bold text-foreground">{q.label || "Розділ"}</h3>
-                    {q.description && <p className="text-sm text-muted mt-1 mb-2">{q.description}</p>}
-                  </div>
-                );
-              }
+            {group.questions.map((q) => {
               const err = customErrors[q.id];
               const val = customAnswers[q.id];
               const inp = `w-full px-4 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white ${err ? "border-red-400" : "border-border"}`;
@@ -561,7 +567,8 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
               );
             })}
           </div>
-        )}
+          );
+        })()}
 
         {/* ── Review ── */}
         {STEPS[step]?.id === "review" && (
@@ -606,7 +613,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
             )}
             {trueCustomQuestions.length > 0 && (
               <div className="bg-muted-bg rounded-xl p-5">
-                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">{customStepLabel}</p>
+                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Відповіді на питання</p>
                 <div className="flex flex-col gap-3">
                   {trueCustomQuestions.map((q) => {
                     const val = customAnswers[q.id];
