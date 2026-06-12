@@ -19,9 +19,22 @@ function isBlock(type: FormQuestion["type"]): type is StandardBlock {
   return type.startsWith("block_");
 }
 
+function isSection(type: FormQuestion["type"]): boolean {
+  return type === "section";
+}
+
 // ── Preview of a single field ────────────────────────────────────────
 function FieldPreview({ q }: { q: FormQuestion }) {
   const base = "w-full px-3.5 py-2.5 text-sm border border-border rounded-xl bg-white text-muted cursor-not-allowed";
+
+  if (isSection(q.type)) {
+    return (
+      <div className="pt-2 pb-3 border-b-2 border-primary/20">
+        <h3 className="text-base font-bold text-foreground">{q.label || <em className="text-muted font-normal">Назва розділу</em>}</h3>
+        {q.description && <p className="text-sm text-muted mt-1">{q.description}</p>}
+      </div>
+    );
+  }
 
   if (isBlock(q.type)) {
     const block = STANDARD_BLOCKS.find((b) => b.type === q.type)!;
@@ -112,6 +125,62 @@ function BlockCard({
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
         </button>
       </div>
+    </div>
+  );
+}
+
+// ── Section divider card ─────────────────────────────────────────────
+function SectionCard({
+  q, index, total,
+  onChange, onDelete, onMove,
+}: {
+  q: FormQuestion; index: number; total: number;
+  onChange: (q: FormQuestion) => void;
+  onDelete: () => void;
+  onMove: (dir: "up" | "down") => void;
+}) {
+  const inp = "w-full px-3 py-2 text-sm border border-transparent rounded-xl bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all placeholder:text-muted/40";
+
+  return (
+    <div className="bg-gradient-to-r from-primary-light/40 to-transparent rounded-2xl border border-primary/20 overflow-hidden shadow-sm">
+      <div className="flex items-center gap-2 px-4 py-3">
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <span className="text-xs font-bold text-muted/60 w-4 text-center">{index + 1}</span>
+          <div className="flex flex-col">
+            <button onClick={() => onMove("up")} disabled={index === 0}
+              className="h-4 w-5 flex items-center justify-center text-muted/40 hover:text-muted disabled:opacity-0 transition-colors">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7"/></svg>
+            </button>
+            <button onClick={() => onMove("down")} disabled={index === total - 1}
+              className="h-4 w-5 flex items-center justify-center text-muted/40 hover:text-muted disabled:opacity-0 transition-colors">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7"/></svg>
+            </button>
+          </div>
+        </div>
+        <svg className="w-4 h-4 text-primary/60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8M4 18h12"/>
+        </svg>
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
+          <input
+            value={q.label}
+            onChange={(e) => onChange({ ...q, label: e.target.value })}
+            placeholder="Назва розділу..."
+            className={`${inp} text-sm font-bold text-foreground`}
+          />
+          <input
+            value={q.description ?? ""}
+            onChange={(e) => onChange({ ...q, description: e.target.value })}
+            placeholder="Опис розділу (необов'язково)..."
+            className={`${inp} text-xs text-muted`}
+          />
+        </div>
+        <span className="text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded-lg flex-shrink-0">Розділ</span>
+        <button onClick={onDelete}
+          className="w-7 h-7 rounded-lg flex items-center justify-center text-muted hover:text-red-500 hover:bg-red-50 transition-all flex-shrink-0">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        </button>
+      </div>
+      <div className="mx-4 mb-3 h-px bg-primary/20" />
     </div>
   );
 }
@@ -330,6 +399,11 @@ export default function FormBuilder({ questions, onChange }: FormBuilderProps) {
     setAddingType(false);
   }
 
+  function addSection() {
+    const q: FormQuestion = { id: genId(), type: "section", label: "", required: false };
+    onChange([...questions, q]);
+  }
+
   function updateQuestion(id: string, updated: FormQuestion) {
     onChange(questions.map((q) => (q.id === id ? updated : q)));
   }
@@ -345,7 +419,7 @@ export default function FormBuilder({ questions, onChange }: FormBuilderProps) {
     onChange(arr);
   }
 
-  const customCount = questions.filter((q) => !isBlock(q.type)).length;
+  const customCount = questions.filter((q) => !isBlock(q.type) && !isSection(q.type)).length;
 
   return (
     <div>
@@ -413,6 +487,13 @@ export default function FormBuilder({ questions, onChange }: FormBuilderProps) {
                 onDelete={() => deleteQuestion(q.id)}
                 onMove={(dir) => moveQuestion(i, dir)}
               />
+            ) : isSection(q.type) ? (
+              <SectionCard
+                key={q.id} q={q} index={i} total={questions.length}
+                onChange={(updated) => updateQuestion(q.id, updated)}
+                onDelete={() => deleteQuestion(q.id)}
+                onMove={(dir) => moveQuestion(i, dir)}
+              />
             ) : (
               <QuestionCard
                 key={q.id} q={q} index={i} total={questions.length}
@@ -443,11 +524,18 @@ export default function FormBuilder({ questions, onChange }: FormBuilderProps) {
           </button>
         </div>
       ) : (
-        <button onClick={() => setAddingType(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-border text-sm font-semibold text-muted hover:border-primary/40 hover:text-primary hover:bg-primary-light/20 transition-all">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg>
-          Додати кастомне питання
-        </button>
+        <div className="flex flex-col gap-2">
+          <button onClick={() => setAddingType(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-border text-sm font-semibold text-muted hover:border-primary/40 hover:text-primary hover:bg-primary-light/20 transition-all">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg>
+            Додати питання
+          </button>
+          <button onClick={addSection}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-primary/20 text-sm font-semibold text-primary/60 hover:border-primary/50 hover:text-primary hover:bg-primary-light/20 transition-all">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8M4 18h12"/></svg>
+            Додати розділ
+          </button>
+        </div>
       )}
 
       {preview && <PreviewModal questions={questions} onClose={() => setPreview(false)} />}

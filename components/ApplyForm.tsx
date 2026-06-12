@@ -139,9 +139,15 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   }, [opp.slug]);
 
   // Standard blocks are already covered by base steps — only show truly custom questions
-  const trueCustomQuestions = useMemo(
+  // trueCustomItems = sections + real questions (for rendering)
+  const trueCustomItems = useMemo(
     () => customQuestions.filter((q) => !q.type.startsWith("block_")),
     [customQuestions]
+  );
+  // trueCustomQuestions = only real questions (for step count, validation, review)
+  const trueCustomQuestions = useMemo(
+    () => trueCustomItems.filter((q) => q.type !== "section"),
+    [trueCustomItems]
   );
 
   const STEPS = useMemo(
@@ -454,7 +460,15 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
         {/* ── Step 3 (optional): Custom questions ── */}
         {step === CUSTOM_STEP && CUSTOM_STEP !== -1 && (
           <div className="flex flex-col gap-6">
-            {trueCustomQuestions.map((q) => {
+            {trueCustomItems.map((q) => {
+              if (q.type === "section") {
+                return (
+                  <div key={q.id} className="pt-2 pb-1 border-b-2 border-primary/20 -mb-2">
+                    <h3 className="text-base font-bold text-foreground">{q.label || "Розділ"}</h3>
+                    {q.description && <p className="text-sm text-muted mt-1 mb-2">{q.description}</p>}
+                  </div>
+                );
+              }
               const err = customErrors[q.id];
               const val = customAnswers[q.id];
               const inp = `w-full px-4 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white ${err ? "border-red-400" : "border-border"}`;

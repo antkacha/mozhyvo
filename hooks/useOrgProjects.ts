@@ -7,7 +7,7 @@ export type StandardBlock = "block_contacts" | "block_education" | "block_motiva
 
 export interface FormQuestion {
   id: string;
-  type: "text" | "textarea" | "select" | "radio" | "checkbox" | StandardBlock;
+  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "section" | StandardBlock;
   label: string;
   description?: string;
   placeholder?: string;
