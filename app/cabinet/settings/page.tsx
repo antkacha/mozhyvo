@@ -41,6 +41,16 @@ export default function CabinetSettingsPage() {
   const [saved, setSaved] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteInput, setDeleteInput] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    try {
+      await fetch("/api/user/delete", { method: "POST" });
+    } catch {}
+    await signOut();
+    window.location.href = "/";
+  }
 
   function toggle(key: keyof NotifSettings) {
     setNotif((p) => ({ ...p, [key]: !p[key] }));
@@ -114,11 +124,13 @@ export default function CabinetSettingsPage() {
             />
             <div className="flex gap-3">
               <button
-                disabled={deleteInput !== "ВИДАЛИТИ"}
-                onClick={signOut}
-                className="px-5 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 disabled:opacity-40 transition-all"
+                disabled={deleteInput !== "ВИДАЛИТИ" || deleting}
+                onClick={handleDeleteAccount}
+                className="px-5 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 disabled:opacity-40 transition-all flex items-center gap-2"
               >
-                Підтвердити видалення
+                {deleting ? (
+                  <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Видалення...</>
+                ) : "Підтвердити видалення"}
               </button>
               <button onClick={() => { setDeleteConfirm(false); setDeleteInput(""); }}
                 className="px-5 py-2.5 border border-border rounded-xl text-sm font-medium hover:bg-muted-bg transition-all">
