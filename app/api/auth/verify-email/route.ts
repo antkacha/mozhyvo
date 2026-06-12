@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
         : userEmailHtml(confirmUrl, firstName ?? "");
 
     await resend.emails.send({
-      from: "Моживо <mozhyvo@gmail.com>",
+      from: "Моживо <onboarding@resend.dev>",
       to: email,
       subject,
       html,
