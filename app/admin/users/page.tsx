@@ -47,12 +47,6 @@ export default function AdminUsersPage() {
     setActionLoading(null);
   }
 
-  const roleLabel: Record<string, { label: string; cls: string }> = {
-    admin: { label: "Адмін",       cls: "bg-primary/10 text-primary" },
-    org:   { label: "Організація", cls: "bg-amber-50 text-amber-600" },
-    user:  { label: "Користувач",  cls: "bg-muted-bg text-muted" },
-  };
-
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
