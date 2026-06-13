@@ -117,13 +117,16 @@ export default function ContactsPage() {
             <p className="font-semibold text-foreground mb-4">Ми в соцмережах</p>
             <div className="flex flex-col gap-3">
               {[
-                { name: "Telegram", icon: "✈️", desc: "Новини та оновлення" },
-                { name: "Instagram", icon: "📸", desc: "Нові можливості та натхнення" },
-                { name: "LinkedIn", icon: "💼", desc: "Новини платформи" },
+                { name: "Telegram", href: "https://t.me/mozhyvo_bot", icon: "✈️", desc: "Новини та оновлення" },
+                { name: "Instagram", href: "https://www.instagram.com/mozhyvo", icon: "📸", desc: "Нові можливості та натхнення" },
+                { name: "LinkedIn", href: "https://www.linkedin.com/company/mozhyvo/about/", icon: "💼", desc: "Новини платформи" },
+                { name: "Linktree", href: "https://linktr.ee/mozhyvo", icon: "🌿", desc: "Всі наші посилання" },
               ].map((s) => (
                 <a
                   key={s.name}
-                  href="#"
+                  href={s.href}
+                  target="_blank"
+                  rel="noreferrer"
                   className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted-bg transition-colors group"
                 >
                   <span className="text-lg">{s.icon}</span>
