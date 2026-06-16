@@ -59,7 +59,17 @@ function Section({ title, children }: { title: string; children: React.ReactNode
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      {open && <div className="flex flex-col gap-1.5">{children}</div>}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: open ? "1fr" : "0fr",
+          transition: "grid-template-rows 0.25s ease",
+        }}
+      >
+        <div style={{ overflow: "hidden" }}>
+          <div className="flex flex-col gap-1.5">{children}</div>
+        </div>
+      </div>
     </div>
   );
 }
