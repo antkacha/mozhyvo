@@ -14,11 +14,7 @@ function createPublicClient() {
 }
 import type { Opportunity } from "@/lib/data";
 
-export function generateStaticParams() {
-  return opportunities.map((o) => ({ slug: o.slug }));
-}
-
-export const dynamicParams = true;
+export const dynamic = "force-dynamic";
 
 async function fetchOrgProject(id: string): Promise<Opportunity | null> {
   try {
