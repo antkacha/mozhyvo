@@ -241,7 +241,7 @@ export default function OrgRegisterPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard`,
         data: metadata,
       },
     });
@@ -255,18 +255,6 @@ export default function OrgRegisterPage() {
       setStatus("error");
       return;
     }
-
-    // Send branded verification email via Resend
-    fetch("/api/auth/verify-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        role: "org",
-        orgName: name,
-        orgFormat: format,
-      }),
-    }).catch(() => {});
 
     setStatus("success");
   }

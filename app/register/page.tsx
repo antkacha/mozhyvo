@@ -148,7 +148,7 @@ export default function RegisterPage() {
     const { data, error } = await supabase.auth.signUp({
       email, password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/cabinet`,
+        emailRedirectTo: `${window.location.origin}/auth/confirm?next=/cabinet`,
         data: { first_name: firstName, last_name: nameParts.slice(1).join(" ") ?? "", role: "seeker" },
       },
     });
@@ -159,12 +159,6 @@ export default function RegisterPage() {
       setServerError("Цей email вже зареєстрований. Перевір пошту або спробуй увійти.");
       setStatus("error");
     } else {
-      // Send branded verification email via Resend
-      fetch("/api/auth/verify-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role: "user", firstName }),
-      }).catch(() => {});
       setStatus("success");
     }
   };
@@ -178,7 +172,7 @@ export default function RegisterPage() {
     const { data: authData, error } = await supabase.auth.signUp({
       email, password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard`,
         data: { role: "org", org_name: orgName, org_type: orgType, org_country: orgCountry, org_city: orgCity, org_website: orgWebsite, org_description: orgDescription },
       },
     });
