@@ -71,7 +71,6 @@ export async function POST(req: NextRequest) {
 
   // Supabase sends invite via configured SMTP.
   // Also send via Resend as backup in case SMTP invite doesn't arrive.
-  const inviteLink = data?.user?.confirmation_sent_at ? redirectTo : redirectTo;
   try {
     await sendInviteViaResend(email, user.email ?? "Команда Моживо", roleLabel, redirectTo);
     console.log("[invite] resend backup sent to:", email);
