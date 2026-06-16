@@ -97,14 +97,20 @@ export function useOrgApplications(orgId?: string, projectId?: string) {
           prev.map((a) => (a.id === id ? { ...a, ...data } : a))
         );
 
-        // Sync status change to user's applications table so they see their result
+        // Sync status change to user's applications table via admin API (bypasses RLS)
         if (data.status !== undefined && current) {
-          const { error: syncError } = await supabase
-            .from("applications")
-            .update({ status: USER_STATUS[data.status] })
-            .eq("opportunity_slug", current.projectId)
-            .eq("email", current.email);
-          if (syncError) console.error("[status-sync] failed:", syncError.message, { projectId: current.projectId, email: current.email });
+          fetch("/api/org/sync-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orgAppId:  id,
+              orgStatus: data.status,
+              projectId: current.projectId,
+              email:     current.email,
+            }),
+          }).then((r) => {
+            if (!r.ok) console.error("[status-sync] failed:", r.status);
+          });
         }
       } else {
         throw new Error(error.message);
