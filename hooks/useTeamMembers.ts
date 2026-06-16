@@ -34,16 +34,18 @@ export function useTeamMembers() {
     setMembers(all);
   }, []);
 
-  const invite = useCallback(async (email: string, role: TeamRole, name?: string): Promise<boolean> => {
+  const invite = useCallback(async (email: string, role: TeamRole, name?: string): Promise<{ ok: boolean; error?: string }> => {
     const all = load();
-    if (all.some((m) => m.email === email)) return false;
+    if (all.some((m) => m.email === email)) return { ok: false, error: "Цей email вже є в команді" };
 
-    // Send invitation email via API
-    fetch("/api/org/invite", {
+    const res = await fetch("/api/org/invite", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, role }),
-    }).catch(() => {});
+    });
+
+    const json = await res.json();
+    if (!res.ok) return { ok: false, error: json.error ?? "Помилка при надсиланні запрошення" };
 
     const m: TeamMember = {
       id: `member-${Date.now()}`,
@@ -56,7 +58,7 @@ export function useTeamMembers() {
     const updated = [...all, m];
     save(updated);
     setMembers(updated);
-    return true;
+    return { ok: true };
   }, []);
 
   const remove = useCallback((id: string) => {
