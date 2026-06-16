@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { profileCompleteness } from "@/lib/types";
+import NotificationsBell from "@/components/NotificationsBell";
 
 const NAV = [
   { href: "/cabinet",              label: "Огляд",        exact: true,
@@ -72,12 +73,13 @@ export default function CabinetLayout({ children }: { children: React.ReactNode 
             <div className="w-9 h-9 rounded-full bg-primary-light flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
               {profile.firstName ? profile.firstName[0].toUpperCase() : "?"}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-foreground truncate">
                 {profile.firstName || profile.email || "Користувач"}
               </p>
               <p className="text-xs text-muted truncate">{profile.email}</p>
             </div>
+            <NotificationsBell />
           </div>
           {completeness < 100 && (
             <div className="mt-3">
@@ -133,9 +135,12 @@ export default function CabinetLayout({ children }: { children: React.ReactNode 
             </div>
             <span className="font-black text-foreground">Моживо</span>
           </Link>
-          <button onClick={signOut} className="p-2 text-muted hover:text-foreground">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-          </button>
+          <div className="flex items-center gap-1">
+            <NotificationsBell />
+            <button onClick={signOut} className="p-2 text-muted hover:text-foreground">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            </button>
+          </div>
         </header>
 
         {/* Page content */}

@@ -8,6 +8,8 @@ interface NotifSettings {
   emailReminders: boolean;
   emailStatusUpdates: boolean;
   emailWeeklyDigest: boolean;
+  smsStatusUpdates: boolean;
+  smsDeadlineReminders: boolean;
 }
 
 const DEFAULT_NOTIF: NotifSettings = {
@@ -15,13 +17,20 @@ const DEFAULT_NOTIF: NotifSettings = {
   emailReminders: true,
   emailStatusUpdates: true,
   emailWeeklyDigest: false,
+  smsStatusUpdates: false,
+  smsDeadlineReminders: false,
 };
 
-const NOTIF_ITEMS: { key: keyof NotifSettings; label: string; desc: string }[] = [
+const EMAIL_ITEMS: { key: keyof NotifSettings; label: string; desc: string }[] = [
   { key: "emailNewOpportunities", label: "Нові можливості",       desc: "Отримуй листи про нові програми за твоїми інтересами" },
   { key: "emailReminders",        label: "Нагадування",           desc: "Нагадування про наближення дедлайнів збережених програм" },
   { key: "emailStatusUpdates",    label: "Оновлення статусу",     desc: "Коли статус твоєї заявки змінюється" },
   { key: "emailWeeklyDigest",     label: "Щотижневий дайджест",   desc: "Огляд нових можливостей кожного понеділка" },
+];
+
+const SMS_ITEMS: { key: keyof NotifSettings; label: string; desc: string }[] = [
+  { key: "smsStatusUpdates",      label: "Оновлення статусу",     desc: "SMS коли організація змінює статус твоєї заявки" },
+  { key: "smsDeadlineReminders",  label: "Нагадування дедлайнів", desc: "SMS за день до закінчення подачі збережених програм" },
 ];
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
@@ -38,10 +47,13 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
 export default function CabinetSettingsPage() {
   const { signOut } = useAuth();
   const [notif, setNotif] = useState<NotifSettings>(DEFAULT_NOTIF);
+  const [phone, setPhone] = useState("");
   const [saved, setSaved] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteInput, setDeleteInput] = useState("");
   const [deleting, setDeleting] = useState(false);
+
+  const smsEnabled = notif.smsStatusUpdates || notif.smsDeadlineReminders;
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -70,11 +82,11 @@ export default function CabinetSettingsPage() {
         <p className="text-sm text-muted mt-0.5">Управляй сповіщеннями та акаунтом</p>
       </div>
 
-      {/* Notifications */}
+      {/* Email notifications */}
       <div className="bg-white rounded-2xl border border-border p-6 space-y-5">
         <h2 className="text-sm font-bold text-foreground">Email-сповіщення</h2>
         <div className="space-y-4">
-          {NOTIF_ITEMS.map(({ key, label, desc }) => (
+          {EMAIL_ITEMS.map(({ key, label, desc }) => (
             <div key={key} className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-foreground">{label}</p>
@@ -84,6 +96,52 @@ export default function CabinetSettingsPage() {
             </div>
           ))}
         </div>
+        <button onClick={handleSave}
+          className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${saved ? "bg-green-500 text-white" : "bg-primary text-white hover:bg-primary-dark"}`}>
+          {saved ? "✓ Збережено" : "Зберегти"}
+        </button>
+      </div>
+
+      {/* SMS notifications */}
+      <div className="bg-white rounded-2xl border border-border p-6 space-y-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-bold text-foreground">SMS-сповіщення</h2>
+            <p className="text-xs text-muted mt-0.5">Потрібен номер телефону для отримання SMS</p>
+          </div>
+          <span className="text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full flex-shrink-0">Незабаром</span>
+        </div>
+
+        {/* Phone input */}
+        <div>
+          <label className="block text-xs font-medium text-muted mb-1.5">Номер телефону</label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="+380 XX XXX XX XX"
+            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          />
+        </div>
+
+        <div className="space-y-4">
+          {SMS_ITEMS.map(({ key, label, desc }) => (
+            <div key={key} className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">{label}</p>
+                <p className="text-xs text-muted mt-0.5">{desc}</p>
+              </div>
+              <Toggle checked={notif[key]} onChange={() => toggle(key)} />
+            </div>
+          ))}
+        </div>
+
+        {smsEnabled && !phone && (
+          <p className="text-xs text-amber-600 bg-amber-50 rounded-xl px-3 py-2">
+            Введи номер телефону, щоб отримувати SMS
+          </p>
+        )}
+
         <button onClick={handleSave}
           className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${saved ? "bg-green-500 text-white" : "bg-primary text-white hover:bg-primary-dark"}`}>
           {saved ? "✓ Збережено" : "Зберегти"}

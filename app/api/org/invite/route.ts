@@ -12,29 +12,53 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // Check if user with this email is registered
+  // Check if invited user is registered
   const { data: { users }, error: listError } = await admin.auth.admin.listUsers();
   if (listError) return NextResponse.json({ error: listError.message }, { status: 500 });
 
-  const found = users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
-  if (!found) {
+  const invitedUser = users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+  if (!invitedUser) {
     return NextResponse.json({
       error: "Цей користувач ще не зареєстрований на Моживо. Попросіть їх спочатку створити акаунт на сайті.",
     }, { status: 404 });
   }
 
-  // User exists — notify them via Resend if API key is set
+  // Get org of the inviting user
+  const { data: org } = await supabase.from("orgs").select("id, name").eq("user_id", user.id).single();
+  if (!org) return NextResponse.json({ error: "Org not found" }, { status: 404 });
+
+  const roleLabel = role === "admin" ? "Адміністратора" : "Рецензента";
+
+  // Add to org_members
+  const { error: memberError } = await admin
+    .from("org_members")
+    .upsert({ org_id: org.id, user_id: invitedUser.id, role, invited_by: user.email }, { onConflict: "org_id,user_id" });
+
+  if (memberError) {
+    console.error("[invite] org_members insert failed:", memberError.message);
+    return NextResponse.json({ error: memberError.message }, { status: 500 });
+  }
+
+  // Create in-app notification for invited user
+  await admin.from("user_notifications").insert({
+    user_id: invitedUser.id,
+    type: "team_invite",
+    title: "Вас додано до команди",
+    message: `${org.name} додала вас як ${roleLabel}. Тепер у вас є доступ до дешборду організації.`,
+    data: { org_id: org.id, org_name: org.name, role },
+  });
+
+  // Send email notification via Resend (best-effort)
   if (process.env.RESEND_API_KEY) {
     try {
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mozhyvo.vercel.app";
-      const roleLabel = role === "admin" ? "Адміністратора" : "Рецензента";
 
       await resend.emails.send({
         from: "Моживо <onboarding@resend.dev>",
         to: email,
-        subject: "Вас додано до команди на Моживо",
+        subject: `Вас додано до команди ${org.name} на Моживо`,
         html: `
           <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:40px 28px;background:#fff">
             <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:28px">
@@ -45,10 +69,10 @@ export async function POST(req: NextRequest) {
             </div>
             <h1 style="font-size:22px;font-weight:800;margin:0 0 12px">Вас додано до команди</h1>
             <p style="font-size:15px;color:#4B5563;line-height:1.7;margin:0 0 8px">
-              <strong>${user.email}</strong> додав вас як <strong>${roleLabel}</strong> організації на Моживо.
+              <strong>${org.name}</strong> додала вас як <strong>${roleLabel}</strong> на Моживо.
             </p>
-            <p style="font-size:15px;color:#4B5563;line-height:1.7;margin:0">
-              Увійдіть у свій акаунт щоб побачити дешборд організації.
+            <p style="font-size:15px;color:#4B5563;line-height:1.7">
+              Тепер у вас є доступ до дешборду організації — ви можете переглядати заявки та проєкти.
             </p>
             <a href="${siteUrl}/dashboard" style="display:inline-block;margin-top:24px;background:#3B4FE8;color:white;padding:14px 32px;border-radius:50px;font-weight:700;font-size:15px;text-decoration:none">
               Перейти до дешборду →
@@ -59,7 +83,7 @@ export async function POST(req: NextRequest) {
           </div>`,
       });
     } catch (e) {
-      console.error("[invite] resend failed:", e);
+      console.error("[invite] email failed:", e);
     }
   }
 
