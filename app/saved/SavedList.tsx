@@ -1,14 +1,22 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { useSaved } from "@/hooks/useSaved";
 import { opportunities } from "@/lib/data";
+import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
 import OpportunityCard from "@/components/OpportunityCard";
 
 export default function SavedList() {
   const { saved, toggle, ready } = useSaved();
+  const { projects: orgProjects, ready: orgReady } = usePublicOrgProjects();
 
-  if (!ready) {
+  const allOpportunities = useMemo(
+    () => [...opportunities, ...orgProjects],
+    [orgProjects]
+  );
+
+  if (!ready || !orgReady) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-pulse">
         {Array.from({ length: 3 }).map((_, i) => (
@@ -18,7 +26,7 @@ export default function SavedList() {
     );
   }
 
-  const savedOpportunities = opportunities.filter((o) => saved.includes(o.slug));
+  const savedOpportunities = allOpportunities.filter((o) => saved.includes(o.slug));
 
   if (savedOpportunities.length === 0) {
     return (

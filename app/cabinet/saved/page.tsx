@@ -1,15 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { useSaved } from "@/hooks/useSaved";
 import { opportunities } from "@/lib/data";
+import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
 import { getDaysUntilDeadline } from "@/lib/recommendations";
 import { typeColors } from "@/lib/data";
 
 export default function CabinetSavedPage() {
   const { saved, toggle, ready } = useSaved();
+  const { projects: orgProjects } = usePublicOrgProjects();
 
-  const savedOpps = opportunities.filter((o) => saved.includes(o.slug));
+  const allOpportunities = useMemo(
+    () => [...opportunities, ...orgProjects],
+    [orgProjects]
+  );
+
+  const savedOpps = allOpportunities.filter((o) => saved.includes(o.slug));
   const expired   = savedOpps.filter((o) => getDaysUntilDeadline(o.deadline) <= 0);
   const active    = savedOpps.filter((o) => getDaysUntilDeadline(o.deadline) > 0);
 
