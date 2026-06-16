@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
+import { SavedProvider } from "@/contexts/SavedContext";
 
 const BASE_URL = "https://mozhyvo.ua";
 const TITLE = "Моживо — Всі можливості в одному місці";
@@ -103,11 +104,13 @@ export default function RootLayout({
   return (
     <html lang="uk">
       <body className="antialiased bg-background text-foreground min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">
-          <PageTransition>{children}</PageTransition>
-        </main>
-        <Footer />
+        <SavedProvider>
+          <Header />
+          <main className="flex-1">
+            <PageTransition>{children}</PageTransition>
+          </main>
+          <Footer />
+        </SavedProvider>
       </body>
     </html>
   );
