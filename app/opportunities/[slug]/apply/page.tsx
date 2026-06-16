@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { opportunities } from "@/lib/data";
 import ApplyForm from "@/components/ApplyForm";
 import { createClient as createSupabase } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 
 function createPublicClient() {
   return createSupabase(
@@ -75,6 +76,10 @@ export async function generateMetadata({
 }
 
 export default async function ApplyPage({ params }: { params: { slug: string } }) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect(`/login?next=/opportunities/${params.slug}/apply`);
+
   const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);
   if (!opp) notFound();
 
