@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function VerifiedPage() {
+function VerifiedInner() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -42,6 +42,14 @@ export default function VerifiedPage() {
         <p className="text-sm text-muted">Підтвердження email...</p>
       </div>
     </div>
+  );
+}
+
+export default function VerifiedPage() {
+  return (
+    <Suspense>
+      <VerifiedInner />
+    </Suspense>
   );
 }
 
