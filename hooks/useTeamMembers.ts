@@ -34,9 +34,17 @@ export function useTeamMembers() {
     setMembers(all);
   }, []);
 
-  const invite = useCallback((email: string, role: TeamRole, name?: string): boolean => {
+  const invite = useCallback(async (email: string, role: TeamRole, name?: string): Promise<boolean> => {
     const all = load();
     if (all.some((m) => m.email === email)) return false;
+
+    // Send invitation email via API
+    fetch("/api/org/invite", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, role }),
+    }).catch(() => {});
+
     const m: TeamMember = {
       id: `member-${Date.now()}`,
       email,

@@ -116,9 +116,9 @@ function TeamTab() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  function handleInvite() {
+  async function handleInvite() {
     if (!inviteEmail.trim() || !inviteEmail.includes("@")) { setError("Введіть коректний email"); return; }
-    const ok = invite(inviteEmail.trim(), inviteRole);
+    const ok = await invite(inviteEmail.trim(), inviteRole);
     if (!ok) { setError("Цей email вже є в команді"); return; }
     setInviteEmail(""); setError("");
     setSuccess("Запрошення надіслано!");
