@@ -29,28 +29,36 @@ export async function GET(request: NextRequest) {
     }
   );
 
-  let verified = false;
-
-  // PKCE flow: Supabase redirects here with ?code=xxx after server-side token verify
+  // Try PKCE code exchange
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) verified = true;
+    if (!error) return redirect(supabase, origin, next);
   }
 
-  // Email OTP flow: link contains token_hash + type directly
-  if (!verified && token_hash && type) {
+  // Try email OTP token_hash
+  if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type });
-    if (!error) verified = true;
+    if (!error) return redirect(supabase, origin, next);
   }
 
-  if (verified) {
-    const { data: { user } } = await supabase.auth.getUser();
-    const role = user?.user_metadata?.role;
-    const destination = next !== "/"
-      ? next
-      : role === "org" ? "/dashboard" : "/cabinet";
-    return NextResponse.redirect(`${origin}${destination}`);
-  }
+  // Both failed — but maybe the user is already logged in
+  // (happens when Supabase creates session on signup before email is confirmed)
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) return redirect(supabase, origin, next, user);
 
   return NextResponse.redirect(`${origin}/login?error=auth`);
+}
+
+async function redirect(
+  supabase: ReturnType<typeof createServerClient>,
+  origin: string,
+  next: string,
+  existingUser?: Awaited<ReturnType<ReturnType<typeof createServerClient>["auth"]["getUser"]>>["data"]["user"]
+) {
+  const user = existingUser ?? (await supabase.auth.getUser()).data.user;
+  const role = user?.user_metadata?.role;
+  const destination = next !== "/"
+    ? next
+    : role === "org" ? "/dashboard" : "/cabinet";
+  return NextResponse.redirect(`${origin}${destination}`);
 }
