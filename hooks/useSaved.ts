@@ -51,17 +51,19 @@ export function useSaved() {
         return;
       }
       if (saved.includes(slug)) {
-        await supabase
+        const { error } = await supabase
           .from("saved_opportunities")
           .delete()
           .eq("user_id", user.id)
           .eq("opportunity_slug", slug);
-        setSaved((prev) => prev.filter((s) => s !== slug));
+        if (!error) setSaved((prev) => prev.filter((s) => s !== slug));
+        else console.error("[useSaved] delete error:", error.message);
       } else {
-        await supabase
+        const { error } = await supabase
           .from("saved_opportunities")
           .insert({ user_id: user.id, opportunity_slug: slug });
-        setSaved((prev) => [...prev, slug]);
+        if (!error) setSaved((prev) => [...prev, slug]);
+        else console.error("[useSaved] insert error:", error.message);
       }
     },
     [saved, supabase]
