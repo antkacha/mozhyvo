@@ -2,11 +2,10 @@
 
 import { useState, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 function LoginContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const authError = searchParams.get("error");
   const supabase = useMemo(() => createClient(), []);
@@ -38,14 +37,14 @@ function LoginContent() {
     }
     setStatus("success");
     const role = data.user?.user_metadata?.role;
+    const hasOrgAccess = data.user?.user_metadata?.has_org_access === true;
     const next = searchParams.get("next");
-    if (role === "org" || role === "coordinator") {
-      setTimeout(() => router.push("/dashboard"), 500);
-    } else if (next) {
-      setTimeout(() => router.push(next), 500);
-    } else {
-      setTimeout(() => router.push("/"), 500);
-    }
+    const dest =
+      role === "org" || role === "coordinator" || hasOrgAccess
+        ? "/dashboard"
+        : next || "/cabinet";
+    // Full reload so middleware refreshes the session and Header picks up the new user
+    setTimeout(() => { window.location.href = dest; }, 400);
   };
 
   const handleGoogle = async () => {
