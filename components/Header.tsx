@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useSaved } from "@/hooks/useSaved";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import NotificationsBell from "@/components/NotificationsBell";
 
 const navLinks = [
   { label: "Головна", href: "/" },
@@ -98,6 +99,7 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-2">
             {!authLoading && user ? (
               <>
+                <NotificationsBell />
                 <Link
                   href={cabinetHref}
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all duration-150 ${
