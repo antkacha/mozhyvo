@@ -29,6 +29,11 @@ export async function POST(req: NextRequest) {
 
   const roleLabel = role === "admin" ? "Адміністратора" : "Рецензента";
 
+  // Mark invited user so their Header shows Dashboard link without extra DB queries
+  await admin.auth.admin.updateUserById(invitedUser.id, {
+    user_metadata: { ...invitedUser.user_metadata, has_org_access: true },
+  });
+
   // Add to org_members
   const { error: memberError } = await admin
     .from("org_members")

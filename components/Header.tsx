@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import { useSaved } from "@/hooks/useSaved";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { useOrgSession } from "@/hooks/useOrgSession";
 import NotificationsBell from "@/components/NotificationsBell";
 
 const navLinks = [
@@ -31,10 +30,12 @@ export default function Header() {
   const { saved } = useSaved();
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile } = useProfile();
-  const { org: orgSession } = useOrgSession();
   const isAdmin = profile.role === "admin";
-  const cabinetHref = orgSession ? "/dashboard" : "/cabinet";
-  const isOrg = !!orgSession;
+  // org owner by metadata; invited members get has_org_access flag in metadata
+  const isOrg = user?.user_metadata?.role === "org"
+    || user?.user_metadata?.role === "coordinator"
+    || user?.user_metadata?.has_org_access === true;
+  const cabinetHref = isOrg ? "/dashboard" : "/cabinet";
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");

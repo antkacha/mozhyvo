@@ -193,10 +193,16 @@ export function useOrgSession() {
   }, [supabase, setCache]);
 
   useEffect(() => {
-    if (!_cachedReady) load();
+    // Guard: only start a load if nobody else is already loading
+    if (!_cachedReady) { load(); }
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") load();
-      else if (event === "SIGNED_OUT") { setCache(null, true, null); }
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        // Reset ready so the load completes before any component acts on ready=true
+        _cachedReady = false;
+        load();
+      } else if (event === "SIGNED_OUT") {
+        setCache(null, true, null);
+      }
     });
     return () => subscription.unsubscribe();
   }, [load, supabase, setCache]);
