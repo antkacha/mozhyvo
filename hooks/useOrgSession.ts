@@ -9,6 +9,7 @@ import { slugify } from "@/lib/slugify";
 // instead of waiting for a fresh Supabase fetch → no layout shift on navigation.
 let _cachedOrg: OrgProfile | null = null;
 let _cachedReady = false;
+let _cachedMemberRole: "owner" | "admin" | "reviewer" | null = null;
 const _listeners = new Set<() => void>();
 
 function notifyListeners() { _listeners.forEach((fn) => fn()); }
@@ -99,16 +100,21 @@ export function useOrgSession() {
   const supabase = useMemo(() => createClient(), []);
   const [org, setOrg] = useState<OrgProfile | null>(_cachedOrg);
   const [ready, setReady] = useState(_cachedReady);
+  const [memberRole, setMemberRole] = useState<"owner" | "admin" | "reviewer" | null>(_cachedMemberRole);
 
   // Keep local state in sync with module cache
   useEffect(() => {
-    const sync = () => { setOrg(_cachedOrg); setReady(_cachedReady); };
+    const sync = () => {
+      setOrg(_cachedOrg);
+      setReady(_cachedReady);
+      setMemberRole(_cachedMemberRole);
+    };
     _listeners.add(sync);
     return () => { _listeners.delete(sync); };
   }, []);
 
-  const setCache = useCallback((o: OrgProfile | null, r: boolean) => {
-    _cachedOrg = o; _cachedReady = r; notifyListeners();
+  const setCache = useCallback((o: OrgProfile | null, r: boolean, role: "owner" | "admin" | "reviewer" | null = null) => {
+    _cachedOrg = o; _cachedReady = r; _cachedMemberRole = role; notifyListeners();
   }, []);
 
   const load = useCallback(async () => {
@@ -121,7 +127,7 @@ export function useOrgSession() {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (data) { setCache(fromRow(data as Record<string, unknown>), true); return; }
+    if (data) { setCache(fromRow(data as Record<string, unknown>), true, "owner"); return; }
 
     // First login after email confirmation — bootstrap org from auth metadata
     const meta = user.user_metadata ?? {};
@@ -160,9 +166,29 @@ export function useOrgSession() {
         .from("profiles")
         .upsert({ id: user.id, role: "org" }, { onConflict: "id" });
 
-      setCache(created ? fromRow(created as Record<string, unknown>) : null, true);
+      setCache(created ? fromRow(created as Record<string, unknown>) : null, true, "owner");
     } else {
-      setCache(null, true);
+      // Check if this user was invited as a team member
+      const { data: membership } = await supabase
+        .from("org_members")
+        .select("org_id, role")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (membership) {
+        const { data: orgData } = await supabase
+          .from("orgs")
+          .select("*")
+          .eq("id", membership.org_id)
+          .single();
+
+        if (orgData) {
+          setCache(fromRow(orgData as Record<string, unknown>), true, membership.role as "admin" | "reviewer");
+          return;
+        }
+      }
+
+      setCache(null, true, null);
     }
   }, [supabase, setCache]);
 
@@ -170,7 +196,7 @@ export function useOrgSession() {
     if (!_cachedReady) load();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") load();
-      else if (event === "SIGNED_OUT") { setCache(null, true); }
+      else if (event === "SIGNED_OUT") { setCache(null, true, null); }
     });
     return () => subscription.unsubscribe();
   }, [load, supabase, setCache]);
@@ -190,5 +216,7 @@ export function useOrgSession() {
   // login() kept for backward compat — no-op in Supabase mode
   const login = useCallback((_profile: OrgProfile) => {}, []);
 
-  return { org, ready, login, update, logout };
+  const isOwner = memberRole === "owner";
+
+  return { org, ready, login, update, logout, memberRole, isOwner };
 }

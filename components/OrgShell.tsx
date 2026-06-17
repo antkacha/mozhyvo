@@ -89,7 +89,7 @@ const NAV_BOTTOM: { href: string; label: string; Icon: (p: React.SVGProps<SVGSVG
 // ── Sidebar ─────────────────────────────────────────────────────────
 function Sidebar() {
   const pathname = usePathname();
-  const { org, logout } = useOrgSession();
+  const { org, logout, isOwner } = useOrgSession();
   const { profile } = useProfile();
   const { projects } = useOrgProjects(org?.id);
   const { applications } = useOrgApplications();
@@ -222,16 +222,18 @@ function Sidebar() {
           )}
         </div>
 
-        {/* Quick action */}
-        <div className="pt-3 border-t border-border">
-          <Link
-            href="/dashboard/projects/new"
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-primary bg-primary-light hover:bg-primary/10 transition-all w-full"
-          >
-            <IconPlus className="w-4 h-4" />
-            Новий проект
-          </Link>
-        </div>
+        {/* Quick action — owners only */}
+        {isOwner && (
+          <div className="pt-3 border-t border-border">
+            <Link
+              href="/dashboard/projects/new"
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-primary bg-primary-light hover:bg-primary/10 transition-all w-full"
+            >
+              <IconPlus className="w-4 h-4" />
+              Новий проект
+            </Link>
+          </div>
+        )}
       </nav>
 
       {/* Footer */}
