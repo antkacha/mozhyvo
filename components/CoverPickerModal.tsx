@@ -122,6 +122,7 @@ export default function CoverPickerModal({ isOpen, onClose, onApply }: Props) {
   const [fileZoom, setFileZoom] = useState(1);
   const [fileCroppedPixels, setFileCroppedPixels] = useState<Area | null>(null);
   const [fileDragOver, setFileDragOver] = useState(false);
+  const [fileError, setFileError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   // URL tab
@@ -148,8 +149,9 @@ export default function CoverPickerModal({ isOpen, onClose, onApply }: Props) {
   function handleClose() { resetAll(); onClose(); }
 
   function loadFile(file: File) {
-    if (!file.type.startsWith("image/")) { alert("Підтримуються тільки зображення (JPG, PNG, WebP). Для відео вставте посилання на вкладці «Посилання»."); return; }
-    if (file.size > 15 * 1024 * 1024) { alert("Файл занадто великий — максимум 15 МБ."); return; }
+    setFileError("");
+    if (!file.type.startsWith("image/")) { setFileError("Підтримуються тільки зображення (JPG, PNG, WebP). Для відео вставте посилання на вкладці «Посилання»."); return; }
+    if (file.size > 15 * 1024 * 1024) { setFileError("Файл занадто великий — максимум 15 МБ."); return; }
     const r = new FileReader();
     r.onload = (e) => { setFileSrc(e.target?.result as string); setFileCrop({ x: 0, y: 0 }); setFileZoom(1); };
     r.readAsDataURL(file);
@@ -288,6 +290,9 @@ export default function CoverPickerModal({ isOpen, onClose, onApply }: Props) {
                 onReset={() => { setFileSrc(null); setFileCrop({ x: 0, y: 0 }); setFileZoom(1); }}
               />
             )
+          )}
+          {tab === "file" && fileError && (
+            <p className="text-xs text-red-500 bg-red-50 rounded-xl px-3 py-2 mt-3">{fileError}</p>
           )}
 
           {/* ── URL tab ──────────────────────────── */}

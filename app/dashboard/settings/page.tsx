@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useTeamMembers, TeamRole } from "@/hooks/useTeamMembers";
 import { useNotificationSettings } from "@/hooks/useNotificationSettings";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Tab types ──────────────────────────────────────────────────────────
 const TABS = [
@@ -97,13 +98,10 @@ function GeneralTab() {
       {/* Danger zone */}
       <div className="bg-white rounded-2xl border border-red-100 p-6">
         <h2 className="text-sm font-bold text-red-600 mb-1">Небезпечна зона</h2>
-        <p className="text-xs text-muted mb-4">Незворотні дії для акаунту організації</p>
-        <button
-          onClick={() => alert("Видалення акаунту — в процесі розробки")}
-          className="px-4 py-2.5 rounded-xl border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-all"
-        >
-          Видалити акаунт організації
-        </button>
+        <p className="text-xs text-muted mb-3">Незворотні дії для акаунту організації</p>
+        <p className="text-xs text-muted bg-red-50 border border-red-100 rounded-xl px-3 py-2 mb-4">
+          Щоб видалити акаунт організації, зверніться до підтримки: <span className="font-medium text-red-600">support@mozhyvo.ua</span>
+        </p>
       </div>
     </div>
   );
@@ -290,18 +288,24 @@ function NotificationsTab() {
 }
 
 function SecurityTab() {
-  const [form, setForm] = useState({ current: "", next: "", confirm: "" });
+  const supabase = useMemo(() => createClient(), []);
+  const [form, setForm] = useState({ next: "", confirm: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  function handleChange() {
-    if (!form.current || !form.next || !form.confirm) { setError("Заповніть всі поля"); return; }
+  async function handleChange() {
+    if (!form.next || !form.confirm) { setError("Заповніть всі поля"); return; }
     if (form.next.length < 8) { setError("Пароль має бути не менше 8 символів"); return; }
     if (form.next !== form.confirm) { setError("Паролі не збігаються"); return; }
     setError("");
+    setLoading(true);
+    const { error: err } = await supabase.auth.updateUser({ password: form.next });
+    setLoading(false);
+    if (err) { setError(err.message); return; }
     setSuccess(true);
-    setForm({ current: "", next: "", confirm: "" });
-    setTimeout(() => setSuccess(false), 3000);
+    setForm({ next: "", confirm: "" });
+    setTimeout(() => setSuccess(false), 4000);
   }
 
   const input = "w-full px-3.5 py-2.5 text-sm rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all";
@@ -312,12 +316,8 @@ function SecurityTab() {
         <h2 className="text-sm font-bold text-foreground mb-4">Зміна паролю</h2>
         <div className="space-y-3 max-w-sm">
           <div>
-            <label className="text-xs font-semibold text-muted uppercase tracking-wider block mb-1.5">Поточний пароль</label>
-            <input type="password" value={form.current} onChange={(e) => setForm({ ...form, current: e.target.value })} placeholder="••••••••" className={input} />
-          </div>
-          <div>
             <label className="text-xs font-semibold text-muted uppercase tracking-wider block mb-1.5">Новий пароль</label>
-            <input type="password" value={form.next} onChange={(e) => setForm({ ...form, next: e.target.value })} placeholder="••••••••" className={input} />
+            <input type="password" value={form.next} onChange={(e) => setForm({ ...form, next: e.target.value })} placeholder="Мінімум 8 символів" className={input} />
           </div>
           <div>
             <label className="text-xs font-semibold text-muted uppercase tracking-wider block mb-1.5">Підтвердіть новий пароль</label>
@@ -327,22 +327,23 @@ function SecurityTab() {
           {success && <p className="text-xs text-green-600 font-semibold">✓ Пароль успішно змінено</p>}
           <button
             onClick={handleChange}
-            className="mt-1 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20"
+            disabled={loading}
+            className="mt-1 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 disabled:opacity-60 flex items-center gap-2"
           >
-            Змінити пароль
+            {loading && <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
+            {loading ? "Зберігаємо..." : "Змінити пароль"}
           </button>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-border p-6">
-        <h2 className="text-sm font-bold text-foreground mb-1">Двофакторна автентифікація</h2>
-        <p className="text-xs text-muted mb-4">Додатковий захист для вашого акаунту</p>
-        <button
-          onClick={() => alert("2FA — в процесі розробки")}
-          className="px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:border-primary/30 hover:text-primary transition-all"
-        >
-          Увімкнути 2FA
-        </button>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-bold text-foreground mb-1">Двофакторна автентифікація</h2>
+            <p className="text-xs text-muted">Додатковий захист для вашого акаунту</p>
+          </div>
+          <span className="text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full flex-shrink-0">Незабаром</span>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-border p-6">

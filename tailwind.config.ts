@@ -32,6 +32,10 @@ const config: Config = {
           from: { opacity: "0", transform: "translateY(16px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "slide-in-right": {
+          from: { opacity: "0", transform: "translateX(24px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
         fadeUp: {
           from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
@@ -54,6 +58,7 @@ const config: Config = {
         float2: "float2 3.6s ease-in-out infinite 0.8s",
         float3: "float3 3.2s ease-in-out infinite 1.6s",
         reveal: "reveal 0.5s ease forwards",
+        "slide-in-right": "slide-in-right 0.2s ease forwards",
         "fade-up": "fadeUp 0.4s ease forwards",
       },
     },

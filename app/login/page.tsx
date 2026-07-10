@@ -180,7 +180,7 @@ function LoginContent() {
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="block text-sm font-medium text-foreground">Пароль</label>
-                        <Link href="/contacts" className="text-xs text-primary hover:underline">Забули пароль?</Link>
+                        <Link href="/forgot-password" className="text-xs text-primary hover:underline">Забули пароль?</Link>
                       </div>
                       <div className="relative">
                         <input type={showPassword ? "text" : "password"} value={password}

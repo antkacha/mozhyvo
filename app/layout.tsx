@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
 import { SavedProvider } from "@/contexts/SavedContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 
 const BASE_URL = "https://mozhyvo.ua";
 const TITLE = "Моживо — Всі можливості в одному місці";
@@ -104,13 +105,15 @@ export default function RootLayout({
   return (
     <html lang="uk">
       <body className="antialiased bg-background text-foreground min-h-screen flex flex-col">
-        <SavedProvider>
-          <Header />
-          <main className="flex-1">
-            <PageTransition>{children}</PageTransition>
-          </main>
-          <Footer />
-        </SavedProvider>
+        <ToastProvider>
+          <SavedProvider>
+            <Header />
+            <main className="flex-1">
+              <PageTransition>{children}</PageTransition>
+            </main>
+            <Footer />
+          </SavedProvider>
+        </ToastProvider>
       </body>
     </html>
   );

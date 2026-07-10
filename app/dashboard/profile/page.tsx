@@ -216,6 +216,7 @@ function ProfileContent() {
   const [saved, setSaved]   = useState(false);
   const [saving, setSaving] = useState(false);
   const [coverModalOpen, setCoverModalOpen] = useState(false);
+  const [logoError, setLogoError] = useState("");
 
   const [form, setForm] = useState({
     name:         org?.name         ?? "",
@@ -257,7 +258,8 @@ function ProfileContent() {
   function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (f.size > 2 * 1024 * 1024) { alert("Максимум 2 МБ"); return; }
+    setLogoError("");
+    if (f.size > 2 * 1024 * 1024) { setLogoError("Максимум 2 МБ для логотипу"); return; }
     const r = new FileReader();
     r.onload = () => set("logo", r.result as string);
     r.readAsDataURL(f);
@@ -438,6 +440,7 @@ function ProfileContent() {
                     )}
                   </div>
                   <p className="text-xs text-muted">PNG або JPG, до 2 МБ</p>
+                  {logoError && <p className="text-xs text-red-500 mt-1">{logoError}</p>}
                 </div>
               </div>
 

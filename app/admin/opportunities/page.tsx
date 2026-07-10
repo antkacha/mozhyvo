@@ -32,6 +32,7 @@ export default function AdminOpportunitiesPage() {
   const [filter, setFilter]       = useState<"all" | "published" | "draft" | "pending">("all");
   const [deleteTarget, setDeleteTarget] = useState<OrgProject | null>(null);
   const [deleting, setDeleting]   = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/opportunities")
@@ -61,7 +62,7 @@ export default function AdminOpportunitiesPage() {
         setDeleteTarget(null);
       } else {
         const { error } = await res.json();
-        alert(`Помилка видалення: ${error}`);
+        setDeleteError(error ?? "Помилка видалення");
       }
     } finally {
       setDeleting(false);
@@ -149,8 +150,11 @@ export default function AdminOpportunitiesPage() {
             <p className="text-xs text-red-500 bg-red-50 rounded-xl px-4 py-2.5 text-center mb-5">
               Це незворотна дія. Усі заявки на цю програму також буде видалено.
             </p>
+            {deleteError && (
+              <p className="text-xs text-red-500 text-center -mt-2 mb-3">{deleteError}</p>
+            )}
             <div className="flex gap-3">
-              <button onClick={() => setDeleteTarget(null)} disabled={deleting}
+              <button onClick={() => { setDeleteTarget(null); setDeleteError(""); }} disabled={deleting}
                 className="flex-1 py-2.5 border border-border rounded-xl text-sm font-medium text-muted hover:bg-muted-bg transition-all disabled:opacity-40">
                 Скасувати
               </button>

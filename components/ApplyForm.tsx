@@ -186,6 +186,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   const [customErrors, setCustomErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const set = (field: keyof FormData, value: string | string[]) => {
     setData((prev) => ({ ...prev, [field]: value }));
@@ -289,7 +290,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
       });
       setDone(true);
     } catch {
-      alert("Помилка відправки заявки. Спробуй ще раз.");
+      setSubmitError("Помилка відправки заявки. Спробуй ще раз.");
     } finally {
       setSubmitting(false);
     }
@@ -671,23 +672,28 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
               </svg>
             </button>
           ) : (
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {submitting ? (
-                <>
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Надсилаємо...
-                </>
-              ) : (
-                <>Відправити заявку 🚀</>
+            <div className="flex flex-col items-end gap-2">
+              {submitError && (
+                <p className="text-xs text-red-500 font-medium">{submitError}</p>
               )}
-            </button>
+              <button
+                onClick={() => { setSubmitError(""); handleSubmit(); }}
+                disabled={submitting}
+                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {submitting ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Надсилаємо...
+                  </>
+                ) : (
+                  <>Відправити заявку 🚀</>
+                )}
+              </button>
+            </div>
           )}
         </div>
       </div>

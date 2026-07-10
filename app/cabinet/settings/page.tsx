@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { createClient } from "@/lib/supabase/client";
 
 interface NotifSettings {
   emailNewOpportunities: boolean;
@@ -45,13 +46,16 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
 }
 
 export default function CabinetSettingsPage() {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const supabase = useMemo(() => createClient(), []);
   const [notif, setNotif] = useState<NotifSettings>(DEFAULT_NOTIF);
   const [phone, setPhone] = useState("");
   const [saved, setSaved] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteInput, setDeleteInput] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [pwResetSent, setPwResetSent] = useState(false);
+  const [pwResetLoading, setPwResetLoading] = useState(false);
 
   const smsEnabled = notif.smsStatusUpdates || notif.smsDeadlineReminders;
 
@@ -69,8 +73,18 @@ export default function CabinetSettingsPage() {
     setSaved(false);
   }
 
+  async function handlePasswordReset() {
+    if (!user?.email) return;
+    setPwResetLoading(true);
+    await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    });
+    setPwResetLoading(false);
+    setPwResetSent(true);
+    setTimeout(() => setPwResetSent(false), 5000);
+  }
+
   function handleSave() {
-    // In production, save to Supabase user_notification_settings
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   }
@@ -148,15 +162,26 @@ export default function CabinetSettingsPage() {
         </button>
       </div>
 
-      {/* Password change placeholder */}
+      {/* Password change */}
       <div className="bg-white rounded-2xl border border-border p-6 space-y-4">
         <h2 className="text-sm font-bold text-foreground">Безпека</h2>
-        <p className="text-sm text-muted">Зміна паролю здійснюється через email-посилання</p>
+        {pwResetSent ? (
+          <div className="flex items-center gap-2.5 px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
+            <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+            <p className="text-sm text-green-700">Лист надіслано на <span className="font-semibold">{user?.email}</span></p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted">Ми надішлемо посилання для зміни паролю на {user?.email ? <span className="font-medium text-foreground">{user.email}</span> : "твою пошту"}</p>
+        )}
         <button
-          onClick={() => alert("Лист для зміни паролю надіслано на вашу пошту")}
-          className="px-5 py-2.5 border border-border rounded-xl text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-all"
+          onClick={handlePasswordReset}
+          disabled={pwResetLoading || pwResetSent}
+          className="flex items-center gap-2 px-5 py-2.5 border border-border rounded-xl text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-all disabled:opacity-60"
         >
-          Змінити пароль
+          {pwResetLoading && <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
+          {pwResetSent ? "✓ Лист надіслано" : "Змінити пароль"}
         </button>
       </div>
 
