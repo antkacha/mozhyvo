@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export interface NotificationSettings {
   newApplication: boolean;
@@ -8,29 +9,43 @@ export interface NotificationSettings {
   digestEmail: string;
 }
 
-const KEY = "mozhyvo_notification_settings";
-
 const DEFAULT: NotificationSettings = {
   newApplication: true,
   dailyDigest: false,
-  digestEmail: "org@mozhyvo.org",
+  digestEmail: "",
 };
 
-function load(): NotificationSettings {
-  try { const s = localStorage.getItem(KEY); return s ? { ...DEFAULT, ...JSON.parse(s) } : DEFAULT; }
-  catch { return DEFAULT; }
-}
-
 export function useNotificationSettings() {
+  const supabase = useMemo(() => createClient(), []);
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => { setSettings(load()); }, []);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      const saved = user.user_metadata?.org_notif_settings as NotificationSettings | undefined;
+      setSettings({
+        ...DEFAULT,
+        ...saved,
+        digestEmail: saved?.digestEmail ?? user.email ?? "",
+      });
+    });
+  }, [supabase]);
 
-  const update = useCallback((data: Partial<NotificationSettings>) => {
-    const updated = { ...load(), ...data };
-    localStorage.setItem(KEY, JSON.stringify(updated));
+  const update = useCallback(async (data: Partial<NotificationSettings>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const updated: NotificationSettings = {
+      ...settings,
+      ...data,
+    };
     setSettings(updated);
-  }, []);
+    setSaving(true);
+    await supabase.auth.updateUser({
+      data: { org_notif_settings: updated },
+    });
+    setSaving(false);
+  }, [supabase, settings]);
 
-  return { settings, update };
+  return { settings, saving, update };
 }

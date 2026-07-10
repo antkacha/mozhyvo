@@ -216,8 +216,8 @@ export default function OpportunitiesCatalog() {
   }, [allOpportunities, types, formats, fundings, countries, languages, search, sort]);
 
   const urgent = useMemo(() =>
-    opportunities.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d >= 0 && d <= 7; }).slice(0, 8),
-  []);
+    allOpportunities.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d >= 0 && d <= 7; }).slice(0, 8),
+  [allOpportunities]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);

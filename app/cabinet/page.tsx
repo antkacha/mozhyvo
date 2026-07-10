@@ -6,7 +6,7 @@ import { useApplications } from "@/hooks/useApplications";
 import { useSaved } from "@/hooks/useSaved";
 import { profileCompleteness } from "@/lib/types";
 import { getRecommendations, getDaysUntilDeadline } from "@/lib/recommendations";
-import { opportunities } from "@/lib/data";
+import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
 import StatusBadge from "@/components/StatusBadge";
 
 const STAT_CLS = "bg-white rounded-2xl border border-border p-5 flex flex-col gap-1";
@@ -16,9 +16,10 @@ export default function CabinetOverviewPage() {
   const { applications, ready: appsReady } = useApplications();
   const { saved, ready: savedReady } = useSaved();
 
+  const { projects: liveProjects, ready: projectsReady } = usePublicOrgProjects();
   const completeness = profileReady ? profileCompleteness(profile) : 0;
   const recentApps   = applications.slice(0, 5);
-  const recommendations = profileReady ? getRecommendations(opportunities, profile, 4) : [];
+  const recommendations = (profileReady && projectsReady) ? getRecommendations(liveProjects, profile, 4) : [];
   const upcoming = applications
     .filter((a) => getDaysUntilDeadline(a.deadline) > 0 && getDaysUntilDeadline(a.deadline) <= 14)
     .sort((a, b) => getDaysUntilDeadline(a.deadline) - getDaysUntilDeadline(b.deadline))

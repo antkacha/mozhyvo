@@ -103,10 +103,11 @@ export function useOrgApplications(orgId?: string, projectId?: string) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              orgAppId:  id,
-              orgStatus: data.status,
-              projectId: current.projectId,
-              email:     current.email,
+              orgAppId:     id,
+              orgStatus:    data.status,
+              projectId:    current.projectId,
+              email:        current.email,
+              projectTitle: current.projectTitle,
             }),
           }).then((r) => {
             if (!r.ok) console.error("[status-sync] failed:", r.status);

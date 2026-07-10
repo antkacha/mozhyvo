@@ -7,6 +7,7 @@ export type TeamStatus = "active" | "pending";
 
 export interface TeamMember {
   id: string;
+  userId: string;
   email: string;
   name: string;
   role: TeamRole;
@@ -14,64 +15,54 @@ export interface TeamMember {
   joinedAt: string;
 }
 
-const KEY = "mozhyvo_team_members";
-
-const SEED: TeamMember[] = [
-  { id: "member-001", email: "org@mozhyvo.org", name: "Власник акаунту", role: "owner", status: "active", joinedAt: "2025-05-10" },
-];
-
-function load(): TeamMember[] {
-  try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : []; } catch { return []; }
-}
-function save(m: TeamMember[]) { localStorage.setItem(KEY, JSON.stringify(m)); }
-
 export function useTeamMembers() {
   const [members, setMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let all = load();
-    if (all.length === 0) { all = SEED; save(all); }
-    setMembers(all);
+  const fetchMembers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/org/members");
+      if (res.ok) {
+        const { members: data } = await res.json();
+        setMembers(data ?? []);
+      }
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const invite = useCallback(async (email: string, role: TeamRole, name?: string): Promise<{ ok: boolean; error?: string }> => {
-    const all = load();
-    if (all.some((m) => m.email === email)) return { ok: false, error: "Цей email вже є в команді" };
+  useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
+  const invite = useCallback(async (email: string, role: TeamRole): Promise<{ ok: boolean; error?: string }> => {
     const res = await fetch("/api/org/invite", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, role }),
     });
-
     const json = await res.json();
     if (!res.ok) return { ok: false, error: json.error ?? "Помилка при надсиланні запрошення" };
-
-    const m: TeamMember = {
-      id: `member-${Date.now()}`,
-      email,
-      name: name?.trim() || email.split("@")[0],
-      role,
-      status: "pending",
-      joinedAt: new Date().toISOString().split("T")[0],
-    };
-    const updated = [...all, m];
-    save(updated);
-    setMembers(updated);
+    await fetchMembers();
     return { ok: true };
-  }, []);
+  }, [fetchMembers]);
 
-  const remove = useCallback((id: string) => {
-    const updated = load().filter((m) => m.id !== id);
-    save(updated);
-    setMembers(updated);
-  }, []);
+  const remove = useCallback(async (id: string) => {
+    const member = members.find((m) => m.id === id);
+    if (!member || member.role === "owner") return;
+    await fetch(`/api/org/members/${member.userId}`, { method: "DELETE" });
+    await fetchMembers();
+  }, [members, fetchMembers]);
 
-  const updateRole = useCallback((id: string, role: TeamRole) => {
-    const updated = load().map((m) => (m.id === id ? { ...m, role } : m));
-    save(updated);
-    setMembers(updated);
-  }, []);
+  const updateRole = useCallback(async (id: string, role: TeamRole) => {
+    const member = members.find((m) => m.id === id);
+    if (!member || member.role === "owner") return;
+    await fetch(`/api/org/members/${member.userId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+    setMembers((prev) => prev.map((m) => m.id === id ? { ...m, role } : m));
+  }, [members]);
 
-  return { members, invite, remove, updateRole };
+  return { members, loading, invite, remove, updateRole };
 }

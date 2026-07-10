@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { useApplications, Application } from "@/hooks/useApplications";
 
 const STATUS_CONFIG: Record<
@@ -35,7 +36,25 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 export default function ApplicationDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const { applications, ready } = useApplications();
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawConfirm, setWithdrawConfirm] = useState(false);
+  const [withdrawError, setWithdrawError] = useState("");
+
+  async function handleWithdraw() {
+    setWithdrawing(true);
+    setWithdrawError("");
+    const res = await fetch(`/api/applications/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      router.push("/cabinet/applications");
+    } else {
+      const json = await res.json();
+      setWithdrawError(json.error ?? "Помилка скасування");
+      setWithdrawing(false);
+      setWithdrawConfirm(false);
+    }
+  }
 
   const app = ready ? (applications.find((a) => a.id === id) ?? null) : undefined;
 
@@ -304,6 +323,43 @@ export default function ApplicationDetailPage() {
                 >
                   Переглянути інші можливості →
                 </Link>
+              </div>
+            )}
+
+            {/* Withdraw — only for pending/reviewing */}
+            {!isAccepted && !isRejected && (
+              <div className="bg-white rounded-2xl border border-border p-5">
+                {withdrawError && (
+                  <p className="text-xs text-red-500 mb-3">{withdrawError}</p>
+                )}
+                {!withdrawConfirm ? (
+                  <button
+                    onClick={() => setWithdrawConfirm(true)}
+                    className="w-full text-xs font-semibold text-muted hover:text-red-500 transition-colors py-2 border border-border rounded-xl hover:border-red-200 hover:bg-red-50"
+                  >
+                    Скасувати заявку
+                  </button>
+                ) : (
+                  <div>
+                    <p className="text-xs font-semibold text-foreground mb-1">Скасувати заявку?</p>
+                    <p className="text-xs text-muted mb-3">Цю дію не можна відмінити. Заявку буде видалено.</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleWithdraw}
+                        disabled={withdrawing}
+                        className="flex-1 text-xs font-semibold bg-red-500 text-white rounded-xl py-2 hover:bg-red-600 transition-all disabled:opacity-60"
+                      >
+                        {withdrawing ? "Скасовуємо..." : "Так, скасувати"}
+                      </button>
+                      <button
+                        onClick={() => setWithdrawConfirm(false)}
+                        className="flex-1 text-xs font-medium border border-border rounded-xl py-2 hover:bg-muted-bg transition-all"
+                      >
+                        Назад
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
