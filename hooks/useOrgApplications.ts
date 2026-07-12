@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export interface OrgApplication {
   id: string;
@@ -23,14 +22,6 @@ export interface OrgApplication {
   internalNote?: string;
   submittedAt: string;
 }
-
-// Maps org status → user-facing status in applications table
-const USER_STATUS: Record<OrgApplication["status"], string> = {
-  new:       "pending",
-  reviewing: "reviewing",
-  selected:  "accepted",
-  rejected:  "rejected",
-};
 
 function fromRow(row: Record<string, unknown>): OrgApplication {
   return {
@@ -56,27 +47,23 @@ function fromRow(row: Record<string, unknown>): OrgApplication {
 }
 
 export function useOrgApplications(orgId?: string, projectId?: string) {
-  const supabase = useMemo(() => createClient(), []);
   const [applications, setApplications] = useState<OrgApplication[]>([]);
   const [ready, setReady] = useState(false);
 
-  // Keep a ref so updateApp can read latest apps without dep array issues
   const appsRef = useRef<OrgApplication[]>([]);
   useEffect(() => { appsRef.current = applications; }, [applications]);
 
   const reload = useCallback(async () => {
     if (!orgId) { setApplications([]); setReady(true); return; }
-    let query = supabase
-      .from("org_applications")
-      .select("*")
-      .eq("org_id", orgId)
-      .order("submitted_at", { ascending: false });
-    if (projectId) query = query.eq("project_id", projectId);
-    const { data } = await query;
-    const mapped = (data ?? []).map((r) => fromRow(r as Record<string, unknown>));
-    setApplications(mapped);
+
+    const url = `/api/org/applications${projectId ? `?projectId=${projectId}` : ""}`;
+    const res = await fetch(url);
+    if (!res.ok) { setReady(true); return; }
+
+    const { applications: data } = await res.json() as { applications: Record<string, unknown>[] };
+    setApplications((data ?? []).map(fromRow));
     setReady(true);
-  }, [supabase, orgId, projectId]);
+  }, [orgId, projectId]);
 
   useEffect(() => { reload(); }, [reload]);
 
@@ -87,37 +74,36 @@ export function useOrgApplications(orgId?: string, projectId?: string) {
       if (data.status       !== undefined) row.status        = data.status;
       if (data.internalNote !== undefined) row.internal_note = data.internalNote;
 
-      const { error } = await supabase
-        .from("org_applications")
-        .update(row)
-        .eq("id", id);
+      const res = await fetch(`/api/org/applications/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(row),
+      });
 
-      if (!error) {
-        setApplications((prev) =>
-          prev.map((a) => (a.id === id ? { ...a, ...data } : a))
-        );
+      if (!res.ok) {
+        const json = await res.json() as { error?: string };
+        throw new Error(json.error ?? "Update failed");
+      }
 
-        // Sync status change to user's applications table via admin API (bypasses RLS)
-        if (data.status !== undefined && current) {
-          fetch("/api/org/sync-status", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orgAppId:     id,
-              orgStatus:    data.status,
-              projectId:    current.projectId,
-              email:        current.email,
-              projectTitle: current.projectTitle,
-            }),
-          }).then((r) => {
-            if (!r.ok) console.error("[status-sync] failed:", r.status);
-          });
-        }
-      } else {
-        throw new Error(error.message);
+      setApplications((prev) => prev.map((a) => (a.id === id ? { ...a, ...data } : a)));
+
+      if (data.status !== undefined && current) {
+        fetch("/api/org/sync-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orgAppId:     id,
+            orgStatus:    data.status,
+            projectId:    current.projectId,
+            email:        current.email,
+            projectTitle: current.projectTitle,
+          }),
+        }).then((r) => {
+          if (!r.ok) console.error("[status-sync] failed:", r.status);
+        });
       }
     },
-    [supabase]
+    []
   );
 
   return { applications, ready, updateApp, reload };

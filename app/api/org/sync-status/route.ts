@@ -48,15 +48,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
-  const { data: orgApp } = await supabase
+  const admin = createAdminClient();
+
+  const { data: orgApp } = await admin
     .from("org_applications")
     .select("id, org_id")
     .eq("id", orgAppId)
     .single();
 
   if (!orgApp) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  const admin = createAdminClient();
   const userStatus = USER_STATUS[orgStatus] ?? "pending";
 
   const { error } = await admin

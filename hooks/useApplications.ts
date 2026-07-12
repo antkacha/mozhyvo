@@ -124,16 +124,12 @@ export function useApplications() {
         const newApp = fromRow(data);
         setApplications((prev) => [newApp, ...prev]);
 
-        // Try to find a matching org project (works for any ID format: plain UUID, proj-*, etc.)
+        // Forward to org via admin API (bypasses RLS on org_projects + org_applications)
         {
-          const { data: project } = await supabase
-            .from("org_projects")
-            .select("org_id")
-            .eq("id", app.opportunitySlug)
-            .maybeSingle();
-          if (project?.org_id) {
-            const { error: orgAppError } = await supabase.from("org_applications").insert({
-              org_id:        project.org_id,
+          const res = await fetch("/api/org/applications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
               project_id:    app.opportunitySlug,
               project_title: app.opportunityTitle,
               first_name:    app.firstName,
@@ -148,9 +144,12 @@ export function useApplications() {
               cv_url:        app.cvUrl,
               portfolio_url: app.portfolioUrl,
               custom_answers: app.customAnswers ?? {},
-              status:        "new",
-            });
-            if (orgAppError) throw new Error(`org_applications insert failed: ${orgAppError.message}`);
+            }),
+          });
+          if (!res.ok) {
+            const json = await res.json() as { error?: string };
+            // Only throw if it's not a "project not found" case (static opportunities don't have org_id)
+            if (res.status !== 404) throw new Error(`org_applications failed: ${json.error ?? res.status}`);
           }
         }
 
