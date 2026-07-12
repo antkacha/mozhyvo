@@ -143,7 +143,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/8">
-            {CATEGORIES.map((c, i) => (
+            {CATEGORIES.map((c) => (
               <Link
                 key={c.href}
                 href={c.href}
