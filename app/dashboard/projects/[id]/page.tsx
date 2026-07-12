@@ -259,6 +259,26 @@ function EditProjectContent() {
         <span className="text-foreground font-semibold truncate max-w-[200px]">{project.title}</span>
       </div>
 
+      {/* Expired banner */}
+      {(() => {
+        const today = new Date().toISOString().split("T")[0];
+        const isExpired = project.deadline && /^\d{4}-\d{2}-\d{2}$/.test(project.deadline) && project.deadline < today;
+        if (!isExpired) return null;
+        return (
+          <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl mb-6">
+            <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <p className="text-sm font-semibold text-amber-800">Дедлайн минув — проект у архіві</p>
+              <p className="text-xs text-amber-600 mt-0.5">
+                Оновіть дату дедлайну нижче, щоб повернути проект до активних.
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="flex items-center justify-between gap-4 mb-7">
         <h1 className="text-2xl font-black text-foreground">Редагування</h1>
         <div className="flex items-center gap-3">

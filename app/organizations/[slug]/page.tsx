@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { orgsBySlug, orgNameToSlug } from "@/lib/organizations";
+import ArchiveSection from "./ArchiveSection";
 import { opportunities } from "@/lib/data";
 import OpportunityCard from "@/components/OpportunityCard";
 
@@ -157,14 +158,22 @@ type SupabaseOrg = {
 
 type SupabaseProject = {
   id: string; title: string; type: string; country: string; flag: string;
-  deadline: string | null; funding: string | null; status: string;
-  short_description: string | null;
+  deadline: string | null; deadline_display: string | null; funding: string | null;
+  status: string; short_description: string | null;
 };
 
-function DynamicOrgPage({ org, projects }: { org: SupabaseOrg; projects: SupabaseProject[] }) {
+function DynamicOrgPage({
+  org,
+  active,
+  archive,
+}: {
+  org: SupabaseOrg;
+  active: SupabaseProject[];
+  archive: SupabaseProject[];
+}) {
   const verified = org.status === "verified";
   const activeSocials = Object.entries(org.socials ?? {}).filter(([, v]) => !!v) as [string, string][];
-  const activeProjects = projects.filter((p) => p.status === "published");
+  const activeProjects = active;
 
   const coverStyle = org.cover_image_url
     ? { backgroundImage: `url(${org.cover_image_url})`, backgroundSize: "cover", backgroundPosition: "center" }
@@ -343,6 +352,11 @@ function DynamicOrgPage({ org, projects }: { org: SupabaseOrg; projects: Supabas
         )}
       </div>
 
+        {/* Archive */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <ArchiveSection projects={archive} orgSlug={org.slug ?? ""} />
+        </div>
+
       <div className="border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <Link href="/opportunities" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-primary transition-colors font-medium">
@@ -385,13 +399,24 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
 
   if (!org) notFound();
 
-  // Fetch org's published projects
+  // Fetch all published projects (active + archived)
   const { data: projects } = await admin
     .from("org_projects")
-    .select("id, title, type, country, flag, deadline, funding, status, short_description")
+    .select("id, title, type, country, flag, deadline, deadline_display, funding, status, short_description")
     .eq("org_id", org.id)
     .eq("status", "published")
     .order("created_at", { ascending: false });
 
-  return <DynamicOrgPage org={org as SupabaseOrg} projects={(projects ?? []) as SupabaseProject[]} />;
+  const today = new Date().toISOString().split("T")[0];
+  const isExpired = (p: SupabaseProject) =>
+    !!p.deadline && /^\d{4}-\d{2}-\d{2}$/.test(p.deadline) && p.deadline < today;
+  const all = (projects ?? []) as SupabaseProject[];
+
+  return (
+    <DynamicOrgPage
+      org={org as SupabaseOrg}
+      active={all.filter((p) => !isExpired(p))}
+      archive={all.filter(isExpired)}
+    />
+  );
 }

@@ -312,6 +312,11 @@ function ProjectsContent() {
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${STATUS_PILL[p.status]}`}>
                         {STATUS_LABEL[p.status]}
                       </span>
+                      {deadlinePast && p.status === "published" && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 flex-shrink-0">
+                          Архів
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-muted truncate">{p.flag} {p.location}{p.shortDescription ? ` · ${p.shortDescription}` : ""}</p>
                   </div>
