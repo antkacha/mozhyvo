@@ -29,7 +29,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-bold mb-3">2. Які дані ми збираємо</h2>
           <ul className="list-disc pl-5 space-y-2 text-muted leading-relaxed">
-            <li><strong>Реєстраційні дані:</strong> ім'я, прізвище, email-адреса, країна, місто.</li>
+            <li><strong>Реєстраційні дані:</strong> ім&apos;я, прізвище, email-адреса, країна, місто.</li>
             <li><strong>Дані профілю:</strong> освіта, мови, навички, інтереси — заповнюються добровільно.</li>
             <li><strong>Дані заявок:</strong> відповіді на форми організацій, CV та портфоліо, якщо ви їх надаєте.</li>
             <li><strong>Технічні дані:</strong> IP-адреса, браузер, дата і час відвідувань — для безпеки та аналітики.</li>
@@ -63,7 +63,7 @@ export default function PrivacyPage() {
           <p className="text-muted leading-relaxed mb-3">Відповідно до GDPR та законодавства України, ви маєте право:</p>
           <ul className="list-disc pl-5 space-y-2 text-muted leading-relaxed">
             <li>Переглядати та редагувати свої дані в особистому кабінеті.</li>
-            <li>Видалити свій акаунт і всі пов'язані дані — у розділі «Налаштування».</li>
+            <li>Видалити свій акаунт і всі пов&apos;язані дані — у розділі «Налаштування».</li>
             <li>Відписатися від email-розсилок у будь-який час.</li>
             <li>Надіслати запит на отримання копії своїх даних або їх видалення — на <strong>mozhyvo@gmail.com</strong>.</li>
           </ul>

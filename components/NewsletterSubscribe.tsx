@@ -5,7 +5,6 @@ import { useProfile } from "@/hooks/useProfile";
 
 export default function NewsletterSubscribe() {
   const [email, setEmail]     = useState("");
-  const [name, setName]       = useState("");
   const [status, setStatus]   = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errMsg, setErrMsg]   = useState("");
   const { profile } = useProfile();
@@ -18,7 +17,7 @@ export default function NewsletterSubscribe() {
     }
     setStatus("loading");
     setErrMsg("");
-    const firstName = profile.firstName || name.trim() || undefined;
+    const firstName = profile.firstName || undefined;
     try {
       const res = await fetch("/api/subscribe", {
         method:  "POST",
