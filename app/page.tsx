@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const features = [
   { title: "Все в одному місці", desc: "Не треба шукати по десятках Telegram-каналів. Гранти, стажування, обміни — тут.", icon: "🔍" },
   { title: "Не пропусти дедлайн", desc: "Зберігай можливості і отримуй нагадування до закінчення прийому заявок.", icon: "🔔" },
-  { title: "Тільки перевірені організації", desc: "Всі партнери верифіковані командою Моживо. Жодного шахрайства.", icon: "✅" },
+  { title: "Тільки перевірені організації", desc: "Всі партнери верифіковані командою МОЖUВО. Жодного шахрайства.", icon: "✅" },
 ];
 
 const whyCards = [
@@ -136,7 +136,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Що таке Моживо? ───────────────────────────────────────────── */}
+      {/* ── Що таке МОЖUВО? ───────────────────────────────────────────── */}
       <section className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
@@ -146,7 +146,7 @@ export default function Home() {
                 Що таке
                 <br />
                 <span className="bg-primary text-white px-4 py-1 rounded-2xl inline-block mt-1">
-                  Моживо?
+                  МОЖUВО?
                 </span>
               </h2>
               <p className="text-gray-500 text-lg leading-relaxed mt-6">
@@ -173,7 +173,7 @@ export default function Home() {
       <section className="bg-primary py-14">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-[1.15]">
-            Моживо підходить усім, хто прагне{" "}
+            МОЖUВО підходить усім, хто прагне{" "}
             <span className="relative inline-block">
               розвиватися
               <span className="absolute -bottom-1 left-0 right-0 h-[3px] bg-white/50 rounded-full" />
@@ -192,7 +192,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-5xl md:text-6xl font-black text-gray-900 leading-[1.0] mb-12">
             Чому{" "}
-            <span className="text-primary">Моживо?</span>
+            <span className="text-primary">МОЖUВО?</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {whyCards.map((card, idx) => (

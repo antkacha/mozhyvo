@@ -150,11 +150,17 @@ export function useOrgSession() {
   }, [load, supabase, setCache]);
 
   const update = useCallback(async (data: Partial<OrgProfile>) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { error } = await supabase.from("orgs").update(toRow(data)).eq("user_id", user.id);
-    if (!error) setCache(_cachedOrg ? { ..._cachedOrg, ...data } : null, true);
-  }, [supabase, setCache]);
+    const res = await fetch("/api/me/org", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(toRow(data)),
+    });
+    if (res.ok) setCache(_cachedOrg ? { ..._cachedOrg, ...data } : null, true);
+    else {
+      const json = await res.json() as { error?: string };
+      throw new Error(json.error ?? "Save failed");
+    }
+  }, [setCache]);
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();

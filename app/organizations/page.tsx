@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Для організацій — Моживо",
+  title: "Для організацій — МОЖUВО",
   description:
-    "Розмісти свою можливість на Моживо і охопи тисячі молодих українців. Безкоштовно.",
+    "Розмісти свою можливість на МОЖUВО і охопи молодих українців. Безкоштовно.",
 };
 
 const steps = [
@@ -35,43 +35,31 @@ const benefits = [
   {
     emoji: "🎯",
     title: "Цільова аудиторія",
-    stat: "5 000+",
-    statLabel: "активних користувачів",
     description: "Студенти, активісти та фахівці, які активно шукають можливості для розвитку.",
   },
   {
     emoji: "✅",
     title: "Верифікація та довіра",
-    stat: "300+",
-    statLabel: "перевірених організацій",
     description: "Верифіковані організації отримують знак довіри, що підвищує відгук на оголошення.",
   },
   {
     emoji: "📊",
     title: "Аналітика охоплення",
-    stat: "↑ відгук",
-    statLabel: "на верифіковані оголошення",
     description: "Переглядай кількість переглядів, збережень і кліків на кнопку «Подати заявку».",
   },
   {
     emoji: "🆓",
     title: "Безкоштовний старт",
-    stat: "0₴",
-    statLabel: "базове розміщення",
     description: "Базове розміщення повністю безкоштовне. Преміум-опції для більшого охоплення — в планах.",
   },
   {
     emoji: "⚡",
     title: "Швидкий старт",
-    stat: "< 10 хв",
-    statLabel: "до першої публікації",
     description: "Перше оголошення можна опублікувати менш ніж за 10 хвилин без технічних навичок.",
   },
   {
     emoji: "🌍",
     title: "Міжнародний масштаб",
-    stat: "40+",
-    statLabel: "країн на платформі",
     description: "Платформа будується з урахуванням росту — незабаром додамо підтримку інших країн та мов.",
   },
 ];
@@ -104,7 +92,7 @@ export default function OrganizationsPage() {
             </h1>
             <p className="text-white/70 text-xl leading-relaxed max-w-xl mb-10">
               Тисячі молодих українців щодня шукають гранти, стажування та
-              обміни. Моживо — єдина платформа, де вони це роблять.
+              обміни. МОЖUВО — єдина платформа, де вони це роблять.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -125,10 +113,9 @@ export default function OrganizationsPage() {
           {/* Stats strip */}
           <div className="mt-16 pt-8 border-t border-white/15 flex flex-wrap gap-12">
             {[
-              { num: "1 200+", label: "можливостей" },
-              { num: "300+", label: "організацій-партнерів" },
-              { num: "5 000+", label: "активних користувачів" },
-              { num: "0₴", label: "безкоштовно" },
+              { num: "< 10 хв", label: "до першої публікації" },
+              { num: "0₴", label: "базове розміщення" },
+              { num: "100%", label: "верифіковані організації" },
             ].map((s) => (
               <div key={s.label}>
                 <p className="text-4xl font-black leading-none text-white">
@@ -180,7 +167,7 @@ export default function OrganizationsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="mb-12">
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.05]">
-              Чому обирають Моживо?
+              Чому обирають МОЖUВО?
             </h2>
             <p className="text-gray-500 text-base mt-3">
               Платформа, яка працює на результат
@@ -197,13 +184,7 @@ export default function OrganizationsPage() {
                   {b.emoji}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-3 mb-1">
-                    <h3 className="font-bold text-gray-900">{b.title}</h3>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-black text-primary leading-none">{b.stat}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{b.statLabel}</p>
-                    </div>
-                  </div>
+                  <h3 className="font-bold text-gray-900 mb-1">{b.title}</h3>
                   <p className="text-gray-500 text-sm leading-relaxed">{b.description}</p>
                 </div>
               </div>
@@ -247,16 +228,16 @@ export default function OrganizationsPage() {
               />
               <div className="relative z-10 divide-y divide-white/15">
                 <div className="pb-6">
-                  <p className="text-5xl font-black leading-none mb-1">1 200+</p>
-                  <p className="text-white/55 text-sm">можливостей на платформі</p>
+                  <p className="text-5xl font-black leading-none mb-1">0₴</p>
+                  <p className="text-white/55 text-sm">базове розміщення — завжди безкоштовно</p>
                 </div>
                 <div className="py-6">
-                  <p className="text-5xl font-black leading-none mb-1">300+</p>
-                  <p className="text-white/55 text-sm">верифікованих організацій</p>
+                  <p className="text-5xl font-black leading-none mb-1">100%</p>
+                  <p className="text-white/55 text-sm">верифіковані організації — тільки перевірені</p>
                 </div>
                 <div className="pt-6">
-                  <p className="text-5xl font-black leading-none mb-1">5 000+</p>
-                  <p className="text-white/55 text-sm">активних користувачів щомісяця</p>
+                  <p className="text-5xl font-black leading-none mb-1">{"< 10 хв"}</p>
+                  <p className="text-white/55 text-sm">до першої публікації без технічних навичок</p>
                 </div>
               </div>
             </div>
@@ -287,13 +268,13 @@ export default function OrganizationsPage() {
               <div className="flex flex-wrap gap-3 justify-center">
                 <Link
                   href="/register"
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-accent text-foreground font-semibold hover:bg-yellow-400 transition-all duration-200 shadow-lg"
+                  className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white text-primary font-bold hover:bg-primary-light transition-all duration-200 shadow-lg hover:-translate-y-0.5"
                 >
                   Зареєструвати організацію →
                 </Link>
                 <Link
                   href="/contacts"
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white/10 text-white font-semibold hover:bg-white/20 transition-all duration-200"
+                  className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl border border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-200"
                 >
                   Написати нам
                 </Link>

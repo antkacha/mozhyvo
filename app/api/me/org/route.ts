@@ -81,3 +81,20 @@ export async function GET() {
 
   return NextResponse.json({ org: null, role: null });
 }
+
+export async function PATCH(req: Request) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json() as Record<string, unknown>;
+  const admin = createAdminClient();
+
+  const { error } = await admin
+    .from("orgs")
+    .update(body)
+    .eq("user_id", user.id);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}

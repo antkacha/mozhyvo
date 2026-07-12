@@ -3,31 +3,24 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { opportunities } from "@/lib/data";
 import ApplyForm from "@/components/ApplyForm";
-import { createClient as createSupabase } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-
-function createPublicClient() {
-  return createSupabase(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Opportunity } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 async function fetchOrgProject(id: string): Promise<Opportunity | null> {
   try {
-    const supabase = createPublicClient();
-    const { data } = await supabase
+    const admin = createAdminClient();
+    const { data } = await admin
       .from("org_projects")
-      .select("*, orgs!inner(name, status)")
+      .select("*, orgs!inner(name, status, slug)")
       .eq("id", id)
       .eq("status", "published")
+      .eq("orgs.status", "verified")
       .maybeSingle();
     if (!data) return null;
-    const org = data.orgs as { name: string; status: string };
-    if (org.status !== "verified") return null;
+    const org = data.orgs as { name: string; status: string; slug?: string };
     return {
       slug:             data.id as string,
       type:             (data.type as Opportunity["type"]) ?? "exchange",
