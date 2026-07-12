@@ -186,8 +186,11 @@ export default function OpportunitiesCatalog() {
   );
 
   // Filtered + sorted list
+  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
   const filtered = useMemo(() => {
     let result = allOpportunities.filter((o) => {
+      // hide expired (only if deadline is a real date, not empty/rolling)
+      if (o.deadline && o.deadline.match(/^\d{4}-\d{2}-\d{2}$/) && o.deadline < today) return false; // eslint-disable-line react-hooks/exhaustive-deps
       if (types.length > 0    && !types.includes(o.type))      return false;
       if (formats.length > 0  && !formats.includes(o.format))  return false;
       if (fundings.length > 0 && !fundings.includes(o.funding)) return false;

@@ -5,14 +5,7 @@ import type { Metadata } from "next";
 import { opportunities, typeColors, formatLabels, type Opportunity } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
 import OpportunityClient from "@/components/OpportunityClient";
-import { createClient as createSupabase } from "@supabase/supabase-js";
-
-function createPublicClient() {
-  return createSupabase(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export function generateStaticParams() {
   return opportunities.map((o) => ({ slug: o.slug }));
@@ -22,16 +15,16 @@ export const dynamicParams = true;
 
 async function fetchOrgProject(id: string): Promise<Opportunity | null> {
   try {
-    const supabase = createPublicClient();
-    const { data } = await supabase
+    const admin = createAdminClient();
+    const { data } = await admin
       .from("org_projects")
       .select("*, orgs!inner(id, name, status, slug)")
       .eq("id", id)
       .eq("status", "published")
+      .eq("orgs.status", "verified")
       .maybeSingle();
     if (!data) return null;
     const org = data.orgs as { id: string; name: string; status: string; slug?: string };
-    if (org.status !== "verified") return null;
     return {
       slug:             data.id as string,
       type:             (data.type as Opportunity["type"]) ?? "exchange",
