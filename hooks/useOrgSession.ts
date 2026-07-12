@@ -235,10 +235,18 @@ export function useOrgSession() {
     setCache(null, true);
   }, [supabase, setCache]);
 
+  const reload = useCallback(() => {
+    _cachedOrg = null;
+    _cachedReady = false;
+    _cachedMemberRole = null;
+    notifyListeners();
+    load();
+  }, [load]);
+
   // login() kept for backward compat — no-op in Supabase mode
   const login = useCallback((_profile: OrgProfile) => {}, []);
 
   const isOwner = memberRole === "owner";
 
-  return { org, ready, login, update, logout, memberRole, isOwner };
+  return { org, ready, reload, login, update, logout, memberRole, isOwner };
 }

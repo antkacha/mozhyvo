@@ -279,7 +279,7 @@ function MobileNav() {
 
 // ── Shell ────────────────────────────────────────────────────────────
 export default function OrgShell({ children }: { children: React.ReactNode }) {
-  const { org, ready } = useOrgSession();
+  const { org, ready, reload } = useOrgSession();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
@@ -287,21 +287,52 @@ export default function OrgShell({ children }: { children: React.ReactNode }) {
     if (!ready || org) return;
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) router.replace("/login");
-      else router.replace("/cabinet");
+      // if user exists but org is null — show error state (handled below)
     });
   }, [ready, org, router, supabase]);
 
-  if (!ready || !org) {
+  if (!ready) {
     return (
       <>
         <div className="lg:hidden h-12 bg-white border-b border-border" />
         <div className="flex min-h-[calc(100vh-64px)]">
-          {/* Sidebar skeleton — same width as real sidebar so content doesn't shift */}
           <aside className="hidden lg:flex flex-col w-[240px] flex-shrink-0 bg-white border-r border-border" />
           <main className="flex-1 min-w-0 bg-background">
             <div className="max-w-5xl mx-auto px-5 sm:px-7 py-7 lg:py-8">
               <div className="flex items-center justify-center py-24">
                 <div className="w-7 h-7 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin" />
+              </div>
+            </div>
+          </main>
+        </div>
+      </>
+    );
+  }
+
+  if (!org) {
+    return (
+      <>
+        <div className="lg:hidden h-12 bg-white border-b border-border" />
+        <div className="flex min-h-[calc(100vh-64px)]">
+          <aside className="hidden lg:flex flex-col w-[240px] flex-shrink-0 bg-white border-r border-border" />
+          <main className="flex-1 min-w-0 bg-background">
+            <div className="max-w-5xl mx-auto px-5 sm:px-7 py-7 lg:py-8">
+              <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Не вдалося завантажити організацію</p>
+                  <p className="text-xs text-muted mt-1">Перевірте з&apos;єднання або спробуйте ще раз</p>
+                </div>
+                <button
+                  onClick={reload}
+                  className="px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all"
+                >
+                  Повторити
+                </button>
               </div>
             </div>
           </main>
