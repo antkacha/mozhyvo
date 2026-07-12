@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }, { status: 404 });
   }
 
-  const { data: org } = await supabase.from("orgs").select("id, name").eq("user_id", user.id).single();
+  const { data: org } = await admin.from("orgs").select("id, name").eq("user_id", user.id).single();
   if (!org) return NextResponse.json({ error: "Org not found" }, { status: 404 });
 
   const roleLabel = role === "admin" ? "Адміністратора" : "Рецензента";

@@ -7,16 +7,16 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Get caller's org (owner or member)
-  const { data: ownOrg } = await supabase.from("orgs").select("id, name, user_id").eq("user_id", user.id).maybeSingle();
+  const admin = createAdminClient();
+
+  // Get caller's org (use admin client to bypass RLS)
+  const { data: ownOrg } = await admin.from("orgs").select("id, name, user_id").eq("user_id", user.id).maybeSingle();
   const { data: membership } = !ownOrg
-    ? await supabase.from("org_members").select("org_id").eq("user_id", user.id).maybeSingle()
+    ? await admin.from("org_members").select("org_id").eq("user_id", user.id).maybeSingle()
     : { data: null };
 
   const orgId = ownOrg?.id ?? membership?.org_id;
   if (!orgId) return NextResponse.json({ members: [] });
-
-  const admin = createAdminClient();
 
   // Get invited members from org_members
   const { data: rows } = await admin

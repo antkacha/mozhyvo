@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { orgsBySlug, orgNameToSlug } from "@/lib/organizations";
 import { opportunities } from "@/lib/data";
 import OpportunityCard from "@/components/OpportunityCard";
@@ -66,8 +66,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     };
   }
   // Supabase org
-  const supabase = createClient();
-  const { data } = await supabase
+  const admin = createAdminClient();
+  const { data } = await admin
     .from("orgs")
     .select("name, description")
     .eq("slug", params.slug)
@@ -360,9 +360,9 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
   // 1. Try static org
   if (orgsBySlug[slug]) return <StaticOrgPage slug={slug} />;
 
-  // 2. Try Supabase org by slug
-  const supabase = createClient();
-  let { data: org } = await supabase
+  // 2. Try Supabase org by slug (use admin client to bypass RLS)
+  const admin = createAdminClient();
+  let { data: org } = await admin
     .from("orgs")
     .select("*")
     .eq("slug", slug)
@@ -371,7 +371,7 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
 
   // 3. Fallback: try by UUID id (only if slug looks like a UUID)
   if (!org && /^[0-9a-f-]{36}$/i.test(slug)) {
-    const { data } = await supabase
+    const { data } = await admin
       .from("orgs")
       .select("*")
       .eq("id", slug)
@@ -382,8 +382,8 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
 
   if (!org) notFound();
 
-  // 3. Fetch org's published projects
-  const { data: projects } = await supabase
+  // Fetch org's published projects
+  const { data: projects } = await admin
     .from("org_projects")
     .select("id, title, type, country, flag, deadline, funding, status, short_description")
     .eq("org_id", org.id)

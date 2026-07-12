@@ -14,10 +14,9 @@ export async function DELETE(
   const { userId } = params;
 
   // Caller must be the org owner
-  const { data: org } = await supabase.from("orgs").select("id").eq("user_id", user.id).maybeSingle();
-  if (!org) return NextResponse.json({ error: "Only org owner can remove members" }, { status: 403 });
-
   const admin = createAdminClient();
+  const { data: org } = await admin.from("orgs").select("id").eq("user_id", user.id).maybeSingle();
+  if (!org) return NextResponse.json({ error: "Only org owner can remove members" }, { status: 403 });
 
   // Remove from org_members
   await admin.from("org_members").delete().eq("org_id", org.id).eq("user_id", userId);
@@ -57,10 +56,10 @@ export async function PATCH(
   const { userId } = params;
 
   // Caller must be the org owner
-  const { data: org } = await supabase.from("orgs").select("id").eq("user_id", user.id).maybeSingle();
+  const admin = createAdminClient();
+  const { data: org } = await admin.from("orgs").select("id").eq("user_id", user.id).maybeSingle();
   if (!org) return NextResponse.json({ error: "Only org owner can change roles" }, { status: 403 });
 
-  const admin = createAdminClient();
   const { error } = await admin
     .from("org_members")
     .update({ role })
