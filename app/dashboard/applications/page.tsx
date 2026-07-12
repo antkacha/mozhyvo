@@ -13,62 +13,83 @@ const STATUS_CHIP: Record<OrgApplication["status"], string> = { new: "bg-blue-50
 const STATUS_ACTIVE: Record<OrgApplication["status"], string> = { new: "bg-blue-500 text-white border-blue-500", reviewing: "bg-amber-400 text-white border-amber-400", selected: "bg-green-500 text-white border-green-500", rejected: "bg-red-400 text-white border-red-400" };
 const STATUS_DOT: Record<OrgApplication["status"], string> = { new: "bg-blue-500", reviewing: "bg-amber-400", selected: "bg-green-500", rejected: "bg-red-400" };
 
-// ── Export field config ───────────────────────────────────────────────
-type ExportableKey =
-  | "firstName" | "lastName" | "email" | "phone" | "country"
-  | "institution" | "degree" | "languages" | "motivation"
-  | "cvUrl" | "portfolioUrl" | "projectTitle" | "status"
-  | "internalNote" | "submittedAt";
+// ── Export: dynamic, data-driven ─────────────────────────────────────
+type StdKey = "projectTitle" | "firstName" | "lastName" | "email" | "phone"
+  | "country" | "institution" | "degree" | "languages" | "motivation"
+  | "cvUrl" | "portfolioUrl" | "status" | "submittedAt";
 
-interface ExportField { key: ExportableKey; label: string; group: string; on: boolean }
-
-const EXPORT_FIELDS: ExportField[] = [
-  { key: "firstName",    label: "Ім'я",              group: "Особисті дані", on: true  },
-  { key: "lastName",     label: "Прізвище",          group: "Особисті дані", on: true  },
-  { key: "email",        label: "Email",             group: "Особисті дані", on: true  },
-  { key: "phone",        label: "Телефон",           group: "Особисті дані", on: false },
-  { key: "country",      label: "Країна",            group: "Особисті дані", on: true  },
-  { key: "institution",  label: "Заклад освіти",     group: "Освіта",        on: true  },
-  { key: "degree",       label: "Ступінь",           group: "Освіта",        on: true  },
-  { key: "languages",    label: "Мови",              group: "Освіта",        on: true  },
-  { key: "motivation",   label: "Мотиваційний лист", group: "Заявка",        on: true  },
-  { key: "cvUrl",        label: "CV (посилання)",    group: "Заявка",        on: false },
-  { key: "portfolioUrl", label: "Портфоліо",         group: "Заявка",        on: false },
-  { key: "projectTitle", label: "Проєкт",            group: "Адмін",         on: true  },
-  { key: "status",       label: "Статус",            group: "Адмін",         on: true  },
-  { key: "internalNote", label: "Внутр. нотатка",   group: "Адмін",         on: false },
-  { key: "submittedAt",  label: "Дата подачі",       group: "Адмін",         on: true  },
+const STD_FIELDS: { key: StdKey; label: string; colW: number }[] = [
+  { key: "projectTitle", label: "Проєкт",             colW: 32 },
+  { key: "firstName",    label: "Ім'я",               colW: 12 },
+  { key: "lastName",     label: "Прізвище",           colW: 14 },
+  { key: "email",        label: "Email",              colW: 28 },
+  { key: "phone",        label: "Телефон",            colW: 16 },
+  { key: "country",      label: "Країна",             colW: 16 },
+  { key: "institution",  label: "Заклад освіти",      colW: 26 },
+  { key: "degree",       label: "Ступінь",            colW: 18 },
+  { key: "languages",    label: "Мови",               colW: 20 },
+  { key: "motivation",   label: "Мотиваційний лист",  colW: 80 },
+  { key: "cvUrl",        label: "CV",                 colW: 30 },
+  { key: "portfolioUrl", label: "Портфоліо",          colW: 30 },
+  { key: "status",       label: "Статус",             colW: 14 },
+  { key: "submittedAt",  label: "Дата подачі",        colW: 14 },
 ];
 
-const COL_WIDTH: Partial<Record<ExportableKey, number>> = {
-  motivation: 80, email: 28, projectTitle: 32, institution: 26, firstName: 12, lastName: 14,
-};
-
-function getFieldValue(app: OrgApplication, key: ExportableKey): string {
-  if (key === "languages") return app.languages.join("; ");
-  if (key === "status")    return STATUS_LABEL[app.status];
-  if (key === "submittedAt") return new Date(app.submittedAt).toLocaleDateString("uk-UA");
-  const val = app[key as keyof OrgApplication];
-  return typeof val === "string" ? val : "";
+function hasValue(app: OrgApplication, key: StdKey): boolean {
+  if (key === "languages") return app.languages.length > 0;
+  if (key === "status" || key === "submittedAt" || key === "projectTitle") return true;
+  const v = app[key as keyof OrgApplication];
+  return typeof v === "string" && v.trim() !== "";
 }
 
-function doExportCSV(apps: OrgApplication[], keys: ExportableKey[], filename = "applications") {
-  const headers = keys.map((k) => EXPORT_FIELDS.find((f) => f.key === k)!.label);
-  const rows = apps.map((a) => keys.map((k) => getFieldValue(a, k)));
-  const csv = [headers, ...rows].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+function stdValue(app: OrgApplication, key: StdKey): string {
+  if (key === "languages")   return app.languages.join("; ");
+  if (key === "status")      return STATUS_LABEL[app.status];
+  if (key === "submittedAt") return new Date(app.submittedAt).toLocaleDateString("uk-UA");
+  const v = app[key as keyof OrgApplication];
+  return typeof v === "string" ? v : "";
+}
+
+function buildExportData(apps: OrgApplication[]) {
+  const activeStd = STD_FIELDS.filter((f) => apps.some((a) => hasValue(a, f.key)));
+  const customKeys = Array.from(new Set(apps.flatMap((a) => Object.keys(a.customAnswers ?? {}))));
+
+  const headers = [...activeStd.map((f) => f.label), ...customKeys];
+  const colWidths = [
+    ...activeStd.map((f) => ({ wch: f.colW })),
+    ...customKeys.map(() => ({ wch: 30 })),
+  ];
+  const rows = apps.map((a) => {
+    const std = activeStd.map((f) => stdValue(a, f.key));
+    const custom = customKeys.map((k) => {
+      const v = (a.customAnswers ?? {})[k];
+      return Array.isArray(v) ? v.join("; ") : (v ?? "");
+    });
+    return [...std, ...custom];
+  });
+
+  return { headers, rows, colWidths };
+}
+
+function doExportCSV(apps: OrgApplication[], filename = "applications") {
+  const { headers, rows } = buildExportData(apps);
+  const csv = [headers, ...rows]
+    .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
   const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const el = document.createElement("a");
-  el.href = url; el.download = `${filename}-${new Date().toISOString().split("T")[0]}.csv`; el.click();
+  el.href = url;
+  el.download = `${filename}-${new Date().toISOString().split("T")[0]}.csv`;
+  el.click();
   URL.revokeObjectURL(url);
 }
 
-async function doExportXLSX(apps: OrgApplication[], keys: ExportableKey[], filename = "applications") {
+async function doExportXLSX(apps: OrgApplication[], filename = "applications") {
   const XLSX = await import("xlsx");
-  const headers = keys.map((k) => EXPORT_FIELDS.find((f) => f.key === k)!.label);
-  const rows = apps.map((a) => keys.map((k) => getFieldValue(a, k)));
+  const { headers, rows, colWidths } = buildExportData(apps);
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  ws["!cols"] = keys.map((k) => ({ wch: COL_WIDTH[k] ?? 15 }));
+  ws["!cols"] = colWidths;
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Заявки");
   XLSX.writeFile(wb, `${filename}-${new Date().toISOString().split("T")[0]}.xlsx`);
@@ -76,129 +97,77 @@ async function doExportXLSX(apps: OrgApplication[], keys: ExportableKey[], filen
 
 // ── Export modal ──────────────────────────────────────────────────────
 function ExportModal({ open, apps, onClose }: { open: boolean; apps: OrgApplication[]; onClose: () => void }) {
-  const [selected, setSelected] = useState<Set<ExportableKey>>(
-    () => new Set(EXPORT_FIELDS.filter((f) => f.on).map((f) => f.key))
-  );
-
   if (!open) return null;
 
-  const groups = Array.from(new Set(EXPORT_FIELDS.map((f) => f.group)));
-  const allOn = EXPORT_FIELDS.every((f) => selected.has(f.key));
-  const selectedKeys = EXPORT_FIELDS.filter((f) => selected.has(f.key)).map((f) => f.key);
-  const n = selected.size;
-  const countLabel = `${n} ${n === 1 ? "поле" : n < 5 ? "поля" : "полів"}`;
-
-  function toggle(key: ExportableKey) {
-    setSelected((prev) => { const s = new Set(prev); if (s.has(key)) { s.delete(key); } else { s.add(key); } return s; });
-  }
+  const n = apps.length;
+  const label = n === 1 ? "заявка" : n < 5 ? "заявки" : "заявок";
+  const customKeys = Array.from(new Set(apps.flatMap((a) => Object.keys(a.customAnswers ?? {}))));
+  const activeStd = STD_FIELDS.filter((f) => apps.some((a) => hasValue(a, f.key)));
+  const totalCols = activeStd.length + customKeys.length;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-white w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col"
-        style={{ maxHeight: "88vh" }}
+        className="bg-white w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle (mobile) */}
-        <div className="flex justify-center pt-3 pb-1 sm:hidden flex-shrink-0">
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
           <div className="w-10 h-1 rounded-full bg-border" />
         </div>
 
         {/* Header */}
-        <div className="flex items-start justify-between px-6 pt-4 sm:pt-6 pb-4 flex-shrink-0">
+        <div className="flex items-start justify-between px-6 pt-4 sm:pt-6 pb-4">
           <div>
             <h2 className="text-base font-bold text-foreground">Експорт заявок</h2>
             <p className="text-sm text-muted mt-0.5">
-              <span className="font-semibold text-foreground">{apps.length}</span>{" "}
-              {apps.length === 1 ? "заявка" : apps.length < 5 ? "заявки" : "заявок"}
+              <span className="font-semibold text-foreground">{n}</span> {label} · {totalCols} колонок
             </p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:bg-muted-bg transition-all mt-0.5 flex-shrink-0">
+          <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:bg-muted-bg transition-all mt-0.5">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        {/* Divider */}
-        <div className="h-px bg-border mx-6 flex-shrink-0" />
+        <div className="h-px bg-border mx-6" />
 
-        {/* Field sections */}
-        <div className="overflow-y-auto flex-1 px-6 py-5 flex flex-col gap-6">
-          {groups.map((group) => {
-            const fields = EXPORT_FIELDS.filter((f) => f.group === group);
-            return (
-              <div key={group}>
-                <p className="text-[10px] font-bold text-muted/70 uppercase tracking-[0.1em] mb-3">{group}</p>
-                <div className="flex flex-wrap gap-2">
-                  {fields.map((field) => {
-                    const on = selected.has(field.key);
-                    return (
-                      <button
-                        key={field.key}
-                        onClick={() => toggle(field.key)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
-                          on
-                            ? "bg-primary-light text-primary ring-1 ring-primary/20"
-                            : "bg-muted-bg text-muted hover:bg-muted-bg/80 hover:text-foreground"
-                        }`}
-                      >
-                        {on ? (
-                          <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          <svg className="w-3 h-3 flex-shrink-0 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                        )}
-                        {field.label}
-                        {field.key === "motivation" && (
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0 ${on ? "bg-primary/15 text-primary" : "bg-border text-muted"}`}>
-                            ★
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+        {/* Column preview */}
+        <div className="px-6 py-4">
+          <p className="text-[10px] font-bold text-muted/70 uppercase tracking-[0.1em] mb-2.5">Що буде в файлі</p>
+          <div className="flex flex-wrap gap-1.5">
+            {activeStd.map((f) => (
+              <span key={f.key} className="text-xs px-2.5 py-1 rounded-lg bg-muted-bg text-muted font-medium">
+                {f.label}
+              </span>
+            ))}
+            {customKeys.map((k) => (
+              <span key={k} className="text-xs px-2.5 py-1 rounded-lg bg-primary-light text-primary font-medium">
+                {k}
+              </span>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted/60 mt-3">Включені лише заповнені поля. Кастомні питання виділені кольором.</p>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 pt-4 pb-6 flex-shrink-0 border-t border-border">
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <p className="text-xs text-muted">
-                <span className="font-semibold text-foreground">{countLabel}</span> обрано
-              </p>
-              <button
-                onClick={() => setSelected(allOn ? new Set() : new Set(EXPORT_FIELDS.map((f) => f.key)))}
-                className="text-xs text-primary hover:underline mt-0.5"
-              >
-                {allOn ? "Скинути всі" : "Вибрати всі"}
-              </button>
-            </div>
-            <button
-              disabled={selected.size === 0}
-              onClick={() => { doExportCSV(apps, selectedKeys); onClose(); }}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:border-primary/40 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-            >
-              CSV
-            </button>
-            <button
-              disabled={selected.size === 0}
-              onClick={() => { doExportXLSX(apps, selectedKeys); onClose(); }}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm shadow-primary/20"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Excel
-            </button>
-          </div>
+        {/* Actions */}
+        <div className="px-6 pb-6 flex items-center gap-3 justify-end">
+          <button
+            onClick={() => { doExportCSV(apps); onClose(); }}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:border-primary/40 hover:text-primary transition-all"
+          >
+            CSV
+          </button>
+          <button
+            onClick={() => { doExportXLSX(apps); onClose(); }}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Excel
+          </button>
         </div>
       </div>
     </div>
