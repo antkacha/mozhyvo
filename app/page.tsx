@@ -9,18 +9,9 @@ export const metadata: Metadata = {
 };
 
 const features = [
-  { num: "01", title: "Все в одному місці", desc: "Більше не треба шукати по десятках Telegram-каналів. Гранти, стажування, обміни — тут." },
-  { num: "02", title: "Не пропусти дедлайн", desc: "Зберігай цікаві можливості і отримуй нагадування до закінчення прийому заявок." },
-  { num: "03", title: "Тільки перевірені організації", desc: "Всі партнери верифіковані командою Моживо. Жодного шахрайства." },
-];
-
-const categories = [
-  { emoji: "🎓", name: "Стипендії",    desc: "Навчання за кордоном та в Україні",    href: "/opportunities?category=scholarships" },
-  { emoji: "💼", name: "Стажування",   desc: "Досвід у топових компаніях",            href: "/opportunities?category=internships" },
-  { emoji: "🌍", name: "Обміни",       desc: "Програми обміну в Європі та світі",     href: "/opportunities?category=exchanges" },
-  { emoji: "🤝", name: "Волонтерство", desc: "Допомагай і розвивайся",               href: "/opportunities?category=volunteering" },
-  { emoji: "🏆", name: "Конкурси",     desc: "Змагання та нагороди",                 href: "/opportunities?category=competitions" },
-  { emoji: "🚀", name: "Гранти",       desc: "Фінансування ідей та проєктів",        href: "/opportunities?category=grants" },
+  { num: "01", title: "Все в одному місці", desc: "Більше не треба шукати по десятках Telegram-каналів. Гранти, стажування, обміни — тут.", icon: "🔍" },
+  { num: "02", title: "Не пропусти дедлайн", desc: "Зберігай цікаві можливості і отримуй нагадування до закінчення прийому заявок.", icon: "🔔" },
+  { num: "03", title: "Тільки перевірені організації", desc: "Всі партнери верифіковані командою Моживо. Жодного шахрайства.", icon: "✅" },
 ];
 
 const marqueeItems = ["СТИПЕНДІЇ", "СТАЖУВАННЯ", "ОБМІНИ", "ВОЛОНТЕРСТВО", "ГРАНТИ", "КОНКУРСИ"];
@@ -45,9 +36,10 @@ export default function Home() {
 
             {/* Left: content */}
             <div className="flex flex-col gap-6">
-              <div className="inline-flex items-center gap-2 self-start px-3.5 py-1.5 rounded-full border border-gray-200 bg-white/80 text-gray-500 text-xs font-semibold shadow-sm backdrop-blur-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                Платформа можливостей для молоді
+              {/* Blue glow accent line */}
+              <div className="self-start relative h-px w-24" aria-hidden>
+                <div className="absolute inset-0 rounded-full bg-primary/50" />
+                <div className="absolute inset-0 rounded-full bg-primary blur-lg scale-y-[5] opacity-40" />
               </div>
 
               <h1 className="text-6xl md:text-7xl lg:text-[5.5rem] font-black text-gray-900 tracking-tight leading-[0.92]">
@@ -138,15 +130,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Marquee strip ────────────────────────────────────────────── */}
-      <div className="bg-foreground py-4 overflow-hidden">
+      {/* ── Marquee strip — blue ──────────────────────────────────────── */}
+      <div className="bg-primary py-4 overflow-hidden">
         <div className="flex animate-marquee whitespace-nowrap w-max">
           {[0, 1].map((i) => (
             <div key={i} className="flex items-center flex-none">
               {marqueeItems.map((item) => (
-                <span key={`${i}-${item}`} className="inline-flex items-center gap-6 text-xs font-bold tracking-[0.2em] text-white/30 px-6">
+                <span key={`${i}-${item}`} className="inline-flex items-center gap-6 text-xs font-bold tracking-[0.2em] text-white/50 px-6">
                   {item}
-                  <span className="text-primary font-black">·</span>
+                  <span className="text-white/30 font-black">·</span>
                 </span>
               ))}
             </div>
@@ -154,19 +146,20 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Why Mozhyvo ──────────────────────────────────────────────── */}
-      <section className="bg-white py-24">
+      {/* ── Why Mozhyvo — editorial 2-col layout ─────────────────────── */}
+      <section className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
 
+            {/* Left: bold statement + bullets */}
             <div>
-              <h2 className="text-5xl md:text-6xl font-black text-gray-900 leading-[1.0] mb-5">
+              <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.05] mb-5">
                 Чому<br />Моживо?
               </h2>
-              <p className="text-gray-400 text-lg leading-relaxed max-w-xs mb-10">
+              <p className="text-gray-500 text-lg leading-relaxed max-w-xs">
                 Ми зібрали все для розвитку молоді — в одному місці
               </p>
-              <div className="flex flex-col gap-4">
+              <div className="mt-10 flex flex-col gap-4">
                 {[
                   { icon: "💙", text: "Безкоштовно — назавжди" },
                   { icon: "🔄", text: "Поповнюється щодня" },
@@ -180,6 +173,7 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Right: numbered feature list */}
             <div>
               {features.map((f) => (
                 <div key={f.num} className="flex gap-5 py-6 border-b border-gray-100 last:border-0">
@@ -188,6 +182,7 @@ export default function Home() {
                     <h3 className="font-bold text-gray-900 text-base mb-1.5">{f.title}</h3>
                     <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
                   </div>
+                  <span className="text-2xl flex-shrink-0 self-start">{f.icon}</span>
                 </div>
               ))}
             </div>
@@ -196,32 +191,106 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Categories — list style ───────────────────────────────────── */}
-      <section className="bg-muted-bg py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-14">
-            <h2 className="text-5xl md:text-6xl font-black text-gray-900 leading-[1.0]">Що ти шукаєш?</h2>
-            <p className="text-gray-400 text-base mt-3">Оберіть напрям — і знайдіть можливості саме для вас</p>
+      {/* ── Category bento grid ───────────────────────────────────────── */}
+      <section style={{ backgroundColor: "#F7F8FF" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="mb-12">
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900">
+              Що ти шукаєш?
+            </h2>
+            <p className="text-gray-500 text-base mt-3">
+              Оберіть напрям — і знайдіть можливості саме для вас
+            </p>
           </div>
 
-          <div>
-            {categories.map((cat, idx) => (
-              <Link
-                key={cat.name}
-                href={cat.href}
-                className="group flex items-center justify-between py-5 border-b border-gray-200 first:border-t transition-all duration-200"
-              >
-                <div className="flex items-center gap-5">
-                  <span className="text-xs font-mono font-bold text-gray-300 w-5 flex-shrink-0">0{idx + 1}</span>
-                  <span className="text-xl">{cat.emoji}</span>
-                  <span className="text-2xl font-black text-gray-900 group-hover:text-primary transition-colors duration-200">
-                    {cat.name}
-                  </span>
-                  <span className="text-sm text-gray-400 hidden sm:block ml-2">{cat.desc}</span>
-                </div>
-                <span className="text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200 text-xl flex-shrink-0">↗</span>
-              </Link>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+            {/* Wide featured: Стипендії */}
+            <Link
+              href="/opportunities?category=scholarships"
+              className="col-span-1 md:col-span-2 group bg-primary rounded-3xl p-7 text-white hover:bg-primary-dark transition-all duration-200"
+            >
+              <div className="flex items-start justify-between mb-6">
+                <span className="text-4xl">🎓</span>
+                <span className="text-white/40 group-hover:text-white text-xl transition-colors duration-200">→</span>
+              </div>
+              <p className="text-3xl font-black leading-tight mb-2">Стипендії</p>
+              <p className="text-white/65 text-sm leading-relaxed">Навчання за кордоном та в Україні</p>
+            </Link>
+
+            {/* Стажування */}
+            <Link
+              href="/opportunities?category=internships"
+              className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-3xl">💼</span>
+                <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
+              </div>
+              <div>
+                <p className="text-xl font-black text-gray-900 leading-tight mb-1">Стажування</p>
+                <p className="text-xs text-gray-500 leading-snug">Досвід у топових компаніях</p>
+              </div>
+            </Link>
+
+            {/* Обміни */}
+            <Link
+              href="/opportunities?category=exchanges"
+              className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-3xl">🌍</span>
+                <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
+              </div>
+              <div>
+                <p className="text-xl font-black text-gray-900 leading-tight mb-1">Обміни</p>
+                <p className="text-xs text-gray-500 leading-snug">Програми обміну в Європі та світі</p>
+              </div>
+            </Link>
+
+            {/* Волонтерство */}
+            <Link
+              href="/opportunities?category=volunteering"
+              className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-3xl">🤝</span>
+                <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
+              </div>
+              <div>
+                <p className="text-xl font-black text-gray-900 leading-tight mb-1">Волонтерство</p>
+                <p className="text-xs text-gray-500 leading-snug">Допомагай і розвивайся</p>
+              </div>
+            </Link>
+
+            {/* Конкурси */}
+            <Link
+              href="/opportunities?category=competitions"
+              className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-3xl">🏆</span>
+                <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
+              </div>
+              <div>
+                <p className="text-xl font-black text-gray-900 leading-tight mb-1">Конкурси</p>
+                <p className="text-xs text-gray-500 leading-snug">Змагання та нагороди</p>
+              </div>
+            </Link>
+
+            {/* Wide featured: Гранти */}
+            <Link
+              href="/opportunities?category=grants"
+              className="col-span-1 md:col-span-2 group bg-primary rounded-3xl p-7 text-white hover:bg-primary-dark transition-all duration-200"
+            >
+              <div className="flex items-start justify-between mb-6">
+                <span className="text-4xl">🚀</span>
+                <span className="text-white/40 group-hover:text-white text-xl transition-colors duration-200">→</span>
+              </div>
+              <p className="text-3xl font-black leading-tight mb-2">Гранти</p>
+              <p className="text-white/65 text-sm leading-relaxed">Фінансування ідей та проєктів</p>
+            </Link>
+
           </div>
         </div>
       </section>
@@ -232,32 +301,33 @@ export default function Home() {
       {/* ── Featured opportunities ────────────────────────────────────── */}
       <FeaturedSection />
 
-      {/* ── Org CTA — dark section ───────────────────────────────────── */}
-      <section className="py-24" style={{ backgroundColor: "#0D0D0D" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-xs font-bold tracking-[0.2em] text-white/25 uppercase mb-10">Для організацій</p>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-end">
-            <div>
-              <h2 className="text-5xl md:text-6xl font-black text-white leading-[1.0] mb-6">
-                Ви організація<br />або фонд?
+      {/* ── CTA banner — white section, blue inner ───────────────────── */}
+      <section className="bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+          <div className="bg-primary rounded-3xl px-8 py-16 text-center relative overflow-hidden">
+            <div
+              aria-hidden
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 15% 50%, rgba(255,255,255,0.08) 0%, transparent 45%), radial-gradient(circle at 85% 20%, rgba(255,255,255,0.10) 0%, transparent 40%), radial-gradient(circle at 75% 80%, rgba(255,255,255,0.07) 0%, transparent 35%)",
+              }}
+            />
+            <div className="relative z-10">
+              <div className="text-4xl mb-5">🏢</div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-4">
+                Ви організація або фонд?
               </h2>
-              <p className="text-white/40 text-lg leading-relaxed mb-10 max-w-sm">
-                Розмістіть свою програму безкоштовно і охопіть тисячі молодих українців.
+              <p className="text-white/80 mb-8 max-w-lg mx-auto">
+                Розмістіть свою програму безкоштовно і охопіть тисячі молодих
+                українців, які шукають саме такі можливості.
               </p>
               <Link
                 href="/organizations"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-white font-semibold hover:bg-primary-dark transition-all shadow-lg shadow-primary/30 hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white text-primary font-semibold hover:bg-primary-light transition-all duration-200 shadow-lg"
               >
                 Розмістити можливість →
               </Link>
-            </div>
-            <div className="text-right select-none">
-              <p className="text-[9rem] md:text-[11rem] font-black leading-none" style={{ color: "rgba(255,255,255,0.04)" }}>
-                0₴
-              </p>
-              <p className="text-base font-bold -mt-4" style={{ color: "rgba(255,255,255,0.08)" }}>
-                Безкоштовно назавжди
-              </p>
             </div>
           </div>
         </div>
