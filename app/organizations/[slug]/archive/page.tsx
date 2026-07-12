@@ -79,7 +79,7 @@ export default async function OrgArchivePage({
     ? archived.filter((p) => p.type === typeFilter)
     : archived;
 
-  const types = [...new Set(archived.map((p) => p.type))].filter(Boolean);
+  const types = Array.from(new Set(archived.map((p) => p.type))).filter(Boolean);
 
   const orgName = org.name as string;
   const brandColor = (org.brand_color as string) ?? "#3B4FE8";

@@ -39,7 +39,7 @@ export default function ArchiveSection({
 
   if (projects.length === 0) return null;
 
-  const types = [...new Set(projects.map((p) => p.type))].filter(Boolean);
+  const types = Array.from(new Set(projects.map((p) => p.type))).filter(Boolean);
   const filtered =
     activeType === "all" ? projects : projects.filter((p) => p.type === activeType);
   const shown = filtered.slice(0, PREVIEW);
