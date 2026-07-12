@@ -22,6 +22,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["Syne", "Inter", "sans-serif"],
       },
       borderRadius: {
         "2xl": "1rem",
