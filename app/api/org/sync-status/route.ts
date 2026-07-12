@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   EMAIL_FROM, SITE_URL,
-  wrapEmailTemplate, emailButton, emailHeading, emailText,
+  wrapEmailTemplate, emailButton,
 } from "@/lib/email-template";
 
 const USER_STATUS: Record<string, string> = {
@@ -17,6 +17,18 @@ const STATUS_UA: Record<string, { label: string; color: string; emoji: string }>
   reviewing: { label: "на розгляді",  color: "#D97706", emoji: "🔍" },
   accepted:  { label: "прийнято",     color: "#059669", emoji: "🎉" },
   rejected:  { label: "не прийнято",  color: "#DC2626", emoji: "📋" },
+};
+
+const EMAIL_HEADING: Record<string, string> = {
+  accepted:  "Вашу заявку прийнято! 🎉",
+  rejected:  "Результат розгляду заявки",
+  reviewing: "Заявку взято на розгляд",
+};
+
+const EMAIL_SUBTITLE: Record<string, string> = {
+  accepted:  "Вітаємо! Твою заявку відібрано. Очікуй подальшу інформацію від організації.",
+  rejected:  "На жаль, цього разу не вийшло. Не зупиняйся — переглянь інші можливості на Моживо.",
+  reviewing: "Твоя заявка перебуває на розгляді. Ми повідомимо тебе про наступні зміни.",
 };
 
 export async function POST(req: NextRequest) {
@@ -100,32 +112,35 @@ export async function POST(req: NextRequest) {
           userStatus === "accepted" ? "#A7F3D0" :
           userStatus === "rejected" ? "#FECACA" : "#FDE68A";
 
-        const bodyText =
-          userStatus === "accepted"
-            ? "Вітаємо! Твою заявку відібрано. Очікуй подальшу інформацію від організації."
-            : userStatus === "rejected"
-            ? "На жаль, цього разу не вийшло. Не зупиняйся — переглянь інші можливості на Моживо."
-            : "Твоя заявка перебуває на розгляді. Ми повідомимо тебе про наступні зміни.";
-
         await resend.emails.send({
           from: EMAIL_FROM,
           to: email,
           subject: `${emoji} Статус заявки на «${title}» змінено`,
           html: wrapEmailTemplate(
-            emailHeading("Оновлення статусу заявки") +
-            `<div style="background:#F9FAFB;border-radius:16px;padding:20px 24px;margin-bottom:20px;">
-              <p style="font-size:13px;color:#6B7280;margin:0 0 4px;">Програма</p>
-              <p style="font-size:16px;font-weight:700;color:#0F0F0F;margin:0 0 14px;">${title}</p>
-              <p style="font-size:13px;color:#6B7280;margin:0 0 4px;">Організатор</p>
-              <p style="font-size:15px;font-weight:600;color:#0F0F0F;margin:0 0 14px;">${orgName}</p>
-              <p style="font-size:13px;color:#6B7280;margin:0 0 8px;">Новий статус</p>
-              <div style="background:${statusBg};border:1px solid ${statusBorder};border-radius:50px;display:inline-block;padding:6px 16px;">
-                <span style="color:${statusColor};font-weight:700;font-size:14px;">${statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}</span>
-              </div>
+            `<div style="background:#F9FAFB;border-radius:16px;padding:20px 24px;margin-bottom:24px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr><td style="padding-bottom:12px;">
+                  <p style="margin:0;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;">Програма</p>
+                  <p style="margin:4px 0 0;font-size:16px;font-weight:700;color:#0F0F0F;">${title}</p>
+                </td></tr>
+                <tr><td style="padding:12px 0;border-top:1px solid #E5E7EB;">
+                  <p style="margin:0;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;">Організатор</p>
+                  <p style="margin:4px 0 0;font-size:15px;font-weight:600;color:#0F0F0F;">${orgName}</p>
+                </td></tr>
+                <tr><td style="padding-top:12px;border-top:1px solid #E5E7EB;">
+                  <p style="margin:0;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;">Новий статус</p>
+                  <div style="margin-top:8px;background:${statusBg};border:1px solid ${statusBorder};border-radius:50px;display:inline-block;padding:6px 16px;">
+                    <span style="color:${statusColor};font-weight:700;font-size:14px;">${statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}</span>
+                  </div>
+                </td></tr>
+              </table>
             </div>` +
-            emailText(bodyText) +
             emailButton("Переглянути мої заявки →", `${SITE_URL}/cabinet/applications`),
-            `${emoji} Статус заявки на «${title}»`,
+            {
+              heading: EMAIL_HEADING[userStatus] ?? "Статус заявки змінено",
+              subtitle: EMAIL_SUBTITLE[userStatus],
+              preview: `${emoji} Статус заявки на «${title}»`,
+            },
           ),
         });
       } catch (e) {

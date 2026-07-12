@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { EMAIL_FROM, wrapEmailTemplate, emailHeading, emailText, emailInfoBox } from "@/lib/email-template";
+import { EMAIL_FROM, wrapEmailTemplate, emailInfoBox, emailText } from "@/lib/email-template";
 
 export async function POST(req: NextRequest) {
   const { name, email, subject, message } = await req.json() as {
@@ -24,13 +24,16 @@ export async function POST(req: NextRequest) {
       replyTo: email,
       subject: `[Контакти] ${subject} — від ${name}`,
       html: wrapEmailTemplate(
-        emailHeading("Нове повідомлення з сайту") +
         emailInfoBox(`
-          <p style="margin:0 0 6px;font-size:13px;"><strong>Від:</strong> ${name} (${email})</p>
-          <p style="margin:0;font-size:13px;"><strong>Тема:</strong> ${subject}</p>
+          <p style="margin:0 0 6px;font-size:13px;"><strong>Тема:</strong> ${subject}</p>
+          <p style="margin:0;font-size:13px;"><strong>Відповісти:</strong> <a href="mailto:${email}" style="color:#3B4FE8;">${email}</a></p>
         `) +
         emailText(message.replace(/\n/g, "<br/>")),
-        `Повідомлення від ${name}`,
+        {
+          heading: "Нове повідомлення",
+          subtitle: `Від ${name}`,
+          preview: `Повідомлення від ${name}`,
+        },
       ),
     });
 

@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
   EMAIL_FROM, SITE_URL,
-  wrapEmailTemplate, emailButton, emailHeading, emailText, emailInfoBox, emailDivider,
+  wrapEmailTemplate, emailButton, emailInfoBox, emailDivider,
 } from "@/lib/email-template";
 
 export async function POST(req: NextRequest) {
@@ -51,19 +51,21 @@ export async function POST(req: NextRequest) {
         to:   org.contact_email,
         subject: `✅ «${org.name}» верифіковано на Моживо`,
         html: wrapEmailTemplate(
-          emailHeading("Вашу організацію верифіковано! 🎉") +
-          emailText(`Вітаємо! Організація <strong>${org.name}</strong> пройшла перевірку на платформі Моживо.`) +
           emailInfoBox(`
             <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#1e3a8a;">Що тепер доступно:</p>
             <ul style="font-size:14px;color:#1e40af;margin:0;padding-left:20px;line-height:1.9;">
               <li>Публікуйте необмежену кількість програм та можливостей</li>
-              <li>Ваші програми одразу з'являються в каталозі для молоді</li>
+              <li>Ваші програми одразу з&apos;являються в каталозі для молоді</li>
               <li>Отримуйте та обробляйте заявки від учасників</li>
             </ul>`) +
           emailButton("Відкрити кабінет →", `${SITE_URL}/dashboard`) +
           emailDivider() +
-          `<p style="font-size:13px;color:#9CA3AF;margin:0;">Маєте питання? Напишіть нам: <a href="mailto:hello@mozhyvo.com.ua" style="color:#3B4FE8;">hello@mozhyvo.com.ua</a></p>`,
-          `«${org.name}» верифіковано на Моживо`,
+          `<p style="font-size:13px;color:#9CA3AF;margin:0;">Маєте питання? <a href="mailto:hello@mozhyvo.com.ua" style="color:#3B4FE8;">hello@mozhyvo.com.ua</a></p>`,
+          {
+            heading: "Організацію верифіковано!",
+            subtitle: `Вітаємо! ${org.name} пройшла перевірку на Моживо. Тепер ви можете публікувати програми для молоді.`,
+            preview: `«${org.name}» верифіковано на Моживо`,
+          },
         ),
       });
     }
@@ -74,14 +76,15 @@ export async function POST(req: NextRequest) {
         to:   org.contact_email,
         subject: `Щодо верифікації «${org.name}» на Моживо`,
         html: wrapEmailTemplate(
-          emailHeading("Результат верифікації") +
-          emailText(`На жаль, ми не змогли верифікувати організацію <strong>${org.name}</strong>.`) +
           emailInfoBox(`
             <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#92400E;">Причина відмови:</p>
             <p style="margin:0;font-size:14px;color:#78350F;">${rejectionReason}</p>`, "#FFF7ED") +
-          emailText("Якщо ви вважаєте, що сталася помилка, або хочете надати додаткові документи — напишіть нам.") +
           emailButton("Написати адміністратору", `mailto:hello@mozhyvo.com.ua`),
-          `Результат верифікації ${org.name}`,
+          {
+            heading: "Результат верифікації",
+            subtitle: `На жаль, ми не змогли верифікувати організацію ${org.name}. Якщо вважаєте, що сталася помилка — напишіть нам.`,
+            preview: `Результат верифікації ${org.name}`,
+          },
         ),
       });
     }

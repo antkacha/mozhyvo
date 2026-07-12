@@ -2,68 +2,72 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   EMAIL_FROM, SITE_URL,
-  wrapEmailTemplate, emailButton, emailHeading, emailText, emailInfoBox,
+  wrapEmailTemplate, emailButton, emailDivider, emailSectionLabel, emailFeatureRow,
 } from "@/lib/email-template";
 
 function userEmailHtml(confirmUrl: string, firstName: string): string {
   return wrapEmailTemplate(
-    emailHeading("Підтвердіть вашу пошту") +
-    emailText(`Привіт${firstName ? `, ${firstName}` : ""}! Ви зареєструвались на <strong>Моживо</strong> — платформі можливостей для молоді України.`) +
-    emailText("Натисніть кнопку нижче, щоб підтвердити email і отримати доступ до тисяч можливостей.") +
-    emailButton("Підтвердити email →", confirmUrl) +
-    emailInfoBox(`
-      <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#0F0F0F;">Що вас чекає на Моживо:</p>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:16px">🔍</span><span style="font-size:13px;color:#4B5563">Гранти, стипендії та обміни в одному місці</span></div>
-        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:16px">📋</span><span style="font-size:13px;color:#4B5563">Подавайте заявки прямо на платформі</span></div>
-        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:16px">🔔</span><span style="font-size:13px;color:#4B5563">Нагадування про дедлайни</span></div>
-      </div>`) +
-    `<p style="font-size:12px;color:#9CA3AF;margin-top:20px;">
-      Кнопка не працює? Скопіюйте це посилання у браузер:<br/>
-      <span style="color:#3B4FE8;word-break:break-all">${confirmUrl}</span>
+    emailButton("Підтвердити email →", confirmUrl, "Посилання дійсне 24 години") +
+    emailDivider() +
+    emailSectionLabel("Що вас чекає на платформі") +
+    `<table width="100%" cellpadding="0" cellspacing="0">
+      ${emailFeatureRow("🔍", "#EEF0FD", "Гранти та стипендії", "З усього світу — в одному місці")}
+      ${emailFeatureRow("🚀", "#ECFDF5", "Подача заявок онлайн", "Без зайвих реєстрацій і форм")}
+      ${emailFeatureRow("🔔", "#FFF7ED", "Нагадування про дедлайни", "Не пропустіть важливі дати")}
+    </table>` +
+    emailDivider() +
+    `<p style="font-size:12px;color:#9CA3AF;margin:0;line-height:1.8;">
+      Якщо ви не реєструвались — проігноруйте цей лист.<br/>
+      Посилання не відкривається? Скопіюйте в браузер:<br/>
+      <a href="${confirmUrl}" style="color:#3B4FE8;word-break:break-all;font-size:11px;">${confirmUrl}</a>
     </p>`,
-    "Підтвердіть вашу пошту на Моживо",
+    {
+      heading: "Підтвердіть<br/>вашу пошту",
+      subtitle: firstName
+        ? `Привіт, ${firstName}! Один клік — і ви на платформі. Тисячі можливостей для молоді України вже чекають.`
+        : "Один клік — і ви на платформі. Тисячі можливостей для молоді України вже чекають.",
+      preview: "Підтвердіть вашу пошту на Моживо",
+    },
   );
 }
 
 function orgEmailHtml(confirmUrl: string, orgName: string, isInformal: boolean): string {
-  const verificationNote = isInformal
-    ? `Після підтвердження ваш профіль потрапить на <strong>ручну перевірку</strong>. Ми зв'яжемось з вами протягом 5 робочих днів.`
-    : `Після підтвердження ваш профіль потрапить на <strong>верифікацію</strong>. Наша команда перевірить дані організації впродовж 1–3 робочих днів.`;
-
   const steps = isInformal
     ? [
-        { icon: "✅", text: "Підтвердіть email — натисніть кнопку нижче" },
-        { icon: "👀", text: "Ми переглянемо вашу заявку та соцмережі" },
-        { icon: "📬", text: "Отримаєте рішення на цей email протягом 5 днів" },
-        { icon: "🚀", text: "Після схвалення — розміщуйте активності" },
+        { icon: "✅", bg: "#ECFDF5", title: "Підтвердіть email",   sub: "Натисніть кнопку нижче" },
+        { icon: "👀", bg: "#EEF0FD", title: "Ручна перевірка",     sub: "Ми переглянемо заявку та соцмережі" },
+        { icon: "📬", bg: "#FFF7ED", title: "Рішення на email",    sub: "Протягом 5 робочих днів" },
+        { icon: "🚀", bg: "#ECFDF5", title: "Публікуйте активності", sub: "Після схвалення — одразу до роботи" },
       ]
     : [
-        { icon: "✅", text: "Підтвердіть email — натисніть кнопку нижче" },
-        { icon: "🔍", text: "Наша команда перевірить дані організації" },
-        { icon: "⏱️", text: "Верифікація займає 1–3 робочих дні" },
-        { icon: "🎉", text: "Після верифікації публікуйте програми для молоді" },
+        { icon: "✅", bg: "#ECFDF5", title: "Підтвердіть email",     sub: "Натисніть кнопку нижче" },
+        { icon: "🔍", bg: "#EEF0FD", title: "Перевірка організації", sub: "Наша команда перевірить дані" },
+        { icon: "⏱️", bg: "#FFF7ED", title: "1–3 робочих дні",      sub: "Верифікація займає небагато часу" },
+        { icon: "🎉", bg: "#ECFDF5", title: "Публікуйте програми",  sub: "Після верифікації — до роботи" },
       ];
 
+  const subtitle = isInformal
+    ? `Ви зареєстрували ${orgName} на Моживо. Після підтвердження ми розглянемо заявку протягом 5 робочих днів.`
+    : `Ви зареєстрували ${orgName} на Моживо. Після підтвердження розпочнеться верифікація — 1–3 робочих дні.`;
+
   return wrapEmailTemplate(
-    emailHeading("Підтвердіть пошту організації") +
-    emailText(`Вітаємо! Ви зареєстрували <strong>${orgName}</strong> на платформі Моживо.`) +
-    emailText(verificationNote) +
-    emailButton("Підтвердити email →", confirmUrl) +
-    emailInfoBox(`
-      <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#0F0F0F;">Що відбудеться далі:</p>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        ${steps.map(({ icon, text }) => `
-          <div style="display:flex;align-items:flex-start;gap:10px">
-            <span style="font-size:15px;margin-top:1px">${icon}</span>
-            <span style="font-size:13px;color:#4B5563;line-height:1.5">${text}</span>
-          </div>`).join("")}
-      </div>`) +
-    `<p style="font-size:12px;color:#9CA3AF;margin-top:20px;">
-      Кнопка не працює? Скопіюйте це посилання у браузер:<br/>
-      <span style="color:#3B4FE8;word-break:break-all">${confirmUrl}</span>
+    emailButton("Підтвердити email →", confirmUrl, "Посилання дійсне 24 години") +
+    emailDivider() +
+    emailSectionLabel("Що відбудеться далі") +
+    `<table width="100%" cellpadding="0" cellspacing="0">
+      ${steps.map(({ icon, bg, title, sub }) => emailFeatureRow(icon, bg, title, sub)).join("")}
+    </table>` +
+    emailDivider() +
+    `<p style="font-size:12px;color:#9CA3AF;margin:0;line-height:1.8;">
+      Якщо ви не реєструвались — проігноруйте цей лист.<br/>
+      Посилання не відкривається? Скопіюйте в браузер:<br/>
+      <a href="${confirmUrl}" style="color:#3B4FE8;word-break:break-all;font-size:11px;">${confirmUrl}</a>
     </p>`,
-    `Підтвердіть пошту — ${orgName} на Моживо`,
+    {
+      heading: "Підтвердіть пошту<br/>організації",
+      subtitle,
+      preview: `Підтвердіть пошту — ${orgName} на Моживо`,
+    },
   );
 }
 

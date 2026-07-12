@@ -1,92 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { EMAIL_FROM, SITE_URL } from "@/lib/email-template";
-
-function buildInviteEmail(orgName: string, roleLabel: string, role: string): string {
-  const accessItems =
-    role === "admin"
-      ? [
-          { icon: "📋", bg: "#EEF0FD", title: "Заявки учасників",   sub: "Переглядайте та обробляйте заявки" },
-          { icon: "🗂️", bg: "#ECFDF5", title: "Програми",           sub: "Публікуйте та редагуйте можливості" },
-          { icon: "👥", bg: "#FFF7ED", title: "Команда",             sub: "Запрошуйте колег та керуйте ролями" },
-        ]
-      : [
-          { icon: "📋", bg: "#EEF0FD", title: "Заявки учасників",   sub: "Переглядайте та обробляйте заявки" },
-          { icon: "🗂️", bg: "#ECFDF5", title: "Програми",           sub: "Доступ до проєктів організації" },
-        ];
-
-  const itemsHtml = accessItems.map(({ icon, bg, title, sub }) => `
-<tr><td style="padding-bottom:14px;">
-  <table cellpadding="0" cellspacing="0"><tr>
-    <td style="width:44px;height:44px;background:${bg};border-radius:12px;text-align:center;vertical-align:middle;font-size:20px;">${icon}</td>
-    <td style="padding-left:14px;vertical-align:middle;">
-      <p style="margin:0;font-size:14px;font-weight:700;color:#0F0F0F;">${title}</p>
-      <p style="margin:3px 0 0;font-size:13px;color:#6B7280;">${sub}</p>
-    </td>
-  </tr></table>
-</td></tr>`).join("");
-
-  return `<!DOCTYPE html>
-<html lang="uk">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-</head>
-<body style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
-<tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
-<tr><td style="border-radius:24px;overflow:hidden;box-shadow:0 4px 40px rgba(59,79,232,0.13);">
-<table width="100%" cellpadding="0" cellspacing="0">
-
-<!-- Blue header -->
-<tr><td style="background:#3B4FE8;padding:36px 44px 40px;">
-  <img src="https://lqtikyzevpjbtueajpsh.supabase.co/storage/v1/object/public/assets/mozhyvo-logo-white.png" alt="Моживо" width="180" style="display:block;width:180px;height:auto;margin-bottom:32px;"/>
-  <h1 style="margin:0 0 12px;font-size:28px;font-weight:900;color:#ffffff;line-height:1.25;">Вас запросили<br/>до команди</h1>
-  <p style="margin:0;font-size:15px;color:rgba(255,255,255,0.85);line-height:1.7;">Організація <strong style="color:#ffffff;">${orgName}</strong> додала вас<br/>як <strong style="color:#FFD600;">${roleLabel}</strong> на платформі Моживо.</p>
-</td></tr>
-
-<!-- White body -->
-<tr><td style="background:#ffffff;padding:36px 44px 44px;">
-  <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="text-align:center;padding-bottom:32px;">
-    <a href="${SITE_URL}/dashboard" style="display:inline-block;background:#3B4FE8;color:#ffffff;padding:17px 52px;border-radius:100px;font-weight:700;font-size:16px;text-decoration:none;">Перейти до дешборду →</a>
-  </td></tr></table>
-
-  <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="height:1px;background:#F3F4F6;"></td></tr></table>
-
-  <p style="font-size:11px;font-weight:700;color:#9CA3AF;margin:24px 0 16px;text-transform:uppercase;letter-spacing:0.08em;">Що вам тепер доступно</p>
-
-  <table width="100%" cellpadding="0" cellspacing="0">
-    ${itemsHtml}
-  </table>
-
-  <table width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 16px;"><tr><td style="height:1px;background:#F3F4F6;"></td></tr></table>
-  <p style="font-size:12px;color:#9CA3AF;margin:0;line-height:1.8;">
-    Маєте питання? Напишіть нам:<br/>
-    <a href="mailto:hello@mozhyvo.com.ua" style="color:#3B4FE8;">hello@mozhyvo.com.ua</a>
-  </p>
-</td></tr>
-
-</table>
-</td></tr>
-
-<!-- Footer -->
-<tr><td style="padding:24px 0 8px;text-align:center;">
-  <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px;">Моживо — платформа можливостей для молоді України</p>
-  <p style="font-size:12px;color:#9CA3AF;margin:0;">
-    <a href="${SITE_URL}" style="color:#9CA3AF;text-decoration:underline;">mozhyvo.com.ua</a>
-    &nbsp;·&nbsp;
-    <a href="mailto:hello@mozhyvo.com.ua" style="color:#9CA3AF;text-decoration:underline;">hello@mozhyvo.com.ua</a>
-  </p>
-</td></tr>
-
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
-}
+import {
+  EMAIL_FROM, SITE_URL,
+  wrapEmailTemplate, emailButton, emailDivider, emailSectionLabel, emailFeatureRow,
+} from "@/lib/email-template";
 
 export async function POST(req: NextRequest) {
   const supabase = createClient();
@@ -139,11 +57,39 @@ export async function POST(req: NextRequest) {
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
 
+      const accessRows =
+        role === "admin"
+          ? [
+              emailFeatureRow("📋", "#EEF0FD", "Заявки учасників",    "Переглядайте та обробляйте заявки"),
+              emailFeatureRow("🗂️", "#ECFDF5", "Програми",            "Публікуйте та редагуйте можливості"),
+              emailFeatureRow("👥", "#FFF7ED", "Команда",              "Запрошуйте колег та керуйте ролями"),
+            ]
+          : [
+              emailFeatureRow("📋", "#EEF0FD", "Заявки учасників",    "Переглядайте та обробляйте заявки"),
+              emailFeatureRow("🗂️", "#ECFDF5", "Програми",            "Доступ до проєктів організації"),
+            ];
+
       await resend.emails.send({
         from: EMAIL_FROM,
         to: email,
         subject: `Вас додано до команди ${org.name} на Моживо`,
-        html: buildInviteEmail(org.name, roleLabel, role),
+        html: wrapEmailTemplate(
+          emailButton("Перейти до дешборду →", `${SITE_URL}/dashboard`) +
+          emailDivider() +
+          emailSectionLabel("Що вам тепер доступно") +
+          `<table width="100%" cellpadding="0" cellspacing="0">
+            ${accessRows.join("")}
+          </table>` +
+          emailDivider() +
+          `<p style="font-size:12px;color:#9CA3AF;margin:0;line-height:1.8;">
+            Маєте питання? <a href="mailto:hello@mozhyvo.com.ua" style="color:#3B4FE8;">hello@mozhyvo.com.ua</a>
+          </p>`,
+          {
+            heading: "Вас запросили<br/>до команди",
+            subtitle: `${org.name} додала вас як ${roleLabel} на платформі Моживо.`,
+            preview: `Вас запросили до команди ${org.name}`,
+          },
+        ),
       });
     } catch (e) {
       console.error("[invite] email failed:", e);

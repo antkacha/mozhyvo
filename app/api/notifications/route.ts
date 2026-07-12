@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   EMAIL_FROM, SITE_URL,
-  wrapEmailTemplate, emailButton, emailHeading, emailText,
+  wrapEmailTemplate, emailButton,
 } from "@/lib/email-template";
 
 interface NewApplicationPayload {
@@ -28,9 +28,7 @@ type Payload = NewApplicationPayload | DailyDigestPayload;
 
 function newApplicationHtml(p: NewApplicationPayload): string {
   return wrapEmailTemplate(
-    emailHeading("Нова заявка на програму") +
-    emailText(`Вітаємо, <strong>${p.orgName}</strong>! Ви отримали нову заявку на проєкт <strong>${p.projectTitle}</strong>.`) +
-    `<div style="background:#F9FAFB;border-radius:16px;padding:20px 24px;margin:20px 0;">
+    `<div style="background:#F9FAFB;border-radius:16px;padding:20px 24px;margin-bottom:24px;">
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="padding-bottom:12px;">
           <p style="margin:0;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;">Кандидат</p>
@@ -47,7 +45,11 @@ function newApplicationHtml(p: NewApplicationPayload): string {
       </table>
     </div>` +
     emailButton("Переглянути заявку →", `${SITE_URL}/dashboard/applications`),
-    `Нова заявка від ${p.applicantName}`,
+    {
+      heading: "Нова заявка",
+      subtitle: `«${p.projectTitle}» · від ${p.applicantName}`,
+      preview: `Нова заявка від ${p.applicantName}`,
+    },
   );
 }
 
@@ -65,9 +67,7 @@ function dailyDigestHtml(p: DailyDigestPayload): string {
   const date = new Date().toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric" });
 
   return wrapEmailTemplate(
-    emailHeading(`Щоденний дайджест — ${date}`) +
-    emailText(`Вітаємо, <strong>${p.orgName}</strong>! Ось ваша зведена статистика за сьогодні.`) +
-    `<div style="background:#EEF0FD;border-radius:16px;padding:24px;text-align:center;margin:20px 0;">
+    `<div style="background:#EEF0FD;border-radius:16px;padding:24px;text-align:center;margin-bottom:24px;">
       <p style="margin:0;font-size:42px;font-weight:900;color:#3B4FE8;">${p.totalNew}</p>
       <p style="margin:6px 0 0;font-size:13px;color:#6B7280;">нових заявок за сьогодні</p>
     </div>` +
@@ -82,7 +82,11 @@ function dailyDigestHtml(p: DailyDigestPayload): string {
       <tbody>${rows}</tbody>
     </table>` : "") +
     emailButton("Відкрити заявки →", `${SITE_URL}/dashboard/applications`),
-    `Дайджест Моживо — ${p.totalNew} нових заявок`,
+    {
+      heading: "Щоденний дайджест",
+      subtitle: `${p.orgName} · ${date}`,
+      preview: `Дайджест Моживо — ${p.totalNew} нових заявок`,
+    },
   );
 }
 

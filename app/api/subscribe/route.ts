@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   EMAIL_FROM, SITE_URL,
-  wrapEmailTemplate, emailButton, emailHeading, emailText, emailInfoBox,
+  wrapEmailTemplate, emailButton, emailDivider, emailSectionLabel, emailFeatureRow,
 } from "@/lib/email-template";
 
 export async function POST(req: NextRequest) {
@@ -22,16 +22,19 @@ export async function POST(req: NextRequest) {
         to:      email,
         subject: "Ти підписався на Моживо 🎉",
         html: wrapEmailTemplate(
-          emailHeading(`Дякуємо за підписку${firstName ? `, ${firstName}` : ""}! 🎉`) +
-          emailText("Тепер ти будеш першим дізнаватись про нові гранти, стипендії та обміни для молоді України.") +
-          emailInfoBox(`
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">🔍</span><span style="font-size:14px;color:#1e40af;">Гранти та стипендії з усього світу</span></div>
-              <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">🏛</span><span style="font-size:14px;color:#1e40af;">Обміни та волонтерські програми</span></div>
-              <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">🔔</span><span style="font-size:14px;color:#1e40af;">Нагадування про дедлайни</span></div>
-            </div>`) +
-          emailButton("Переглянути можливості →", `${SITE_URL}/opportunities`),
-          "Ти підписався на розсилку Моживо",
+          emailButton("Переглянути можливості →", `${SITE_URL}/opportunities`) +
+          emailDivider() +
+          emailSectionLabel("Що тебе чекає") +
+          `<table width="100%" cellpadding="0" cellspacing="0">
+            ${emailFeatureRow("🔍", "#EEF0FD", "Гранти та стипендії", "З усього світу — в одному місці")}
+            ${emailFeatureRow("🏛", "#ECFDF5", "Обміни та волонтерство", "Програми для молоді України")}
+            ${emailFeatureRow("🔔", "#FFF7ED", "Нагадування про дедлайни", "Не пропустіть важливі дати")}
+          </table>`,
+          {
+            heading: firstName ? `Дякуємо, ${firstName}!` : "Дякуємо за підписку!",
+            subtitle: "Тепер ти будеш першим дізнаватись про нові гранти, стипендії та обміни для молоді України.",
+            preview: "Ти підписався на розсилку Моживо",
+          },
         ),
       });
     }
