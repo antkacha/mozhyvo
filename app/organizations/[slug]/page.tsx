@@ -162,6 +162,18 @@ type SupabaseProject = {
   status: string; short_description: string | null;
 };
 
+const TYPE_LABELS: Record<string, string> = {
+  exchange:    "Обмін",
+  grant:       "Грант",
+  internship:  "Стажування",
+  volunteer:   "Волонтерство",
+  conference:  "Конференція",
+  competition: "Конкурс",
+  hackathon:   "Хакатон",
+  training:    "Тренінг",
+  custom:      "Інше",
+};
+
 function DynamicOrgPage({
   org,
   active,
@@ -328,7 +340,7 @@ function DynamicOrgPage({
                 <Link key={p.id} href={`/opportunities/${p.id}`}
                   className="bg-white rounded-2xl border border-border p-5 hover:shadow-md hover:border-primary/30 transition-all group">
                   <div className="flex items-start justify-between gap-3 mb-3">
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-light text-primary">{p.type}</span>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-light text-primary">{TYPE_LABELS[p.type] ?? p.type}</span>
                     {p.deadline && <span className="text-xs text-muted">{p.deadline}</span>}
                   </div>
                   <h3 className="font-bold text-foreground text-sm leading-snug mb-2 group-hover:text-primary transition-colors">{p.title}</h3>
