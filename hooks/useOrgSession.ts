@@ -118,77 +118,93 @@ export function useOrgSession() {
   }, []);
 
   const load = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setCache(null, true); return; }
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setCache(null, true); return; }
 
-    const { data } = await supabase
-      .from("orgs")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (data) { setCache(fromRow(data as Record<string, unknown>), true, "owner"); return; }
-
-    // First login after email confirmation — bootstrap org from auth metadata
-    const meta = user.user_metadata ?? {};
-    if ((meta.role === "org" || meta.role === "coordinator") && meta.org_name) {
-      const orgName = meta.org_name as string;
-      const baseSlug = slugify(orgName);
-      const uniqueSlug = `${baseSlug}-${user.id.slice(0, 6)}`;
-
-      const orgFormat = (meta.org_format as string) ?? "official";
-      const socials: Record<string, string> = {};
-      if (meta.org_instagram) socials.instagram = `https://instagram.com/${meta.org_instagram}`;
-      if (meta.org_telegram)  socials.telegram  = `https://t.me/${meta.org_telegram}`;
-      if (meta.org_facebook)  socials.facebook  = `https://facebook.com/${meta.org_facebook}`;
-
-      const { data: created } = await supabase
+      const { data } = await supabase
         .from("orgs")
-        .insert({
-          user_id:             user.id,
-          name:                orgName,
-          slug:                uniqueSlug,
-          type:                (meta.org_type as string) ?? "",
-          country:             (meta.org_country as string) ?? "",
-          city:                (meta.org_city as string) ?? "",
-          website:             (meta.org_website as string) ?? "",
-          contact_email:       user.email ?? "",
-          description:         (meta.org_description as string) ?? "",
-          org_format:          orgFormat,
-          registration_number: (meta.org_registration_number as string) ?? "",
-          socials:             Object.keys(socials).length > 0 ? socials : {},
-          status:              "pending",
-        })
-        .select()
-        .single();
-
-      await supabase
-        .from("profiles")
-        .upsert({ id: user.id, role: "org" }, { onConflict: "id" });
-
-      setCache(created ? fromRow(created as Record<string, unknown>) : null, true, "owner");
-    } else {
-      // Check if this user was invited as a team member
-      const { data: membership } = await supabase
-        .from("org_members")
-        .select("org_id, role")
+        .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (membership) {
-        const { data: orgData } = await supabase
+      if (data) { setCache(fromRow(data as Record<string, unknown>), true, "owner"); return; }
+
+      // First login after email confirmation — bootstrap org from auth metadata
+      const meta = user.user_metadata ?? {};
+      if ((meta.role === "org" || meta.role === "coordinator") && meta.org_name) {
+        const orgName = meta.org_name as string;
+        const baseSlug = slugify(orgName);
+        const uniqueSlug = `${baseSlug}-${user.id.slice(0, 6)}`;
+
+        const orgFormat = (meta.org_format as string) ?? "official";
+        const socials: Record<string, string> = {};
+        if (meta.org_instagram) socials.instagram = `https://instagram.com/${meta.org_instagram}`;
+        if (meta.org_telegram)  socials.telegram  = `https://t.me/${meta.org_telegram}`;
+        if (meta.org_facebook)  socials.facebook  = `https://facebook.com/${meta.org_facebook}`;
+
+        const { data: created, error: insertError } = await supabase
           .from("orgs")
-          .select("*")
-          .eq("id", membership.org_id)
+          .insert({
+            user_id:             user.id,
+            name:                orgName,
+            slug:                uniqueSlug,
+            type:                (meta.org_type as string) ?? "",
+            country:             (meta.org_country as string) ?? "",
+            city:                (meta.org_city as string) ?? "",
+            website:             (meta.org_website as string) ?? "",
+            contact_email:       user.email ?? "",
+            description:         (meta.org_description as string) ?? "",
+            org_format:          orgFormat,
+            registration_number: (meta.org_registration_number as string) ?? "",
+            socials:             Object.keys(socials).length > 0 ? socials : {},
+            status:              "pending",
+          })
+          .select()
           .single();
 
-        if (orgData) {
-          setCache(fromRow(orgData as Record<string, unknown>), true, membership.role as "admin" | "reviewer");
+        // If insert failed due to duplicate (race condition), re-fetch
+        if (insertError && !created) {
+          const { data: existing } = await supabase
+            .from("orgs")
+            .select("*")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          setCache(existing ? fromRow(existing as Record<string, unknown>) : null, true, "owner");
           return;
         }
-      }
 
-      setCache(null, true, null);
+        await supabase
+          .from("profiles")
+          .upsert({ id: user.id, role: "org" }, { onConflict: "id" });
+
+        setCache(created ? fromRow(created as Record<string, unknown>) : null, true, "owner");
+      } else {
+        // Check if this user was invited as a team member
+        const { data: membership } = await supabase
+          .from("org_members")
+          .select("org_id, role")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (membership) {
+          const { data: orgData } = await supabase
+            .from("orgs")
+            .select("*")
+            .eq("id", membership.org_id)
+            .single();
+
+          if (orgData) {
+            setCache(fromRow(orgData as Record<string, unknown>), true, membership.role as "admin" | "reviewer");
+            return;
+          }
+        }
+
+        setCache(null, true, null);
+      }
+    } catch (err) {
+      console.error("[useOrgSession] load error:", err);
+      setCache(null, true);
     }
   }, [supabase, setCache]);
 

@@ -285,11 +285,9 @@ export default function OrgShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready || org) return;
-    // Only redirect to /login if the user truly has no session.
-    // If they are authenticated but org is missing, stay and retry —
-    // the org row may still be bootstrapping (first login after email confirm).
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) router.replace("/login");
+      else router.replace("/cabinet");
     });
   }, [ready, org, router, supabase]);
 
