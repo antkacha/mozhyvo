@@ -21,21 +21,29 @@ export default function Home() {
     <>
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section className="bg-white relative overflow-hidden min-h-[90vh] flex items-center">
-        {/* Concentric arc decorations */}
+        {/* Diagonal brush strokes + spiral */}
         <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-          {/* Top-right arcs */}
-          <svg className="absolute top-0 right-0" width="500" height="500" viewBox="0 0 500 500" fill="none">
-            <circle cx="500" cy="0" r="170" stroke="#3B4FE8" strokeWidth="1.5" opacity="0.13"/>
-            <circle cx="500" cy="0" r="240" stroke="#3B4FE8" strokeWidth="1.5" opacity="0.09"/>
-            <circle cx="500" cy="0" r="310" stroke="#3B4FE8" strokeWidth="1.5" opacity="0.07"/>
-            <circle cx="500" cy="0" r="380" stroke="#3B4FE8" strokeWidth="1"   opacity="0.05"/>
-            <circle cx="500" cy="0" r="450" stroke="#3B4FE8" strokeWidth="1"   opacity="0.04"/>
+          {/* 3 diagonal strokes — top right, like //// pattern */}
+          <svg className="absolute -top-8 -right-8" width="460" height="460" viewBox="0 0 460 460" fill="none">
+            <path
+              d="M80,440 C160,320 260,200 400,30"
+              stroke="#3B4FE8" strokeWidth="38" strokeLinecap="round" opacity="0.07"
+            />
+            <path
+              d="M160,460 C240,340 340,220 480,50"
+              stroke="#3B4FE8" strokeWidth="38" strokeLinecap="round" opacity="0.055"
+            />
+            <path
+              d="M240,480 C320,360 420,240 560,70"
+              stroke="#3B4FE8" strokeWidth="38" strokeLinecap="round" opacity="0.04"
+            />
           </svg>
-          {/* Bottom-left arcs */}
-          <svg className="absolute bottom-0 left-0" width="340" height="340" viewBox="0 0 340 340" fill="none">
-            <circle cx="0" cy="340" r="160" stroke="#3B4FE8" strokeWidth="1.5" opacity="0.09"/>
-            <circle cx="0" cy="340" r="240" stroke="#3B4FE8" strokeWidth="1"   opacity="0.06"/>
-            <circle cx="0" cy="340" r="320" stroke="#3B4FE8" strokeWidth="1"   opacity="0.04"/>
+          {/* Spiral — bottom left */}
+          <svg className="absolute -bottom-4 -left-4" width="180" height="180" viewBox="0 0 180 180" fill="none">
+            <path
+              d="M90,22 C136,22 158,62 145,98 C132,136 90,150 56,136 C18,120 8,76 30,46 C48,22 78,18 96,32 C114,46 116,74 100,88"
+              stroke="#3B4FE8" strokeWidth="18" strokeLinecap="round" fill="none" opacity="0.07"
+            />
           </svg>
         </div>
 
