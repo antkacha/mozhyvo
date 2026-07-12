@@ -21,39 +21,21 @@ export default function Home() {
     <>
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section className="bg-white relative overflow-hidden min-h-[90vh] flex items-center">
-        {/* Blue paint stroke decorations */}
+        {/* Concentric arc decorations */}
         <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-          {/* Top-right brush stroke — thick SVG stroke = real paint brush */}
-          <svg
-            className="absolute -top-10 -right-24 opacity-[0.075]"
-            width="680"
-            height="260"
-            viewBox="0 0 680 260"
-            fill="none"
-          >
-            <path
-              d="M60,160 C180,80 360,110 520,70 C610,46 670,90 700,72"
-              stroke="#3B4FE8"
-              strokeWidth="100"
-              strokeLinecap="round"
-              fill="none"
-            />
+          {/* Top-right arcs */}
+          <svg className="absolute top-0 right-0" width="500" height="500" viewBox="0 0 500 500" fill="none">
+            <circle cx="500" cy="0" r="170" stroke="#3B4FE8" strokeWidth="1.5" opacity="0.13"/>
+            <circle cx="500" cy="0" r="240" stroke="#3B4FE8" strokeWidth="1.5" opacity="0.09"/>
+            <circle cx="500" cy="0" r="310" stroke="#3B4FE8" strokeWidth="1.5" opacity="0.07"/>
+            <circle cx="500" cy="0" r="380" stroke="#3B4FE8" strokeWidth="1"   opacity="0.05"/>
+            <circle cx="500" cy="0" r="450" stroke="#3B4FE8" strokeWidth="1"   opacity="0.04"/>
           </svg>
-          {/* Bottom-left wave stroke */}
-          <svg
-            className="absolute -bottom-12 -left-24 opacity-[0.065]"
-            width="700"
-            height="260"
-            viewBox="0 0 700 260"
-            fill="none"
-          >
-            <path
-              d="M-10,100 C140,40 320,85 490,52 C600,30 665,75 710,58"
-              stroke="#3B4FE8"
-              strokeWidth="110"
-              strokeLinecap="round"
-              fill="none"
-            />
+          {/* Bottom-left arcs */}
+          <svg className="absolute bottom-0 left-0" width="340" height="340" viewBox="0 0 340 340" fill="none">
+            <circle cx="0" cy="340" r="160" stroke="#3B4FE8" strokeWidth="1.5" opacity="0.09"/>
+            <circle cx="0" cy="340" r="240" stroke="#3B4FE8" strokeWidth="1"   opacity="0.06"/>
+            <circle cx="0" cy="340" r="320" stroke="#3B4FE8" strokeWidth="1"   opacity="0.04"/>
           </svg>
         </div>
 
