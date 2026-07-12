@@ -82,6 +82,7 @@ function AnalyticsContent() {
       return {
         id: p.id,
         title: p.title,
+        views: p.views ?? 0,
         total: apps.length,
         selected: apps.filter((a) => a.status === "selected").length,
         reviewing: apps.filter((a) => a.status === "reviewing").length,
@@ -100,6 +101,7 @@ function AnalyticsContent() {
       .slice(0, 5);
   }, [applications]);
 
+  const totalViews = projects.reduce((sum, p) => sum + (p.views ?? 0), 0);
   const totalSelected = applications.filter((a) => a.status === "selected").length;
   const totalReviewing = applications.filter((a) => a.status === "reviewing").length;
   const convRate = applications.length > 0 ? Math.round((totalSelected / applications.length) * 100) : 0;
@@ -124,8 +126,8 @@ function AnalyticsContent() {
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Переглядів" value={totalViews} />
         <StatCard label="Всього заявок" value={applications.length} delta={last7 > 0 ? `+${last7} за 7 днів` : undefined} />
-        <StatCard label="На розгляді" value={totalReviewing} />
         <StatCard label="Відібрано" value={totalSelected} />
         <StatCard label="Конверсія" value={`${convRate}%`} />
       </div>
@@ -222,7 +224,7 @@ function AnalyticsContent() {
           <table className="w-full">
             <thead className="bg-muted-bg">
               <tr>
-                {["Проєкт", "Заявок", "На розгляді", "Відібрано", "Конверсія"].map((h) => (
+                {["Проєкт", "Переглядів", "Заявок", "На розгляді", "Відібрано", "Конверсія"].map((h) => (
                   <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold text-muted uppercase tracking-wider first:font-semibold">{h}</th>
                 ))}
               </tr>
@@ -234,6 +236,9 @@ function AnalyticsContent() {
                     <a href={`/dashboard/projects/${p.id}`} className="text-sm font-semibold text-foreground hover:text-primary transition-colors line-clamp-1">
                       {p.title}
                     </a>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <span className="text-sm text-muted">{p.views}</span>
                   </td>
                   <td className="px-5 py-3.5">
                     <span className="text-sm font-bold text-foreground">{p.total}</span>

@@ -6,6 +6,7 @@ import { opportunities, typeColors, formatLabels, type Opportunity } from "@/lib
 import { orgNameToSlug } from "@/lib/organizations";
 import OpportunityClient from "@/components/OpportunityClient";
 import { createAdminClient } from "@/lib/supabase/admin";
+import ViewTracker from "./ViewTracker";
 
 export function generateStaticParams() {
   return opportunities.map((o) => ({ slug: o.slug }));
@@ -51,6 +52,7 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
       applyUrl:         (data.external_apply_url as string) || `/opportunities/${data.id}/apply`,
       duration:         (data.duration as string) ?? "",
       infoPackUrl:      (data.info_pack_url as string) || undefined,
+      projectId:        data.id as string,
     };
   } catch {
     return null;
@@ -127,6 +129,7 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
 
   return (
     <>
+      {opp.projectId && <ViewTracker projectId={opp.projectId} />}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
