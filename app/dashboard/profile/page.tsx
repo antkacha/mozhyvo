@@ -236,6 +236,31 @@ function ProfileContent() {
     socials:      (org?.socials     ?? {}) as Record<string, string>,
   });
 
+  // Sync form when org first loads (handles cache-miss on initial mount)
+  const formInitRef = useRef(false);
+  useEffect(() => {
+    if (org && !formInitRef.current) {
+      formInitRef.current = true;
+      setForm({
+        name:         org.name         ?? "",
+        type:         org.type         ?? "",
+        country:      org.country      ?? "",
+        city:         org.city         ?? "",
+        founded:      org.founded      ?? "",
+        website:      org.website      ?? "",
+        contactEmail: org.contactEmail ?? "",
+        description:  org.description  ?? "",
+        mission:      org.mission      ?? "",
+        logo:         org.logo         ?? null,
+        coverImage:   org.coverImage   ?? null,
+        coverVideo:   org.coverVideo   ?? null,
+        brandColor:   org.brandColor   ?? "#3B4FE8",
+        focusAreas:   org.focusAreas   ?? [],
+        socials:      (org.socials     ?? {}) as Record<string, string>,
+      });
+    }
+  }, [org]);
+
   // Must be before conditional return (Rules of Hooks)
   const handleCoverApply = useCallback((result: CoverResult) => {
     if (result.kind === "image") {

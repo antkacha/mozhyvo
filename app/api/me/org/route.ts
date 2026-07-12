@@ -87,13 +87,33 @@ export async function PATCH(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json() as Record<string, unknown>;
   const admin = createAdminClient();
 
+  // Resolve the org ID for this user (owner or member)
+  let orgId: string | null = null;
+  const { data: ownedOrg } = await admin
+    .from("orgs")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (ownedOrg) {
+    orgId = ownedOrg.id;
+  } else {
+    const { data: membership } = await admin
+      .from("org_members")
+      .select("org_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    orgId = membership?.org_id ?? null;
+  }
+
+  if (!orgId) return NextResponse.json({ error: "No org found" }, { status: 404 });
+
+  const body = await req.json() as Record<string, unknown>;
   const { error } = await admin
     .from("orgs")
     .update(body)
-    .eq("user_id", user.id);
+    .eq("id", orgId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
