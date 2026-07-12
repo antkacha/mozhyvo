@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   EMAIL_FROM, SITE_URL,
-  wrapEmailTemplate, emailButton, emailHeading, emailText, emailInfoBox,
+  wrapEmailTemplate, emailButton, emailHeading, emailText, emailInfoBox, emailDivider,
 } from "@/lib/email-template";
 
 export async function POST(req: NextRequest) {
@@ -57,19 +57,47 @@ export async function POST(req: NextRequest) {
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
 
+      const accessItems = role === "admin"
+        ? [
+            { icon: "📋", text: "Переглядайте та обробляйте заявки учасників" },
+            { icon: "🗂️", text: "Публікуйте та редагуйте програми організації" },
+            { icon: "👥", text: "Керуйте командою та запрошуйте колег" },
+          ]
+        : [
+            { icon: "📋", text: "Переглядайте та обробляйте заявки учасників" },
+            { icon: "🗂️", text: "Доступ до програм та проєктів організації" },
+          ];
+
       await resend.emails.send({
         from: EMAIL_FROM,
         to: email,
         subject: `Вас додано до команди ${org.name} на Моживо`,
         html: wrapEmailTemplate(
-          emailHeading("Вас додано до команди 🎉") +
-          emailText(`<strong>${org.name}</strong> додала вас як <strong>${roleLabel}</strong> на Моживо.`) +
-          emailText("Тепер у вас є доступ до дешборду організації — ви можете переглядати заявки та проєкти.") +
+          emailHeading("Вас запросили до команди") +
+          emailText(`Організація <strong>${org.name}</strong> додала вас на Моживо як <strong>${roleLabel}</strong>.`) +
           emailInfoBox(`
-            <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#1e3a8a;">Ваша роль: ${roleLabel}</p>
-            <p style="margin:0;font-size:13px;color:#1e40af;">Організація: ${org.name}</p>`) +
-          emailButton("Перейти до дешборду →", `${SITE_URL}/dashboard`),
-          `Вас додано до команди ${org.name}`,
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <div style="width:40px;height:40px;background:#3B4FE8;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span style="color:#fff;font-weight:900;font-size:16px;">М</span>
+              </div>
+              <div>
+                <p style="margin:0;font-size:15px;font-weight:700;color:#0F0F0F;">${org.name}</p>
+                <p style="margin:0;font-size:13px;color:#4B5563;">Ваша роль: <strong style="color:#3B4FE8;">${roleLabel}</strong></p>
+              </div>
+            </div>
+            <div style="height:1px;background:#C7D0FB;margin:0 0 14px;"></div>
+            <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#1e3a8a;">Що тепер доступно:</p>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              ${accessItems.map(({ icon, text }) => `
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="font-size:15px;">${icon}</span>
+                  <span style="font-size:13px;color:#1e40af;">${text}</span>
+                </div>`).join("")}
+            </div>`) +
+          emailButton("Перейти до дешборду →", `${SITE_URL}/dashboard`) +
+          emailDivider() +
+          `<p style="font-size:13px;color:#9CA3AF;margin:0;">Маєте питання? Напишіть нам: <a href="mailto:hello@mozhyvo.com.ua" style="color:#3B4FE8;">hello@mozhyvo.com.ua</a></p>`,
+          `Вас запросили до команди ${org.name}`,
         ),
       });
     } catch (e) {
