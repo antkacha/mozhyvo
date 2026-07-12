@@ -2,12 +2,14 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { orgsBySlug, orgNameToSlug } from "@/lib/organizations";
 import { opportunities } from "@/lib/data";
 import OpportunityCard from "@/components/OpportunityCard";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 // ── Social icons ──────────────────────────────────────────────────────────────
 const socialIcons: Record<string, { label: string; icon: React.ReactNode; bg: string }> = {
@@ -355,6 +357,7 @@ function DynamicOrgPage({ org, projects }: { org: SupabaseOrg; projects: Supabas
 
 // ── Route handler ─────────────────────────────────────────────────────────────
 export default async function OrgProfilePage({ params }: { params: { slug: string } }) {
+  noStore(); // Opt out of Next.js data cache entirely for this render
   const { slug } = params;
 
   // 1. Try static org
