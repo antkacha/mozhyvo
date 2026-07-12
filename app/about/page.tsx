@@ -9,25 +9,12 @@ export const metadata: Metadata = {
     "Знайомся з командою Моживо — платформою, що зібрала гранти, стажування та обміни для молоді України в одному місці.",
 };
 
+const marqueeItems = ["СТИПЕНДІЇ", "СТАЖУВАННЯ", "ОБМІНИ", "ВОЛОНТЕРСТВО", "ГРАНТИ", "КОНКУРСИ"];
+
 const stats = [
-  {
-    icon: "📡",
-    num: "100+",
-    title: "Сотні джерел",
-    desc: "Ми агрегуємо можливості з десятків платформ",
-  },
-  {
-    icon: "⏱️",
-    num: "~5 год",
-    title: "Економія часу",
-    desc: "Не треба шукати — можливості самі знаходять тебе",
-  },
-  {
-    icon: "🔒",
-    num: "100%",
-    title: "Тільки перевірене",
-    desc: "Жодних сумнівних програм — тільки верифіковані організації",
-  },
+  { num: "100+", label: "джерел", desc: "Агрегуємо можливості з десятків платформ і сайтів" },
+  { num: "~5 год", label: "економії на тиждень", desc: "Не треба шукати — можливості знаходять тебе" },
+  { num: "100%", label: "верифіковано", desc: "Тільки перевірені організації та програми" },
 ];
 
 const founders = [
@@ -39,7 +26,7 @@ const founders = [
     bio: [
       "20 років, студентка-айтішниця та просто людина, яка дуже любить можливості.",
       "Брала участь у 9 міжнародних обмінах, навчалася безкоштовно в Хорватії — і зовсім скоро вирушає на нове навчання у Францію. Official Member of EYP Ukraine 2026.",
-      "Організувала івент «Міжнародні можливості для молоді», який зібрав 100+ учасників. Саме тоді зрозуміла: людям потрібна не лекція, а зручний інструмент. Так з’явилось Моживо.",
+      "Організувала івент «Міжнародні можливості для молоді», який зібрав 100+ учасників. Саме тоді зрозуміла: людям потрібна не лекція, а зручний інструмент. Так з'явилось Моживо.",
     ],
   },
   {
@@ -49,7 +36,7 @@ const founders = [
     photo: "/founders/lilya.jpg",
     bio: [
       "19 років, громадська діячка та людина, яка на власному досвіді переконалася, що міжнародні можливості доступні кожному.",
-      "Перша українка, яка увійшла до топ-10 світового міжнародного бізнес-конкурсу HCGCC’2024. Працюючи над кейсами для таких компаній, як Disney та OURA, вона переконалася, що подібний досвід є реальним і досяжним для кожного, хто готовий до змін.",
+      "Перша українка, яка увійшла до топ-10 світового міжнародного бізнес-конкурсу HCGCC'2024. Працюючи над кейсами для таких компаній, як Disney та OURA, вона переконалася, що подібний досвід є реальним і досяжним для кожного, хто готовий до змін.",
       "Має досвід участі у понад 10 міжнародних проєктах. Саме тому ціль — допомогти іншим дізнатися про можливості, які ти зможеш використати вже сьогодні.",
     ],
   },
@@ -71,62 +58,115 @@ const quotes = [
 export default function AboutPage() {
   return (
     <>
-      {/* ── Section 1: Hero ─────────────────────────────────────────── */}
-      <section className="bg-white min-h-[70vh] flex items-center">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 w-full">
-          <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-16">
+      {/* ── Hero — blue ──────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-primary">
+        {/* Dot grid */}
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none opacity-[0.07]"
+          style={{
+            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+        {/* Glow */}
+        <div
+          aria-hidden
+          className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full pointer-events-none opacity-20"
+          style={{ background: "radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 65%)" }}
+        />
 
-            {/* Left: text */}
-            <div className="md:w-1/2 flex flex-col gap-6">
-              <div className="inline-flex items-center gap-2 self-start px-4 py-1.5 rounded-full border border-primary/25 bg-white text-primary text-xs font-semibold shadow-sm">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+            {/* Left */}
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 text-white text-xs font-semibold mb-8">
                 <span>✦</span>
                 Наша історія
               </div>
 
-              <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-[1.1]">
-                Ми віримо, що кожен українець заслуговує знати про свої можливості
+              <h1 className="text-5xl md:text-6xl font-black text-white leading-[1.0] mb-6">
+                Ми віримо, що кожен{" "}
+                <span className="relative inline-block">
+                  українець
+                  <span className="absolute -bottom-1 left-0 right-0 h-[4px] bg-white/50 rounded-full" />
+                </span>{" "}
+                заслуговує знати про свої можливості
               </h1>
 
-              <p className="text-gray-500 text-lg leading-relaxed">
+              <p className="text-white/65 text-lg leading-relaxed max-w-lg">
                 Моживо — це платформа, яка зібрала гранти, стажування, обміни та
                 волонтерство в одному місці. Ми зробили це, бо самі шукали ці
                 можливості і знаємо, як це складно.
               </p>
             </div>
 
-            {/* Right: auto-sliding photo gallery (desktop only) */}
-            <div className="hidden md:block md:w-1/2">
+            {/* Right: photo gallery */}
+            <div className="hidden lg:block">
               <HeroSlider />
             </div>
 
           </div>
+
+          {/* Stats row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px mt-16 bg-white/10 rounded-3xl overflow-hidden">
+            {stats.map((s) => (
+              <div key={s.num} className="bg-primary px-8 py-7">
+                <p className="text-4xl font-black text-white leading-none mb-1">{s.num}</p>
+                <p className="text-white/50 text-xs font-bold tracking-widest uppercase mb-2">{s.label}</p>
+                <p className="text-white/55 text-sm leading-snug">{s.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── Section 2: Problem we solve ─────────────────────────────── */}
-      <section style={{ backgroundColor: "#F7F8FF" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      {/* ── Marquee ──────────────────────────────────────────────────── */}
+      <div className="bg-primary py-4 overflow-hidden border-t border-white/10">
+        <div className="flex animate-marquee whitespace-nowrap w-max">
+          {[0, 1].map((i) => (
+            <div key={i} className="flex items-center flex-none">
+              {marqueeItems.map((item) => (
+                <span key={`${i}-${item}`} className="inline-flex items-center gap-6 text-xs font-bold tracking-[0.2em] text-white/55 px-6">
+                  {item}
+                  <span className="text-white/30 font-black">·</span>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Problem section — white ───────────────────────────────────── */}
+      <section className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
 
             {/* Left: bold statement */}
             <div>
-              <p className="text-2xl md:text-3xl font-black text-gray-900 leading-snug">
-                Раніше потрібно було моніторити десятки Telegram-каналів,
-                Facebook-груп і сайтів щодня.{" "}
+              <p className="text-white/50 text-xs font-bold tracking-widest uppercase text-primary/50 mb-6">Проблема</p>
+              <p className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.05]">
+                Раніше потрібно було моніторити десятки каналів щодня.{" "}
                 <span className="text-primary">Більшість просто здавалась.</span>
+              </p>
+              <p className="text-gray-500 text-lg leading-relaxed mt-6">
+                Telegram-канали, Facebook-групи, сайти організацій — інформація була розкидана скрізь. Ми самі через це пройшли і вирішили зробити щось із цим.
               </p>
             </div>
 
-            {/* Right: stat rows */}
-            <div className="divide-y divide-gray-200">
-              {stats.map((s) => (
-                <div key={s.title} className="flex items-center gap-4 py-6 first:pt-0 last:pb-0">
-                  <span className="text-2xl flex-shrink-0">{s.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900">{s.title}</p>
-                    <p className="text-gray-500 text-sm mt-0.5">{s.desc}</p>
+            {/* Right: stats with dividers */}
+            <div className="divide-y divide-gray-100">
+              {stats.map((s, idx) => (
+                <div key={s.num} className="relative flex items-start gap-6 py-7 first:pt-0 last:pb-0 group">
+                  {/* Background number */}
+                  <span className="absolute -top-2 right-0 text-[64px] font-black text-gray-50 leading-none select-none group-hover:text-primary/5 transition-colors">
+                    0{idx + 1}
+                  </span>
+                  <p className="text-4xl font-black text-primary leading-none flex-shrink-0 w-24">{s.num}</p>
+                  <div className="relative z-10">
+                    <p className="font-black text-gray-900 text-base">{s.desc}</p>
                   </div>
-                  <p className="text-2xl font-black text-primary flex-shrink-0 ml-4">{s.num}</p>
                 </div>
               ))}
             </div>
@@ -135,80 +175,96 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── Section 3: Founders ─────────────────────────────────────── */}
-      <section className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="mb-12">
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.05]">
-              Хто ми?
-            </h2>
-            <p className="text-gray-500 text-base mt-3">
-              Двоє, які вирішили змінити те, що їх самих колись дратувало
-            </p>
-          </div>
+      {/* ── Blue statement strip ──────────────────────────────────────── */}
+      <section className="bg-primary py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-2xl md:text-3xl font-black text-white/80 leading-snug">
+            ✦ Моживо — це не просто агрегатор. Це{" "}
+            <span className="text-white">інструмент,</span>{" "}
+            який дає молодим українцям реальний доступ до можливостей світового рівня.
+          </p>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* ── Founders — #F7F8FF ───────────────────────────────────────── */}
+      <section style={{ backgroundColor: "#F7F8FF" }} className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          <h2 className="text-5xl md:text-6xl font-black text-gray-900 leading-[1.0] mb-3">
+            Хто{" "}
+            <span className="text-primary">ми?</span>
+          </h2>
+          <p className="text-gray-500 text-lg mb-12">
+            Двоє, які вирішили змінити те, що їх самих колись дратувало
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {founders.map((f) => (
-              <div key={f.num} className="flex flex-col sm:flex-row gap-6 p-6 rounded-2xl border border-gray-100 shadow-sm">
+              <div key={f.num} className="relative bg-white rounded-3xl p-8 border border-gray-100 shadow-sm overflow-hidden">
+                {/* Background number */}
+                <span className="absolute -bottom-3 -right-2 text-[90px] font-black text-gray-50 leading-none select-none">
+                  {f.num}
+                </span>
 
-                {/* Photo */}
-                <div className="w-32 h-32 rounded-3xl overflow-hidden flex-shrink-0 bg-indigo-50 self-start">
-                  <FounderImage src={f.photo} alt={f.name} />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-xs font-mono font-bold text-gray-300">{f.num}</span>
-                    <h3 className="text-xl font-bold text-gray-900">{f.name}</h3>
+                {/* Photo + name row */}
+                <div className="flex items-center gap-5 mb-6 relative z-10">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-primary-light">
+                    <FounderImage src={f.photo} alt={f.name} />
                   </div>
-                  <p className="text-sm font-semibold text-primary mb-3">{f.role}</p>
-                  <div className="space-y-2">
-                    {f.bio.map((para, i) => (
-                      <p key={i} className="text-gray-500 text-sm leading-relaxed">{para}</p>
-                    ))}
+                  <div>
+                    <h3 className="text-xl font-black text-gray-900">{f.name}</h3>
+                    <p className="text-sm font-semibold text-primary mt-0.5">{f.role}</p>
                   </div>
                 </div>
 
+                {/* Bio */}
+                <div className="space-y-3 relative z-10">
+                  {f.bio.map((para, i) => (
+                    <p key={i} className="text-gray-500 text-sm leading-relaxed flex gap-2">
+                      {i === 0 && <span className="text-primary font-black flex-shrink-0 mt-0.5">✦</span>}
+                      {para}
+                    </p>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Section 4: Quotes ───────────────────────────────────────── */}
-      <section style={{ backgroundColor: "#F7F8FF" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="mb-12">
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.05]">
-              Що для нас Моживо?
-            </h2>
-            <p className="text-gray-500 text-base mt-3">Особисто від засновниць</p>
-          </div>
+      {/* ── Quotes — white ───────────────────────────────────────────── */}
+      <section className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          <h2 className="text-5xl md:text-6xl font-black text-gray-900 leading-[1.0] mb-3">
+            Що для нас{" "}
+            <span className="text-primary">Моживо?</span>
+          </h2>
+          <p className="text-gray-500 text-lg mb-12">Особисто від засновниць</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {quotes.map((q) => (
               <div
                 key={q.name}
-                className="bg-white rounded-3xl p-8 relative overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
+                className="relative bg-gray-50 rounded-3xl p-8 border border-gray-100 overflow-hidden hover:-translate-y-1 hover:shadow-md transition-all duration-200"
               >
-                {/* Decorative large quote mark */}
+                {/* Decorative quote */}
                 <span
-                  className="absolute -top-4 left-4 text-[110px] leading-none font-serif text-indigo-100 select-none pointer-events-none"
+                  className="absolute -top-4 -left-2 text-[120px] leading-none font-serif text-primary/6 select-none pointer-events-none"
                   aria-hidden
                 >
                   &ldquo;
                 </span>
 
-                <div className="relative">
-                  <p className="text-gray-700 text-base italic leading-relaxed mt-4 whitespace-pre-line">
+                <div className="relative z-10">
+                  <p className="text-gray-700 text-base leading-relaxed whitespace-pre-line mb-8">
                     {q.text}
                   </p>
-                  <div className="flex items-center gap-2 mt-6">
-                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" aria-hidden />
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 h-[3px] bg-primary rounded-full flex-shrink-0" aria-hidden />
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{q.name}</p>
-                      <p className="text-xs text-primary">{q.role}</p>
+                      <p className="text-sm font-black text-gray-900">{q.name}</p>
+                      <p className="text-xs text-primary font-semibold">{q.role}</p>
                     </div>
                   </div>
                 </div>
@@ -218,38 +274,32 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── Section 5: Support banner ───────────────────────────────── */}
-      <section className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="bg-primary rounded-3xl px-8 py-16 text-center relative overflow-hidden">
-            <div
-              aria-hidden
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle at 15% 50%, rgba(255,214,0,0.15) 0%, transparent 45%), radial-gradient(circle at 85% 20%, rgba(255,255,255,0.10) 0%, transparent 40%), radial-gradient(circle at 75% 80%, rgba(255,255,255,0.07) 0%, transparent 35%)",
-              }}
-            />
-            <div className="relative z-10">
-              <div className="text-4xl mb-5">🩵</div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-4">
-                На розвиток Моживо
+      {/* ── Support CTA — blue ───────────────────────────────────────── */}
+      <section className="bg-primary py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
+            <div>
+              <p className="text-white/50 text-xs font-bold tracking-widest uppercase mb-5">Підтримка</p>
+              <h2 className="text-5xl md:text-6xl font-black text-white leading-[1.0] mb-6">
+                На розвиток{" "}
+                <span className="relative inline-block">
+                  Моживо
+                  <span className="absolute -bottom-1 left-0 right-0 h-[4px] bg-white/50 rounded-full" />
+                </span>
               </h2>
-              <p className="text-white/80 mb-8 max-w-xl mx-auto leading-relaxed">
-                Ми створили цей проєкт безкоштовно — бо хочемо, щоб кожен
-                молодий українець та українка могли знайти свою можливість і
-                розвиватися. Якщо ти хочеш підтримати нас — будемо щиро
-                вдячні. Кожна гривня йде на розвиток платформи.
+              <p className="text-white/60 text-lg leading-relaxed max-w-md">
+                Ми створили цей проєкт безкоштовно — бо хочемо, щоб кожен молодий
+                українець міг знайти свою можливість. Кожна гривня йде на розвиток платформи.
               </p>
-              <Link
-                href="https://send.monobank.ua/jar/2aqfexs7AP"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-accent text-foreground font-semibold hover:bg-accent-dark transition-all duration-200 shadow-lg"
-              >
-                🔗 Підтримати проєкт →
-              </Link>
             </div>
+            <Link
+              href="https://send.monobank.ua/jar/2aqfexs7AP"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0 px-8 py-4 rounded-2xl bg-white text-primary font-bold text-base hover:bg-primary-light transition-all shadow-xl hover:-translate-y-0.5"
+            >
+              🔗 Підтримати проєкт →
+            </Link>
           </div>
         </div>
       </section>
