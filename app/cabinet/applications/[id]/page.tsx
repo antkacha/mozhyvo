@@ -191,29 +191,31 @@ export default function ApplicationDetailPage() {
               </div>
             )}
 
-            {/* Education */}
-            <div className="bg-white rounded-2xl border border-border p-6">
-              <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-                <span className="w-6 h-6 bg-primary-light rounded-lg flex items-center justify-center text-sm">🎓</span>
-                Освіта
-              </h2>
-              <div className="flex flex-col">
-                <InfoRow label="Заклад" value={app.institution} />
-                <InfoRow label="Ступінь" value={app.degree} />
-                {app.graduationYear && <InfoRow label="Рік випуску" value={app.graduationYear} />}
-              </div>
-
-              {app.languages.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-border">
-                  <p className="text-xs text-muted mb-2">Мови</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {app.languages.map((l) => (
-                      <span key={l} className="text-xs font-medium bg-primary-light text-primary px-2.5 py-1 rounded-lg break-all">{l}</span>
-                    ))}
-                  </div>
+            {/* Education — only show if at least one field was filled */}
+            {(app.institution || app.degree || app.graduationYear || app.languages.length > 0) && (
+              <div className="bg-white rounded-2xl border border-border p-6">
+                <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-primary-light rounded-lg flex items-center justify-center text-sm">🎓</span>
+                  Освіта
+                </h2>
+                <div className="flex flex-col">
+                  {app.institution && <InfoRow label="Заклад" value={app.institution} />}
+                  {app.degree && <InfoRow label="Ступінь" value={app.degree} />}
+                  {app.graduationYear && <InfoRow label="Рік випуску" value={app.graduationYear} />}
                 </div>
-              )}
-            </div>
+
+                {app.languages.length > 0 && (
+                  <div className={`${app.institution || app.degree || app.graduationYear ? "mt-3 pt-3 border-t border-border" : ""}`}>
+                    <p className="text-xs text-muted mb-2">Мови</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {app.languages.map((l) => (
+                        <span key={l} className="text-xs font-medium bg-primary-light text-primary px-2.5 py-1 rounded-lg break-all">{l}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Documents */}
             {(app.cvUrl || app.portfolioUrl) && (
@@ -285,7 +287,7 @@ export default function ApplicationDetailPage() {
                 <InfoRow label="Ім'я" value={`${app.firstName} ${app.lastName}`} />
                 <InfoRow label="Email" value={app.email} />
                 {app.phone && <InfoRow label="Телефон" value={app.phone} />}
-                <InfoRow label="Країна" value={app.country} />
+                {app.country && <InfoRow label="Країна" value={app.country} />}
               </div>
             </div>
 
