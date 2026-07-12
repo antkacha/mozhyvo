@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
 
@@ -56,14 +56,32 @@ export default function CabinetSettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [pwResetSent, setPwResetSent] = useState(false);
   const [pwResetLoading, setPwResetLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  useEffect(() => {
+    if (user?.user_metadata?.notification_settings) {
+      setNotif((prev) => ({ ...prev, ...user.user_metadata.notification_settings as Partial<NotifSettings> }));
+    }
+  }, [user]);
 
   const smsEnabled = notif.smsStatusUpdates || notif.smsDeadlineReminders;
 
   async function handleDeleteAccount() {
     setDeleting(true);
+    setDeleteError("");
     try {
-      await fetch("/api/user/delete", { method: "POST" });
-    } catch {}
+      const res = await fetch("/api/user/delete", { method: "POST" });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({})) as { error?: string };
+        setDeleteError(json.error ?? "Не вдалося видалити акаунт. Спробуй ще раз або напиши нам на mozhyvo@gmail.com");
+        setDeleting(false);
+        return;
+      }
+    } catch {
+      setDeleteError("Помилка мережі. Перевір з'єднання та спробуй ще раз.");
+      setDeleting(false);
+      return;
+    }
     await signOut();
     window.location.href = "/";
   }
@@ -84,7 +102,8 @@ export default function CabinetSettingsPage() {
     setTimeout(() => setPwResetSent(false), 5000);
   }
 
-  function handleSave() {
+  async function handleSave() {
+    await supabase.auth.updateUser({ data: { notification_settings: notif } });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   }
@@ -205,6 +224,9 @@ export default function CabinetSettingsPage() {
               placeholder="ВИДАЛИТИ"
               className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-red-200 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400"
             />
+            {deleteError && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">{deleteError}</p>
+            )}
             <div className="flex gap-3">
               <button
                 disabled={deleteInput !== "ВИДАЛИТИ" || deleting}

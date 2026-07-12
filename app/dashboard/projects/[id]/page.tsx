@@ -197,9 +197,9 @@ function EditProjectContent() {
     setSaveError(null);
 
     const deadline = form.deadline;
-    const deadlineDisplay = new Date(deadline).toLocaleDateString("uk-UA", {
-      day: "numeric", month: "short", year: "numeric",
-    });
+    const deadlineDisplay = deadline
+      ? new Date(deadline).toLocaleDateString("uk-UA", { day: "numeric", month: "short", year: "numeric" })
+      : (project.deadlineDisplay ?? "");
     const flagEmoji = form.flag.includes(" ") ? form.flag.split(" ")[0] : form.flag;
     const city = form.city.trim();
     const country = form.country.trim();

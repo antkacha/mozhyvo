@@ -254,6 +254,7 @@ function Sidebar() {
 // ── Mobile top nav ───────────────────────────────────────────────────
 function MobileNav() {
   const pathname = usePathname();
+  const { logout } = useOrgSession();
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
 
@@ -273,6 +274,12 @@ function MobileNav() {
           {label}
         </Link>
       ))}
+      <button
+        onClick={logout}
+        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 text-muted hover:bg-red-50 hover:text-red-600"
+      >
+        Вийти
+      </button>
     </div>
   );
 }

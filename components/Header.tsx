@@ -14,6 +14,7 @@ const navLinks = [
   { label: "Про нас", href: "/about" },
   { label: "Можливості", href: "/opportunities" },
   { label: "Для організацій", href: "/organizations" },
+  { label: "Контакти", href: "/contacts" },
 ];
 
 function LogoMark({ size = 32 }: { size?: number }) {

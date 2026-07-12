@@ -62,7 +62,7 @@ const quotes = [
     role: "Co-founder & Product",
   },
   {
-    text: "Тому що вчора ти годинами шукав серед десятків каналів те, що тобі справді потрібно. А сьогодні «МОЖUВО» знаходить це для тебе.\n\nШукай. Заповнюй. Створюй себе.",
+    text: "Тому що вчора ти годинами шукав серед десятків каналів те, що тобі справді потрібно. А сьогодні «Моживо» знаходить це для тебе.\n\nШукай. Заповнюй. Створюй себе.",
     name: "Лілія Нежельська",
     role: "Co-founder & Operations",
   },
@@ -233,7 +233,7 @@ export default function AboutPage() {
             <div className="relative z-10">
               <div className="text-4xl mb-5">🩵</div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-4">
-                На розвиток MOЖUВО
+                На розвиток Моживо
               </h2>
               <p className="text-white/80 mb-8 max-w-xl mx-auto leading-relaxed">
                 Ми створили цей проєкт безкоштовно — бо хочемо, щоб кожен

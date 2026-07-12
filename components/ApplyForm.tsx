@@ -45,7 +45,8 @@ const COUNTRIES = [
   "Інша",
 ];
 
-const YEARS = ["2024", "2025", "2026", "2027", "2028", "2029"];
+const CURRENT_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: 8 }, (_, i) => String(CURRENT_YEAR - 4 + i));
 
 type FormData = {
   firstName: string;

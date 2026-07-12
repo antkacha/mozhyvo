@@ -76,7 +76,7 @@ export default function CabinetSavedPage() {
                       </div>
                       <p className="text-xs text-muted">{opp.flag} {opp.location} · {opp.deadlineDisplay}</p>
                       <div className="flex gap-2 pt-1">
-                        <Link href={`/opportunities/${opp.slug}`}
+                        <Link href={`/opportunities/${opp.slug}/apply`}
                           className="flex-1 text-center py-2 bg-primary text-white text-xs font-semibold rounded-xl hover:bg-primary-dark transition-all">
                           Подати заявку
                         </Link>

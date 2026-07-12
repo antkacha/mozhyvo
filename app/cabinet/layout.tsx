@@ -147,7 +147,7 @@ export default function CabinetLayout({ children }: { children: React.ReactNode 
 
         {/* Mobile bottom nav */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-border flex z-40 safe-area-bottom">
-          {NAV.slice(0, 4).map(({ href, label, icon, exact }) => {
+          {NAV.map(({ href, label, icon, exact }) => {
             const active = exact ? pathname === href : pathname.startsWith(href);
             return (
               <Link key={href} href={href}

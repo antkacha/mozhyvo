@@ -352,7 +352,7 @@ function SecurityTab() {
         <div className="flex items-center justify-between py-3 border-t border-border">
           <div>
             <p className="text-sm font-semibold text-foreground">Поточна сесія</p>
-            <p className="text-xs text-muted">Chrome · macOS · Активна зараз</p>
+            <p className="text-xs text-muted">Активна зараз</p>
           </div>
           <span className="w-2 h-2 bg-green-400 rounded-full" />
         </div>

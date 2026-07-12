@@ -277,13 +277,16 @@ function ProfileContent() {
     setFocusInput("");
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!form.name.trim()) return;
     setSaving(true);
-    update({ ...form, name: form.name.trim(), description: form.description.trim(), mission: form.mission.trim() });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    try {
+      await update({ ...form, name: form.name.trim(), description: form.description.trim(), mission: form.mission.trim() });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } finally {
+      setSaving(false);
+    }
   }
 
   const hasCover = !!(form.coverImage || form.coverVideo);

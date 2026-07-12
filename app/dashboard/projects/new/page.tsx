@@ -336,7 +336,9 @@ function NewProjectContent() {
     const deadline = deadlineMode === "date" ? form.deadline : "";
     const deadlineDisplay = deadlineMode === "rolling" ? "Набір триває"
       : deadlineMode === "asap" ? "ASAP — якомога швидше"
-      : new Date(form.deadline).toLocaleDateString("uk-UA", { day: "numeric", month: "short", year: "numeric" });
+      : form.deadline
+        ? new Date(form.deadline).toLocaleDateString("uk-UA", { day: "numeric", month: "short", year: "numeric" })
+        : "";
     const flagEmoji = form.flag;
     const location = form.city.trim()
       ? `${form.city.trim()}, ${form.country.trim()}`

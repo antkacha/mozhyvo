@@ -61,14 +61,18 @@ export default function OnboardingPage() {
 
   async function finish() {
     setSaving(true);
-    await save({
-      interests,
-      degree,
-      country,
-      languages,
-      onboardingDone: true,
-    });
-    router.push("/opportunities");
+    try {
+      await save({
+        interests,
+        degree,
+        country,
+        languages,
+        onboardingDone: true,
+      });
+      router.push("/opportunities");
+    } catch {
+      setSaving(false);
+    }
   }
 
   const canNext = [

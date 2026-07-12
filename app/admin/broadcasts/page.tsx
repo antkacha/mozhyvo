@@ -21,6 +21,7 @@ const SEGMENT_LABELS: Record<Segment, string> = {
 export default function AdminBroadcastsPage() {
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [composing, setComposing]   = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [subject, setSubject]       = useState("");
   const [body, setBody]             = useState("");
   const [segment, setSegment]       = useState<Segment>("all");
@@ -52,6 +53,7 @@ export default function AdminBroadcastsPage() {
       setSubject("");
       setBody("");
       setComposing(false);
+      setConfirming(false);
     } catch {
       setError("Мережева помилка");
     } finally {
@@ -108,7 +110,7 @@ export default function AdminBroadcastsPage() {
       {/* Compose modal */}
       {composing && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !sending && setComposing(false)} />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { if (!sending) { setComposing(false); setConfirming(false); }}} />
           <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-3xl rounded-t-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="sticky top-0 bg-white border-b border-border px-6 py-4 flex items-center justify-between rounded-t-3xl">
               <h2 className="text-base font-bold text-foreground">Нова розсилка</h2>
@@ -168,25 +170,48 @@ export default function AdminBroadcastsPage() {
                 <p className="text-xs text-red-500 bg-red-50 rounded-xl px-4 py-3">{error}</p>
               )}
 
-              <div className="flex gap-3 justify-end pt-2">
-                <button
-                  onClick={() => setComposing(false)}
-                  disabled={sending}
-                  className="px-5 py-2.5 border border-border rounded-xl text-sm text-muted hover:bg-muted-bg transition-all disabled:opacity-40"
-                >
-                  Скасувати
-                </button>
-                <button
-                  onClick={handleSend}
-                  disabled={!subject.trim() || !body.trim() || sending}
-                  className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark disabled:opacity-50 transition-all flex items-center gap-2"
-                >
-                  {sending && (
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  )}
-                  {sending ? "Надсилаємо..." : "Надіслати"}
-                </button>
-              </div>
+              {confirming ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 space-y-3">
+                  <p className="text-sm font-semibold text-amber-900">Підтвердіть відправку</p>
+                  <p className="text-xs text-amber-800">
+                    Буде надіслано масовий лист сегменту <strong>{SEGMENT_LABELS[segment]}</strong>. Цю дію не можна скасувати.
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setConfirming(false)}
+                      disabled={sending}
+                      className="flex-1 py-2.5 border border-border rounded-xl text-sm text-muted hover:bg-muted-bg transition-all disabled:opacity-40"
+                    >
+                      Назад
+                    </button>
+                    <button
+                      onClick={handleSend}
+                      disabled={sending}
+                      className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                    >
+                      {sending && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                      {sending ? "Надсилаємо..." : "Так, надіслати"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-3 justify-end pt-2">
+                  <button
+                    onClick={() => setComposing(false)}
+                    disabled={sending}
+                    className="px-5 py-2.5 border border-border rounded-xl text-sm text-muted hover:bg-muted-bg transition-all disabled:opacity-40"
+                  >
+                    Скасувати
+                  </button>
+                  <button
+                    onClick={() => { setError(""); setConfirming(true); }}
+                    disabled={!subject.trim() || !body.trim()}
+                    className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark disabled:opacity-50 transition-all"
+                  >
+                    Надіслати →
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

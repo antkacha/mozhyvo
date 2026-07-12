@@ -67,6 +67,8 @@ export default function ContactsPage() {
     return e;
   };
 
+  const [submitError, setSubmitError] = useState("");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
@@ -75,8 +77,24 @@ export default function ContactsPage() {
       return;
     }
     setStatus("loading");
-    await new Promise((r) => setTimeout(r, 1200));
-    setStatus("success");
+    setSubmitError("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({})) as { error?: string };
+        setSubmitError(json.error ?? "Не вдалося надіслати. Спробуй ще раз.");
+        setStatus("idle");
+        return;
+      }
+      setStatus("success");
+    } catch {
+      setSubmitError("Помилка мережі. Перевір з'єднання та спробуй ще раз.");
+      setStatus("idle");
+    }
   };
 
   return (
@@ -117,7 +135,7 @@ export default function ContactsPage() {
             <p className="font-semibold text-foreground mb-4">Ми в соцмережах</p>
             <div className="flex flex-col gap-3">
               {[
-                { name: "Telegram", href: "https://t.me/mozhyvo_bot", icon: "✈️", desc: "Новини та оновлення" },
+                { name: "Telegram", href: "https://t.me/mozhyvo_bot", icon: "✈", desc: "Новини та оновлення" },
                 { name: "Instagram", href: "https://www.instagram.com/mozhyvo", icon: "📸", desc: "Нові можливості та натхнення" },
                 { name: "LinkedIn", href: "https://www.linkedin.com/company/mozhyvo/about/", icon: "💼", desc: "Новини платформи" },
                 { name: "Linktree", href: "https://linktr.ee/mozhyvo", icon: "🌿", desc: "Всі наші посилання" },
@@ -205,7 +223,7 @@ export default function ContactsPage() {
                       type="email"
                       value={form.email}
                       onChange={(e) => set("email", e.target.value)}
-                      placeholder="your@email.com"
+                      placeholder="твій@email.com"
                       className={`w-full px-4 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white ${
                         errors.email ? "border-red-400" : "border-border"
                       }`}
@@ -261,6 +279,12 @@ export default function ContactsPage() {
                     <p className="text-xs text-muted">{form.message.length} символів</p>
                   </div>
                 </div>
+
+                {submitError && (
+                  <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                    {submitError}
+                  </p>
+                )}
 
                 <button
                   type="submit"

@@ -24,7 +24,7 @@ const NAV = [
   },
 ];
 
-const MOZHYVO_NAV = { href: "/dashboard", label: "Кабінет МОЖUВО" };
+const MOZHYVO_NAV = { href: "/dashboard", label: "Кабінет Моживо" };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
@@ -98,10 +98,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-border">
-          <span className="font-black text-foreground">Адмін-панель</span>
+          <Link href="/admin" className="font-black text-foreground">Адмін-панель</Link>
           <Link href="/" className="text-xs text-muted">← Сайт</Link>
         </header>
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        {/* Mobile bottom nav */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border flex">
+          {NAV.map(({ href, label, icon, exact }) => {
+            const active = exact ? pathname === href : pathname.startsWith(href);
+            return (
+              <Link key={href} href={href}
+                className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
+                  active ? "text-red-600" : "text-muted"
+                }`}>
+                <span className={`[&>svg]:w-5 [&>svg]:h-5 ${active ? "text-red-500" : "text-muted"}`}>{icon}</span>
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+        <main className="flex-1 overflow-y-auto pb-16 md:pb-0">{children}</main>
       </div>
     </div>
   );
