@@ -155,10 +155,17 @@ export function useOrgSession() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(toRow(data)),
     });
-    if (res.ok) setCache(_cachedOrg ? { ..._cachedOrg, ...data } : null, true);
-    else {
+    if (!res.ok) {
       const json = await res.json() as { error?: string };
       throw new Error(json.error ?? "Save failed");
+    }
+    // Update cache from the actual saved DB row, not just the form values.
+    // This catches silent 0-row updates and confirms the data is really persisted.
+    const json = await res.json() as { ok: boolean; org?: Record<string, unknown> };
+    if (json.org) {
+      setCache(fromRow(json.org), true, _cachedMemberRole);
+    } else {
+      setCache(_cachedOrg ? { ..._cachedOrg, ...data } : null, true);
     }
   }, [setCache]);
 

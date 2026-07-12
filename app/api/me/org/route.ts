@@ -110,11 +110,18 @@ export async function PATCH(req: Request) {
   if (!orgId) return NextResponse.json({ error: "No org found" }, { status: 404 });
 
   const body = await req.json() as Record<string, unknown>;
-  const { error } = await admin
+
+  // Update and return the saved row so the client can verify what was actually written
+  const { data: savedOrg, error } = await admin
     .from("orgs")
     .update(body)
-    .eq("id", orgId);
+    .eq("id", orgId)
+    .select()
+    .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  if (error) {
+    console.error("[PATCH /api/me/org] update error:", error.message, "orgId:", orgId);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true, org: savedOrg });
 }
