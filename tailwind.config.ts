@@ -28,6 +28,10 @@ const config: Config = {
         "3xl": "1.5rem",
       },
       keyframes: {
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
         reveal: {
           from: { opacity: "0", transform: "translateY(16px)" },
           to: { opacity: "1", transform: "translateY(0)" },
@@ -54,6 +58,7 @@ const config: Config = {
         },
       },
       animation: {
+        marquee: "marquee 28s linear infinite",
         float1: "float1 4s ease-in-out infinite",
         float2: "float2 3.6s ease-in-out infinite 0.8s",
         float3: "float3 3.2s ease-in-out infinite 1.6s",
