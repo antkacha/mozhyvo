@@ -48,7 +48,7 @@ export default function Home() {
               </div>
 
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.0]">
-                знайди{" "}
+                Знайди{" "}
                 <span className="relative inline-block">
                   свою
                   <span className="absolute -bottom-1 left-0 right-0 h-[4px] bg-white/55 rounded-full" />
@@ -143,7 +143,7 @@ export default function Home() {
             <div>
               <p className="text-gray-400 text-sm font-semibold mb-5">— платформа можливостей</p>
               <h2 className="text-5xl md:text-6xl font-black text-gray-900 leading-[1.0] mb-6">
-                що таке
+                Що таке
                 <br />
                 <span className="bg-primary text-white px-4 py-1 rounded-2xl inline-block mt-1">
                   Моживо?
@@ -191,7 +191,7 @@ export default function Home() {
       <section className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-5xl md:text-6xl font-black text-gray-900 leading-[1.0] mb-12">
-            чому{" "}
+            Чому{" "}
             <span className="bg-primary-light text-primary px-4 py-1 rounded-2xl inline-block border border-primary/15">
               Моживо?
             </span>
@@ -213,7 +213,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="mb-12">
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.05]">
-              що ти{" "}
+              Що ти{" "}
               <span className="bg-primary text-white px-4 py-1 rounded-2xl inline-block">
                 шукаєш?
               </span>
@@ -300,7 +300,7 @@ export default function Home() {
             <div>
               <p className="text-white/50 text-xs font-bold tracking-widest uppercase mb-5">Для організацій</p>
               <h2 className="text-5xl md:text-6xl font-black text-white leading-[1.0] mb-6">
-                ви організація
+                Ви організація
                 <br />
                 або{" "}
                 <span className="relative inline-block">
