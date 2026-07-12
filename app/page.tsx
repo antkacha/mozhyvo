@@ -23,42 +23,32 @@ export default function Home() {
       <section className="bg-white relative overflow-hidden min-h-[90vh] flex items-center">
         {/* Blue paint stroke decorations */}
         <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-          <div
-            className="absolute bg-primary"
-            style={{
-              top: "-80px",
-              right: "-100px",
-              width: "540px",
-              height: "360px",
-              opacity: 0.07,
-              borderRadius: "68% 32% 71% 29% / 42% 61% 39% 58%",
-              transform: "rotate(-14deg)",
-            }}
-          />
-          <div
-            className="absolute bg-primary"
-            style={{
-              bottom: "-100px",
-              left: "-60px",
-              width: "460px",
-              height: "300px",
-              opacity: 0.055,
-              borderRadius: "38% 62% 49% 51% / 58% 41% 59% 42%",
-              transform: "rotate(9deg)",
-            }}
-          />
-          <div
-            className="absolute bg-primary"
-            style={{
-              top: "40%",
-              right: "30%",
-              width: "180px",
-              height: "110px",
-              opacity: 0.04,
-              borderRadius: "55% 45% 60% 40% / 48% 56% 44% 52%",
-              transform: "rotate(-6deg)",
-            }}
-          />
+          {/* Top-right brush stroke */}
+          <svg
+            className="absolute -top-6 -right-12 opacity-[0.08]"
+            width="600"
+            height="290"
+            viewBox="0 0 600 290"
+            fill="none"
+          >
+            <path
+              d="M70,12 C190,-18 400,18 560,6 C586,55 582,150 548,168 C458,196 285,158 118,174 C46,181 4,136 2,92 C-3,52 28,24 70,12 Z"
+              fill="#3B4FE8"
+            />
+          </svg>
+          {/* Bottom-left wave stroke */}
+          <svg
+            className="absolute -bottom-6 -left-8 opacity-[0.065]"
+            width="660"
+            height="230"
+            viewBox="0 0 660 230"
+            fill="none"
+          >
+            <path
+              d="M-20,78 C130,22 320,72 490,42 C590,22 648,64 668,50 L668,230 L-20,230 Z"
+              fill="#3B4FE8"
+            />
+          </svg>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
@@ -325,34 +315,77 @@ export default function Home() {
       {/* ── Featured opportunities ────────────────────────────────────── */}
       <FeaturedSection />
 
-      {/* ── CTA banner — white section, blue inner ───────────────────── */}
-      <section className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="bg-primary rounded-3xl px-8 py-16 text-center relative overflow-hidden">
-            <div
+      {/* ── CTA banner — card with decorative SVG elements ──────────── */}
+      <section className="bg-white py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative rounded-3xl overflow-hidden bg-[#F4F6FF] border border-primary/8" style={{ minHeight: "220px" }}>
+
+            {/* Squiggle — top right */}
+            <svg
               aria-hidden
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle at 15% 50%, rgba(255,255,255,0.08) 0%, transparent 45%), radial-gradient(circle at 85% 20%, rgba(255,255,255,0.10) 0%, transparent 40%), radial-gradient(circle at 75% 80%, rgba(255,255,255,0.07) 0%, transparent 35%)",
-              }}
-            />
-            <div className="relative z-10">
-              <div className="text-4xl mb-5">🏢</div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-4">
-                Ви організація або фонд?
+              className="absolute top-5 right-5 w-28 h-28"
+              viewBox="0 0 100 120"
+              fill="none"
+            >
+              <path
+                d="M78,10 C104,10 104,44 78,44 C52,44 52,78 78,78 C104,78 104,110 78,110"
+                stroke="#3B4FE8"
+                strokeWidth="4"
+                strokeLinecap="round"
+                opacity="0.4"
+              />
+            </svg>
+
+            {/* Left decoration — dark keycap with building icon */}
+            <div aria-hidden className="absolute left-0 bottom-0 hidden sm:block">
+              <svg width="158" height="152" viewBox="0 0 158 152" fill="none">
+                {/* Shadow */}
+                <rect x="10" y="124" width="130" height="14" rx="7" fill="#0D0D20" opacity="0.25"/>
+                {/* Keycap back face */}
+                <rect x="10" y="7" width="130" height="118" rx="22" fill="#1A1A38"/>
+                {/* Keycap top face */}
+                <rect x="10" y="4" width="130" height="116" rx="22" fill="#24245A"/>
+                {/* Inner raised surface */}
+                <rect x="22" y="16" width="106" height="96" rx="15" fill="#2E2E66"/>
+                {/* Building base */}
+                <rect x="46" y="68" width="62" height="38" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5"/>
+                {/* Roof */}
+                <path d="M40,70 L77,50 L114,70" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinejoin="round" fill="none"/>
+                {/* Windows row */}
+                <rect x="52" y="76" width="10" height="8" rx="1.5" fill="rgba(255,255,255,0.38)"/>
+                <rect x="68" y="76" width="10" height="8" rx="1.5" fill="rgba(255,255,255,0.38)"/>
+                <rect x="84" y="76" width="10" height="8" rx="1.5" fill="rgba(255,255,255,0.38)"/>
+                {/* Door */}
+                <rect x="67" y="88" width="20" height="18" rx="2" fill="rgba(255,255,255,0.22)"/>
+              </svg>
+            </div>
+
+            {/* Right decoration — cursor / paper arrow */}
+            <div aria-hidden className="absolute right-10 bottom-5 hidden sm:block">
+              <svg width="82" height="98" viewBox="0 0 82 98" fill="none">
+                <path
+                  d="M10,5 L10,76 L30,57 L47,90 L61,83 L44,50 L70,42 Z"
+                  fill="white"
+                  stroke="#C8CCEE"
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+
+            {/* Center content */}
+            <div className="relative z-10 flex flex-col items-center justify-center text-center py-14 px-4">
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight mb-8 max-w-sm">
+                Розмістіть свою<br />можливість<br />безкоштовно!
               </h2>
-              <p className="text-white/80 mb-8 max-w-lg mx-auto">
-                Розмістіть свою програму безкоштовно і охопіть тисячі молодих
-                українців, які шукають саме такі можливості.
-              </p>
               <Link
                 href="/organizations"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white text-primary font-semibold hover:bg-primary-light transition-all duration-200 shadow-lg"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-white font-semibold hover:bg-primary-dark transition-all shadow-lg shadow-primary/25 hover:-translate-y-0.5"
               >
                 Розмістити можливість →
               </Link>
             </div>
+
           </div>
         </div>
       </section>
