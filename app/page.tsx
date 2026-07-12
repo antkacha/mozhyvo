@@ -192,16 +192,21 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-5xl md:text-6xl font-black text-gray-900 leading-[1.0] mb-12">
             Чому{" "}
-            <span className="bg-primary-light text-primary px-4 py-1 rounded-2xl inline-block border border-primary/15">
-              Моживо?
-            </span>
+            <span className="text-primary">Моживо?</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {whyCards.map((card) => (
-              <div key={card.title} className="bg-gray-50 rounded-3xl p-8 border border-gray-100">
-                <span className="text-3xl mb-5 block">{card.icon}</span>
-                <h3 className="font-black text-gray-900 text-xl mb-3">{card.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{card.desc}</p>
+            {whyCards.map((card, idx) => (
+              <div key={card.title} className="relative bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-200 overflow-hidden">
+                {/* Large background number */}
+                <span className="absolute -bottom-3 -right-2 text-[90px] font-black text-gray-50 leading-none select-none">
+                  0{idx + 1}
+                </span>
+                {/* Icon pill */}
+                <div className="w-12 h-12 rounded-2xl bg-primary-light flex items-center justify-center mb-6">
+                  <span className="text-xl">{card.icon}</span>
+                </div>
+                <h3 className="font-black text-gray-900 text-xl mb-3 relative z-10">{card.title}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed relative z-10">{card.desc}</p>
               </div>
             ))}
           </div>
@@ -292,6 +297,22 @@ export default function Home() {
       {/* ── Recommendations + Featured ───────────────────────────────── */}
       <HomeRecommendations />
       <FeaturedSection />
+
+      {/* ── Marquee — blue (above org CTA) ──────────────────────────── */}
+      <div className="bg-primary py-4 overflow-hidden">
+        <div className="flex animate-marquee whitespace-nowrap w-max">
+          {[0, 1].map((i) => (
+            <div key={i} className="flex items-center flex-none">
+              {marqueeItems.map((item) => (
+                <span key={`${i}-${item}`} className="inline-flex items-center gap-6 text-xs font-bold tracking-[0.2em] text-white/55 px-6">
+                  {item}
+                  <span className="text-white/30 font-black">·</span>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* ── Org CTA — full blue ──────────────────────────────────────── */}
       <section className="bg-primary py-20">
