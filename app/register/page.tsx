@@ -206,9 +206,8 @@ export default function RegisterPage() {
           style={{ background: "radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 65%)" }} />
 
         <div className="relative z-10">
-          <Link href="/" className="inline-flex items-center gap-2 group">
-            <span className="text-2xl">⚡</span>
-            <span className="text-2xl font-black text-white group-hover:text-accent transition-colors">Моживо</span>
+          <Link href="/" className="inline-block">
+            <Image src="/logo-full-white.png" alt="МОЖUВО" width={160} height={40} className="h-9 w-auto" priority />
           </Link>
         </div>
 
@@ -223,7 +222,7 @@ export default function RegisterPage() {
               <span className="text-accent">починається тут</span>
             </h2>
             <p className="text-white/55 text-sm mt-3 leading-relaxed max-w-xs">
-              Приєднуйся до тисяч молодих людей, які вже знайшли свій шлях через Моживо
+              Приєднуйся до тисяч молодих людей, які вже знайшли свій шлях через МОЖUВО
             </p>
           </div>
 
@@ -259,11 +258,10 @@ export default function RegisterPage() {
         <div className="lg:hidden bg-primary px-6 pt-8 pb-10 relative overflow-hidden">
           <div aria-hidden className="absolute inset-0 pointer-events-none"
             style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-          <Link href="/" className="relative z-10 inline-flex items-center gap-1.5">
-            <span className="text-xl">⚡</span>
-            <span className="text-xl font-black text-white">Моживо</span>
+          <Link href="/" className="relative z-10 inline-block">
+            <Image src="/logo-full-white.png" alt="МОЖUВО" width={140} height={36} className="h-8 w-auto" priority />
           </Link>
-          <p className="relative z-10 text-white/55 text-sm mt-1">Приєднуйся до спільноти</p>
+          <p className="relative z-10 text-white/55 text-sm mt-2">Приєднуйся до спільноти</p>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 lg:py-16 -mt-4 lg:mt-0">
@@ -296,8 +294,11 @@ export default function RegisterPage() {
               {/* ── Step 1: Role ── */}
               {step === 1 && (
                 <>
+                  <div className="flex justify-center mb-4 lg:hidden">
+                    <Image src="/logo.png" alt="МОЖUВО" width={120} height={32} className="h-8 w-auto" />
+                  </div>
                   <h1 className="text-xl font-bold text-foreground mb-1 text-center">
-                    Як плануєш використовувати Моживо?
+                    Як плануєш використовувати МОЖUВО?
                   </h1>
                   <p className="text-sm text-muted text-center mb-6">Обери роль — від неї залежать можливості акаунту</p>
                   <div className="grid grid-cols-2 gap-3">

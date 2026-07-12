@@ -301,17 +301,20 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   if (ready && hasApplied(opp.slug)) {
     return (
       <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
-        <div className="h-1 bg-green-500 w-full" />
+        <div className="h-1.5 bg-gradient-to-r from-green-400 to-emerald-500 w-full" />
         <div className="px-8 py-14 text-center">
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
-            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-18 h-18 rounded-full bg-green-50 border-2 border-green-200 flex items-center justify-center mx-auto mb-5" style={{ width: 72, height: 72 }}>
+            <svg className="w-9 h-9 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-foreground mb-2">Ти вже подав заявку</h2>
-          <p className="text-muted mb-6">Ти вже відгукнувся на цю програму. Переглянути статус можна в кабінеті.</p>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 border border-green-200 text-green-700 text-xs font-semibold mb-4">
+            <span className="text-green-500">✦</span> Заявка вже подана
+          </div>
+          <h2 className="text-xl font-black text-foreground mb-2">Ти вже відгукнувся!</h2>
+          <p className="text-muted mb-7 max-w-xs mx-auto leading-relaxed">Ти вже подав заявку на цю програму. Переглянути статус можна в кабінеті.</p>
           <div className="flex gap-3 justify-center">
-            <Link href="/cabinet/applications" className="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all">
+            <Link href="/cabinet/applications" className="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all shadow-sm shadow-primary/20">
               Мої заявки
             </Link>
             <Link href="/opportunities" className="px-5 py-2.5 border border-border rounded-xl text-sm font-medium hover:border-primary hover:text-primary transition-all">
@@ -327,20 +330,26 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   if (done) {
     return (
       <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
-        <div className="h-1 bg-green-500 w-full" />
+        <div className="h-1.5 bg-gradient-to-r from-primary to-indigo-500 w-full" />
         <div className="px-8 py-14 text-center">
-          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-            </svg>
+          <div className="relative w-24 h-24 mx-auto mb-6">
+            <div className="w-24 h-24 rounded-full bg-primary-light flex items-center justify-center">
+              <svg className="w-12 h-12 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="absolute -top-1 -right-1 w-7 h-7 bg-primary rounded-full flex items-center justify-center text-white text-sm">✦</div>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-light text-primary text-xs font-semibold mb-4">
+            МОЖUВО
           </div>
           <h2 className="text-2xl font-black text-foreground mb-2">Заявку подано! 🎉</h2>
           <p className="text-muted max-w-sm mx-auto mb-8 leading-relaxed">
-            Твою заявку на <strong>{opp.title}</strong> надіслано. Координатор розгляне її найближчим часом.
+            Твою заявку на <strong className="text-foreground">{opp.title}</strong> надіслано. Координатор розгляне її найближчим часом.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/cabinet/applications" className="px-6 py-3 bg-primary text-white rounded-2xl font-semibold text-sm hover:bg-primary-dark transition-all shadow-sm shadow-primary/20">
-              Переглянути заявку
+              Переглянути заявку →
             </Link>
             <Link href="/opportunities" className="px-6 py-3 border border-border rounded-2xl text-sm font-semibold hover:border-primary hover:text-primary transition-all">
               Знайти ще можливості
@@ -354,51 +363,48 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
   return (
     <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
 
-      {/* Progress bar — sticky header inside card */}
-      <div className="px-6 py-4 border-b border-border bg-muted-bg/40">
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-          {STEPS.map((s, i) => (
-            <div key={s.id} className="flex items-center gap-1.5 flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
-                    i < step
-                      ? "bg-primary text-white"
-                      : i === step
-                      ? "bg-primary text-white ring-4 ring-primary/20"
-                      : "bg-white text-muted border border-border"
-                  }`}
-                >
-                  {i < step ? (
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  ) : i + 1}
-                </div>
-                <span className={`text-xs font-semibold hidden sm:block whitespace-nowrap ${i === step ? "text-foreground" : "text-muted"}`}>
-                  {s.label}
-                </span>
-              </div>
-              {i < STEPS.length - 1 && (
-                <div className={`w-6 h-0.5 flex-shrink-0 rounded-full transition-all ${i < step ? "bg-primary" : "bg-border"}`} />
+      {/* Progress header */}
+      <div>
+        <div className="h-1 bg-primary-light">
+          <div
+            className="h-full bg-gradient-to-r from-primary to-indigo-500 transition-all duration-500 ease-out"
+            style={{ width: `${Math.round(((step + 1) / STEPS.length) * 100)}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-sm font-bold text-white flex-shrink-0 shadow-sm shadow-primary/30">
+              {step < STEPS.length - 1 ? step + 1 : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
               )}
             </div>
-          ))}
-          <span className="ml-auto text-xs text-muted font-medium flex-shrink-0 pl-2">{step + 1}/{STEPS.length}</span>
+            <div>
+              <p className="font-bold text-foreground text-sm leading-tight">{STEPS[step]?.label}</p>
+              <p className="text-xs text-muted mt-0.5">Крок {step + 1} з {STEPS.length}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {STEPS.map((s, i) => (
+              <div
+                key={s.id}
+                title={s.label}
+                className={`rounded-full transition-all duration-300 ${
+                  i < step
+                    ? "w-2 h-2 bg-primary"
+                    : i === step
+                    ? "w-2.5 h-2.5 bg-primary ring-[3px] ring-primary/20"
+                    : "w-2 h-2 bg-border"
+                }`}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Step content */}
-      <div className="px-8 py-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-            {step + 1}
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-foreground leading-tight">{STEPS[step]?.label}</h2>
-            <p className="text-xs text-muted mt-0.5">Крок {step + 1} з {STEPS.length}</p>
-          </div>
-        </div>
+      <div className="px-7 py-7">
 
         {/* ── Personal data ── */}
         {STEPS[step]?.id === "personal" && (
@@ -588,85 +594,130 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
 
         {/* ── Review ── */}
         {STEPS[step]?.id === "review" && (
-          <div className="flex flex-col gap-6">
-            <div className="bg-muted-bg rounded-xl p-5">
-              <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Особисті дані</p>
-              <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
-                <span className="text-muted">Ім&apos;я</span><span className="text-foreground font-medium">{data.firstName} {data.lastName}</span>
-                <span className="text-muted">Email</span><span className="text-foreground font-medium">{data.email}</span>
+          <div className="flex flex-col gap-4">
+            {/* Confirm banner */}
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-primary-light border border-primary/15">
+              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p className="text-xs text-primary font-medium leading-snug">Перевір дані перед відправкою — після подачі заявку не можна редагувати.</p>
+            </div>
+
+            {/* Personal */}
+            <div className="rounded-2xl border border-border overflow-hidden">
+              <div className="px-5 py-3 bg-muted-bg/60 border-b border-border flex items-center gap-2">
+                <span className="text-base">👤</span>
+                <p className="text-xs font-bold text-foreground uppercase tracking-wider">Особисті дані</p>
+              </div>
+              <div className="px-5 py-4 grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
+                <span className="text-muted">Ім&apos;я</span><span className="text-foreground font-semibold">{data.firstName} {data.lastName}</span>
+                <span className="text-muted">Email</span><span className="text-foreground font-semibold truncate">{data.email}</span>
                 {enabledBlocks.has("block_contacts") && (
                   <>
-                    <span className="text-muted">Телефон</span><span className="text-foreground font-medium">{data.phone || "—"}</span>
-                    <span className="text-muted">Країна</span><span className="text-foreground font-medium">{data.country}</span>
+                    <span className="text-muted">Телефон</span><span className="text-foreground font-semibold">{data.phone || "—"}</span>
+                    <span className="text-muted">Країна</span><span className="text-foreground font-semibold">{data.country}</span>
                   </>
                 )}
               </div>
             </div>
+
             {enabledBlocks.has("block_education") && (
-              <div className="bg-muted-bg rounded-xl p-5">
-                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Освіта та мови</p>
-                <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
-                  <span className="text-muted">Заклад</span><span className="text-foreground font-medium">{data.institution}</span>
-                  <span className="text-muted">Ступінь</span><span className="text-foreground font-medium">{data.degree}</span>
-                  <span className="text-muted">Рік</span><span className="text-foreground font-medium">{data.graduationYear || "—"}</span>
-                  <span className="text-muted">Мови</span><span className="text-foreground font-medium">{data.languages.join(", ")}</span>
+              <div className="rounded-2xl border border-border overflow-hidden">
+                <div className="px-5 py-3 bg-muted-bg/60 border-b border-border flex items-center gap-2">
+                  <span className="text-base">🎓</span>
+                  <p className="text-xs font-bold text-foreground uppercase tracking-wider">Освіта та мови</p>
+                </div>
+                <div className="px-5 py-4 grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
+                  <span className="text-muted">Заклад</span><span className="text-foreground font-semibold">{data.institution}</span>
+                  <span className="text-muted">Ступінь</span><span className="text-foreground font-semibold">{data.degree}</span>
+                  <span className="text-muted">Рік</span><span className="text-foreground font-semibold">{data.graduationYear || "—"}</span>
+                  <span className="text-muted">Мови</span>
+                  <div className="flex flex-wrap gap-1">
+                    {data.languages.map((l) => (
+                      <span key={l} className="px-2 py-0.5 rounded-full bg-primary-light text-primary text-xs font-medium">{l}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
+
             {(enabledBlocks.has("block_motivation") || enabledBlocks.has("block_documents")) && (
-              <div className="bg-muted-bg rounded-xl p-5">
-                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Мотивація</p>
-                {enabledBlocks.has("block_motivation") && (
-                  <p className="text-sm text-foreground leading-relaxed line-clamp-4">{data.motivation}</p>
-                )}
-                {(data.cvUrl || data.portfolioUrl) && (
-                  <div className="mt-3 flex flex-col gap-1">
-                    {data.cvUrl && <a href={data.cvUrl} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">📄 CV</a>}
-                    {data.portfolioUrl && <a href={data.portfolioUrl} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">🔗 Портфоліо</a>}
-                  </div>
-                )}
+              <div className="rounded-2xl border border-border overflow-hidden">
+                <div className="px-5 py-3 bg-muted-bg/60 border-b border-border flex items-center gap-2">
+                  <span className="text-base">💬</span>
+                  <p className="text-xs font-bold text-foreground uppercase tracking-wider">Мотивація та документи</p>
+                </div>
+                <div className="px-5 py-4">
+                  {enabledBlocks.has("block_motivation") && (
+                    <p className="text-sm text-foreground leading-relaxed line-clamp-4 mb-3">{data.motivation}</p>
+                  )}
+                  {(data.cvUrl || data.portfolioUrl) && (
+                    <div className="flex flex-wrap gap-3">
+                      {data.cvUrl && (
+                        <a href={data.cvUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-light text-primary text-xs font-semibold hover:bg-primary/15 transition-colors">
+                          📄 CV
+                        </a>
+                      )}
+                      {data.portfolioUrl && (
+                        <a href={data.portfolioUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-light text-primary text-xs font-semibold hover:bg-primary/15 transition-colors">
+                          🔗 Портфоліо
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
+
             {trueCustomQuestions.length > 0 && (
-              <div className="bg-muted-bg rounded-xl p-5">
-                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Відповіді на питання</p>
-                <div className="flex flex-col gap-3">
+              <div className="rounded-2xl border border-border overflow-hidden">
+                <div className="px-5 py-3 bg-muted-bg/60 border-b border-border flex items-center gap-2">
+                  <span className="text-base">✏️</span>
+                  <p className="text-xs font-bold text-foreground uppercase tracking-wider">Відповіді на питання</p>
+                </div>
+                <div className="px-5 py-4 flex flex-col gap-3">
                   {trueCustomQuestions.map((q) => {
                     const val = customAnswers[q.id];
                     const display = Array.isArray(val) ? val.join(", ") : val || "—";
                     return (
-                      <div key={q.id} className="grid grid-cols-2 gap-x-4 text-sm">
+                      <div key={q.id} className="grid grid-cols-2 gap-x-6 text-sm">
                         <span className="text-muted">{q.label}</span>
-                        <span className="text-foreground font-medium">{display}</span>
+                        <span className="text-foreground font-semibold">{display}</span>
                       </div>
                     );
                   })}
                 </div>
               </div>
             )}
-            <p className="text-xs text-muted text-center">
+
+            <p className="text-xs text-muted text-center pt-2">
               Натискаючи «Відправити заявку», ти підтверджуєш, що всі дані вірні.
             </p>
           </div>
         )}
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
+        <div className="flex items-center justify-between mt-8 pt-5 border-t border-border">
           {step > 0 ? (
-            <button onClick={back} className="flex items-center gap-2 text-sm font-medium text-muted hover:text-foreground transition-colors">
+            <button onClick={back} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted hover:text-foreground hover:border-foreground/30 transition-all">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Назад
             </button>
           ) : (
-            <Link href={`/opportunities/${opp.slug}`} className="text-sm text-muted hover:text-foreground transition-colors">
-              ← До програми
+            <Link href={`/opportunities/${opp.slug}`} className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors font-medium">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              До програми
             </Link>
           )}
 
           {step < STEPS.length - 1 ? (
-            <button onClick={next} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all shadow-sm shadow-primary/20">
+            <button onClick={next} className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all shadow-sm shadow-primary/25">
               Далі
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -680,7 +731,7 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
               <button
                 onClick={() => { setSubmitError(""); handleSubmit(); }}
                 disabled={submitting}
-                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-7 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-dark transition-all shadow-md shadow-primary/25 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {submitting ? (
                   <>

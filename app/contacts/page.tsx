@@ -135,7 +135,6 @@ export default function ContactsPage() {
             <p className="font-semibold text-foreground mb-4">Ми в соцмережах</p>
             <div className="flex flex-col gap-3">
               {[
-                { name: "Telegram", href: "https://t.me/mozhyvo_bot", icon: "✈", desc: "Новини та оновлення" },
                 { name: "Instagram", href: "https://www.instagram.com/mozhyvo", icon: "📸", desc: "Нові можливості та натхнення" },
                 { name: "LinkedIn", href: "https://www.linkedin.com/company/mozhyvo/about/", icon: "💼", desc: "Новини платформи" },
                 { name: "Linktree", href: "https://linktr.ee/mozhyvo", icon: "🌿", desc: "Всі наші посилання" },

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -68,9 +69,8 @@ function LoginContent() {
           style={{ background: "radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 65%)" }} />
 
         <div className="relative z-10">
-          <Link href="/" className="inline-flex items-center gap-2 group">
-            <span className="text-2xl">⚡</span>
-            <span className="text-2xl font-black text-white group-hover:text-accent transition-colors">Моживо</span>
+          <Link href="/" className="inline-block">
+            <Image src="/logo-full-white.png" alt="МОЖUВО" width={160} height={40} className="h-9 w-auto" priority />
           </Link>
         </div>
 
@@ -121,18 +121,21 @@ function LoginContent() {
         <div className="lg:hidden bg-primary px-6 pt-8 pb-10 relative overflow-hidden">
           <div aria-hidden className="absolute inset-0 pointer-events-none"
             style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-          <Link href="/" className="relative z-10 inline-flex items-center gap-1.5">
-            <span className="text-xl">⚡</span>
-            <span className="text-xl font-black text-white">Моживо</span>
+          <Link href="/" className="relative z-10 inline-block">
+            <Image src="/logo-full-white.png" alt="МОЖUВО" width={140} height={36} className="h-8 w-auto" priority />
           </Link>
-          <p className="relative z-10 text-white/55 text-sm mt-1">Раді бачити тебе знову</p>
+          <p className="relative z-10 text-white/55 text-sm mt-2">Раді бачити тебе знову</p>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 lg:py-16 -mt-4 lg:mt-0">
           <div className="w-full max-w-[420px]">
             <div className="bg-white rounded-2xl shadow-sm border border-border/60 p-7 lg:p-8">
 
-              <h1 className="text-xl font-bold text-foreground mb-6 text-center">Увійти</h1>
+              <div className="flex justify-center mb-5 lg:hidden">
+                <Image src="/logo.png" alt="МОЖUВО" width={120} height={32} className="h-8 w-auto" />
+              </div>
+              <h1 className="text-xl font-bold text-foreground mb-1 text-center">Увійти в акаунт</h1>
+              <p className="text-xs text-muted text-center mb-6">Ласкаво просимо назад ✦</p>
 
               {authError && (
                 <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
