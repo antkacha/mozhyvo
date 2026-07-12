@@ -232,7 +232,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
-              <input type="email" value={form.email} onChange={(e) => setField("email", e.target.value)} placeholder="your@email.com" className={inputCls} />
+              <input type="email" value={form.email} onChange={(e) => setField("email", e.target.value)} placeholder="твій@email.com" className={inputCls} />
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Номер телефону</label>

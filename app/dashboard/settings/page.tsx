@@ -134,7 +134,7 @@ function TeamTab() {
           <input
             value={inviteEmail}
             onChange={(e) => { setInviteEmail(e.target.value); setError(""); }}
-            placeholder="email@example.com"
+            placeholder="колега@email.com"
             className={input + " flex-1"}
           />
           <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as TeamRole)} className={input + " flex-shrink-0"}>

@@ -353,7 +353,7 @@ export default function RegisterPage() {
                     </Field>
                     <Field label="Email" error={errors.email}>
                       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                        placeholder="your@email.com" autoComplete="email" className={inp(!!errors.email)} />
+                        placeholder="твій@email.com" autoComplete="email" className={inp(!!errors.email)} />
                     </Field>
                     <Field label="Пароль" error={errors.password}>
                       <PasswordInput value={password} onChange={setPassword} placeholder="Мінімум 8 символів" autoComplete="new-password" />
