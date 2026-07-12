@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState, useEffect, useCallback } from "react";
 
 export type StandardBlock = "block_contacts" | "block_education" | "block_motivation" | "block_documents";
 
@@ -129,61 +128,57 @@ function toRow(data: Partial<OrgProject>): Record<string, unknown> {
 }
 
 export function useOrgProjects(orgId?: string) {
-  const supabase = useMemo(() => createClient(), []);
   const [projects, setProjects] = useState<OrgProject[]>([]);
   const [ready, setReady] = useState(false);
 
   const reload = useCallback(async () => {
     if (!orgId) { setProjects([]); setReady(true); return; }
-    const { data } = await supabase
-      .from("org_projects")
-      .select("*")
-      .eq("org_id", orgId)
-      .order("created_at", { ascending: false });
-    setProjects((data ?? []).map((r) => fromRow(r as Record<string, unknown>)));
+    const res = await fetch("/api/org/projects");
+    if (res.ok) {
+      const json = await res.json() as { projects: Record<string, unknown>[] };
+      setProjects((json.projects ?? []).map((r) => fromRow(r)));
+    }
     setReady(true);
-  }, [supabase, orgId]);
+  }, [orgId]);
 
   useEffect(() => { reload(); }, [reload]);
 
   const create = useCallback(
     async (data: Omit<OrgProject, "id" | "createdAt" | "updatedAt" | "views" | "saves">): Promise<OrgProject> => {
-      if (!orgId) throw new Error("orgId required");
-      const row = { ...toRow(data as Partial<OrgProject>), org_id: orgId };
-      const { data: created, error } = await supabase
-        .from("org_projects")
-        .insert(row)
-        .select()
-        .single();
-      if (error) throw error;
-      const project = fromRow(created as Record<string, unknown>);
+      const res = await fetch("/api/org/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(toRow(data as Partial<OrgProject>)),
+      });
+      const json = await res.json() as { project?: Record<string, unknown>; error?: string };
+      if (!res.ok) throw new Error(json.error ?? "Не вдалось зберегти проект");
+      const project = fromRow(json.project!);
       setProjects((prev) => [project, ...prev]);
       return project;
     },
-    [supabase, orgId]
+    []
   );
 
   const update = useCallback(
     async (id: string, data: Partial<OrgProject>) => {
-      const { error } = await supabase
-        .from("org_projects")
-        .update(toRow(data))
-        .eq("id", id);
-      if (!error) {
-        setProjects((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, ...data } : p))
-        );
+      const res = await fetch(`/api/org/projects/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(toRow(data)),
+      });
+      if (res.ok) {
+        setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...data } : p)));
       }
     },
-    [supabase]
+    []
   );
 
   const remove = useCallback(
     async (id: string) => {
-      await supabase.from("org_projects").delete().eq("id", id);
+      await fetch(`/api/org/projects/${id}`, { method: "DELETE" });
       setProjects((prev) => prev.filter((p) => p.id !== id));
     },
-    [supabase]
+    []
   );
 
   return { projects, ready, create, update, remove, reload };
