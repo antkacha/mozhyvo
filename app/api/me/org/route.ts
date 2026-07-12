@@ -123,5 +123,9 @@ export async function PATCH(req: Request) {
     console.error("[PATCH /api/me/org] update error:", error.message, "orgId:", orgId);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  console.log("[PATCH /api/me/org] saved:", {
+    id: savedOrg?.id, slug: savedOrg?.slug,
+    website: savedOrg?.website, socials: savedOrg?.socials,
+  });
   return NextResponse.json({ ok: true, org: savedOrg });
 }
