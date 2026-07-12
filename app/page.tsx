@@ -93,30 +93,10 @@ export default function Home() {
                 </Link>
               </div>
 
-              <div className="flex items-center gap-6 pt-1">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xl">🌍</span>
-                  <div>
-                    <p className="text-sm font-bold text-white leading-tight">40+</p>
-                    <p className="text-xs text-white/40">країн</p>
-                  </div>
-                </div>
-                <div className="w-px h-8 bg-white/10" />
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xl">📋</span>
-                  <div>
-                    <p className="text-sm font-bold text-white leading-tight">1 200+</p>
-                    <p className="text-xs text-white/40">можливостей</p>
-                  </div>
-                </div>
-                <div className="w-px h-8 bg-white/10" />
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xl">🎓</span>
-                  <div>
-                    <p className="text-sm font-bold text-white leading-tight">0₴</p>
-                    <p className="text-xs text-white/40">завжди</p>
-                  </div>
-                </div>
+              <div className="flex items-center gap-5 pt-1 flex-wrap">
+                {["🌍 Міжнародні можливості", "✅ Верифіковані", "💙 Безкоштовно"].map((tag) => (
+                  <span key={tag} className="text-xs text-white/55 font-medium">{tag}</span>
+                ))}
               </div>
             </div>
 
@@ -203,21 +183,17 @@ export default function Home() {
               <p className="text-gray-500 text-lg leading-relaxed max-w-xs">
                 Ми зібрали все для розвитку молоді — в одному місці
               </p>
-              <div className="mt-10 flex items-stretch gap-10">
-                <div>
-                  <p className="text-5xl font-black text-primary leading-none">1200+</p>
-                  <p className="text-sm text-gray-500 mt-2">можливостей</p>
-                </div>
-                <div className="w-px bg-gray-100" />
-                <div>
-                  <p className="text-5xl font-black text-primary leading-none">40+</p>
-                  <p className="text-sm text-gray-500 mt-2">країн</p>
-                </div>
-                <div className="w-px bg-gray-100" />
-                <div>
-                  <p className="text-5xl font-black text-primary leading-none">0₴</p>
-                  <p className="text-sm text-gray-500 mt-2">завжди безкоштовно</p>
-                </div>
+              <div className="mt-10 flex flex-col gap-4">
+                {[
+                  { icon: "💙", text: "Безкоштовно — назавжди" },
+                  { icon: "🔄", text: "Поповнюється щодня" },
+                  { icon: "✅", text: "Тільки верифіковані організації" },
+                ].map((item) => (
+                  <div key={item.text} className="flex items-center gap-3">
+                    <span className="text-lg">{item.icon}</span>
+                    <p className="text-base font-semibold text-gray-800">{item.text}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -267,9 +243,8 @@ export default function Home() {
                 <span className="text-4xl">🎓</span>
                 <span className="text-white/40 group-hover:text-white text-xl transition-colors duration-200">→</span>
               </div>
-              <p className="text-5xl md:text-6xl font-black leading-none mb-2">340+</p>
-              <p className="text-lg font-bold">Стипендії</p>
-              <p className="text-white/55 text-sm mt-1">активних можливостей</p>
+              <p className="text-3xl font-black leading-tight mb-2">Стипендії</p>
+              <p className="text-white/65 text-sm leading-relaxed">Навчання за кордоном та в Україні</p>
             </Link>
 
             {/* Normal: Стажування */}
@@ -282,9 +257,8 @@ export default function Home() {
                 <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
               </div>
               <div>
-                <p className="text-4xl font-black text-gray-900 leading-none mb-1.5">210+</p>
-                <p className="font-bold text-gray-700">Стажування</p>
-                <p className="text-xs text-gray-400 mt-1">активних</p>
+                <p className="text-xl font-black text-gray-900 leading-tight mb-1">Стажування</p>
+                <p className="text-xs text-gray-500 leading-snug">Досвід у топових компаніях</p>
               </div>
             </Link>
 
@@ -298,9 +272,8 @@ export default function Home() {
                 <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
               </div>
               <div>
-                <p className="text-4xl font-black text-gray-900 leading-none mb-1.5">180+</p>
-                <p className="font-bold text-gray-700">Обміни</p>
-                <p className="text-xs text-gray-400 mt-1">активних</p>
+                <p className="text-xl font-black text-gray-900 leading-tight mb-1">Обміни</p>
+                <p className="text-xs text-gray-500 leading-snug">Програми обміну в Європі та світі</p>
               </div>
             </Link>
 
@@ -314,9 +287,8 @@ export default function Home() {
                 <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
               </div>
               <div>
-                <p className="text-4xl font-black text-gray-900 leading-none mb-1.5">290+</p>
-                <p className="font-bold text-gray-700">Волонтерство</p>
-                <p className="text-xs text-gray-400 mt-1">активних</p>
+                <p className="text-xl font-black text-gray-900 leading-tight mb-1">Волонтерство</p>
+                <p className="text-xs text-gray-500 leading-snug">Допомагай і розвивайся</p>
               </div>
             </Link>
 
@@ -330,9 +302,8 @@ export default function Home() {
                 <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
               </div>
               <div>
-                <p className="text-4xl font-black text-gray-900 leading-none mb-1.5">95+</p>
-                <p className="font-bold text-gray-700">Конкурси</p>
-                <p className="text-xs text-gray-400 mt-1">активних</p>
+                <p className="text-xl font-black text-gray-900 leading-tight mb-1">Конкурси</p>
+                <p className="text-xs text-gray-500 leading-snug">Змагання та нагороди</p>
               </div>
             </Link>
 
@@ -345,9 +316,8 @@ export default function Home() {
                 <span className="text-4xl">🚀</span>
                 <span className="text-white/40 group-hover:text-white text-xl transition-colors duration-200">→</span>
               </div>
-              <p className="text-5xl md:text-6xl font-black leading-none mb-2">120+</p>
-              <p className="text-lg font-bold">Гранти</p>
-              <p className="text-white/55 text-sm mt-1">активних можливостей</p>
+              <p className="text-3xl font-black leading-tight mb-2">Гранти</p>
+              <p className="text-white/65 text-sm leading-relaxed">Фінансування ідей та проєктів</p>
             </Link>
 
           </div>
@@ -436,7 +406,7 @@ export default function Home() {
               <NewsletterSubscribe />
             </div>
             <p className="text-xs text-muted mt-4">
-              Понад 3 000 підписників · Відписатись можна в будь-який момент
+              Відписатись можна в будь-який момент
             </p>
           </div>
         </div>
