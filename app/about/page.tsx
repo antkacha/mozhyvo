@@ -4,9 +4,9 @@ import FounderImage from "@/components/FounderImage";
 import HeroSlider from "@/components/HeroSlider";
 
 export const metadata: Metadata = {
-  title: "Про нас — Моживо",
+  title: "Про нас — МОЖUВО",
   description:
-    "Знайомся з командою Моживо — платформою, що зібрала гранти, стажування та обміни для молоді України в одному місці.",
+    "Знайомся з командою МОЖUВО — платформою, що зібрала гранти, стажування та обміни для молоді України в одному місці.",
 };
 
 const marqueeItems = ["СТИПЕНДІЇ", "СТАЖУВАННЯ", "ОБМІНИ", "ВОЛОНТЕРСТВО", "ГРАНТИ", "КОНКУРСИ"];
@@ -26,7 +26,7 @@ const founders = [
     bio: [
       "20 років, студентка-айтішниця та просто людина, яка дуже любить можливості.",
       "Брала участь у 9 міжнародних обмінах, навчалася безкоштовно в Хорватії — і зовсім скоро вирушає на нове навчання у Францію. Official Member of EYP Ukraine 2026.",
-      "Організувала івент «Міжнародні можливості для молоді», який зібрав 100+ учасників. Саме тоді зрозуміла: людям потрібна не лекція, а зручний інструмент. Так з'явилось Моживо.",
+      "Організувала івент «Міжнародні можливості для молоді», який зібрав 100+ учасників. Саме тоді зрозуміла: людям потрібна не лекція, а зручний інструмент. Так з'явилось МОЖUВО.",
     ],
   },
   {
@@ -44,12 +44,12 @@ const founders = [
 
 const quotes = [
   {
-    text: "Моживо — це те, що я хотіла мати, коли тільки починала шукати свою першу можливість. Це майданчик для активної молоді, що готова розвиватися та репрезентувати Україну на міжнародному рівні.",
+    text: "МОЖUВО — це те, що я хотіла мати, коли тільки починала шукати свою першу можливість. Це майданчик для активної молоді, що готова розвиватися та репрезентувати Україну на міжнародному рівні.",
     name: "Аня Ткаченко",
     role: "Co-founder & Product",
   },
   {
-    text: "Тому що вчора ти годинами шукав серед десятків каналів те, що тобі справді потрібно. А сьогодні «Моживо» знаходить це для тебе.\n\nШукай. Заповнюй. Створюй себе.",
+    text: "Тому що вчора ти годинами шукав серед десятків каналів те, що тобі справді потрібно. А сьогодні «МОЖUВО» знаходить це для тебе.\n\nШукай. Заповнюй. Створюй себе.",
     name: "Лілія Нежельська",
     role: "Co-founder & Operations",
   },
@@ -58,48 +58,49 @@ const quotes = [
 export default function AboutPage() {
   return (
     <>
-      {/* ── Hero — blue ──────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-primary">
-        {/* Dot grid */}
+      {/* ── Hero — white ─────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-white border-b border-gray-100">
+        {/* Soft glow */}
         <div
           aria-hidden
-          className="absolute inset-0 pointer-events-none opacity-[0.07]"
-          style={{
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-          }}
-        />
-        {/* Glow */}
-        <div
-          aria-hidden
-          className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full pointer-events-none opacity-20"
-          style={{ background: "radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 65%)" }}
+          className="absolute -top-20 right-0 w-[600px] h-[600px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(59,79,232,0.05) 0%, transparent 65%)" }}
         />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
             {/* Left */}
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 text-white text-xs font-semibold mb-8">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/25 bg-white text-primary text-xs font-semibold shadow-sm mb-8">
                 <span>✦</span>
                 Наша історія
               </div>
 
-              <h1 className="text-5xl md:text-6xl font-black text-white leading-[1.0] mb-6">
+              <h1 className="text-5xl md:text-6xl font-black text-gray-900 leading-[1.0] mb-6">
                 Ми віримо, що кожен{" "}
-                <span className="relative inline-block">
-                  українець
-                  <span className="absolute -bottom-1 left-0 right-0 h-[4px] bg-white/50 rounded-full" />
-                </span>{" "}
+                <span className="text-primary">українець</span>{" "}
                 заслуговує знати про свої можливості
               </h1>
 
-              <p className="text-white/65 text-lg leading-relaxed max-w-lg">
-                Моживо — це платформа, яка зібрала гранти, стажування, обміни та
+              <p className="text-gray-500 text-lg leading-relaxed max-w-lg mb-10">
+                МОЖUВО — це платформа, яка зібрала гранти, стажування, обміни та
                 волонтерство в одному місці. Ми зробили це, бо самі шукали ці
                 можливості і знаємо, як це складно.
               </p>
+
+              {/* Stats inline */}
+              <div className="flex items-stretch gap-8">
+                {stats.map((s, i) => (
+                  <div key={s.num} className="flex items-stretch gap-8">
+                    {i > 0 && <div className="w-px bg-gray-100" />}
+                    <div>
+                      <p className="text-3xl font-black text-primary leading-none">{s.num}</p>
+                      <p className="text-sm text-gray-500 mt-1.5">{s.label}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Right: photo gallery */}
@@ -108,22 +109,11 @@ export default function AboutPage() {
             </div>
 
           </div>
-
-          {/* Stats row */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px mt-16 bg-white/10 rounded-3xl overflow-hidden">
-            {stats.map((s) => (
-              <div key={s.num} className="bg-primary px-8 py-7">
-                <p className="text-4xl font-black text-white leading-none mb-1">{s.num}</p>
-                <p className="text-white/50 text-xs font-bold tracking-widest uppercase mb-2">{s.label}</p>
-                <p className="text-white/55 text-sm leading-snug">{s.desc}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* ── Marquee ──────────────────────────────────────────────────── */}
-      <div className="bg-primary py-4 overflow-hidden border-t border-white/10">
+      <div className="bg-primary py-4 overflow-hidden">
         <div className="flex animate-marquee whitespace-nowrap w-max">
           {[0, 1].map((i) => (
             <div key={i} className="flex items-center flex-none">
@@ -145,7 +135,7 @@ export default function AboutPage() {
 
             {/* Left: bold statement */}
             <div>
-              <p className="text-white/50 text-xs font-bold tracking-widest uppercase text-primary/50 mb-6">Проблема</p>
+              <p className="text-primary/50 text-xs font-bold tracking-widest uppercase mb-6">Проблема</p>
               <p className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.05]">
                 Раніше потрібно було моніторити десятки каналів щодня.{" "}
                 <span className="text-primary">Більшість просто здавалась.</span>
@@ -158,12 +148,12 @@ export default function AboutPage() {
             {/* Right: stats with dividers */}
             <div className="divide-y divide-gray-100">
               {stats.map((s, idx) => (
-                <div key={s.num} className="relative flex items-start gap-6 py-7 first:pt-0 last:pb-0 group">
+                <div key={s.num} className="relative flex items-center gap-6 py-7 first:pt-0 last:pb-0">
                   {/* Background number */}
-                  <span className="absolute -top-2 right-0 text-[64px] font-black text-gray-50 leading-none select-none group-hover:text-primary/5 transition-colors">
+                  <span className="absolute -top-1 right-0 text-[64px] font-black text-gray-50 leading-none select-none">
                     0{idx + 1}
                   </span>
-                  <p className="text-4xl font-black text-primary leading-none flex-shrink-0 w-24">{s.num}</p>
+                  <p className="text-4xl font-black text-primary leading-none flex-shrink-0 w-28 whitespace-nowrap">{s.num}</p>
                   <div className="relative z-10">
                     <p className="font-black text-gray-900 text-base">{s.desc}</p>
                   </div>
@@ -179,7 +169,7 @@ export default function AboutPage() {
       <section className="bg-primary py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-2xl md:text-3xl font-black text-white/80 leading-snug">
-            ✦ Моживо — це не просто агрегатор. Це{" "}
+            ✦ МОЖUВО — це не просто агрегатор. Це{" "}
             <span className="text-white">інструмент,</span>{" "}
             який дає молодим українцям реальний доступ до можливостей світового рівня.
           </p>
@@ -238,7 +228,7 @@ export default function AboutPage() {
 
           <h2 className="text-5xl md:text-6xl font-black text-gray-900 leading-[1.0] mb-3">
             Що для нас{" "}
-            <span className="text-primary">Моживо?</span>
+            <span className="text-primary">МОЖUВО?</span>
           </h2>
           <p className="text-gray-500 text-lg mb-12">Особисто від засновниць</p>
 
@@ -250,7 +240,7 @@ export default function AboutPage() {
               >
                 {/* Decorative quote */}
                 <span
-                  className="absolute -top-4 -left-2 text-[120px] leading-none font-serif text-primary/6 select-none pointer-events-none"
+                  className="absolute -top-4 -left-2 text-[120px] leading-none font-serif text-gray-200 select-none pointer-events-none"
                   aria-hidden
                 >
                   &ldquo;
@@ -283,7 +273,7 @@ export default function AboutPage() {
               <h2 className="text-5xl md:text-6xl font-black text-white leading-[1.0] mb-6">
                 На розвиток{" "}
                 <span className="relative inline-block">
-                  Моживо
+                  МОЖUВО
                   <span className="absolute -bottom-1 left-0 right-0 h-[4px] bg-white/50 rounded-full" />
                 </span>
               </h2>
