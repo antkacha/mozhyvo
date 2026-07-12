@@ -21,14 +21,44 @@ export default function Home() {
     <>
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section className="bg-white relative overflow-hidden min-h-[90vh] flex items-center">
-        {/* Background watermark */}
-        <div aria-hidden className="absolute inset-0 flex flex-col justify-center pointer-events-none select-none overflow-hidden">
-          <p className="text-[13vw] font-black text-gray-100 leading-none whitespace-nowrap -ml-2">
-            МОЖЛИВОСТІ
-          </p>
-          <p className="text-[13vw] font-black text-gray-100 leading-none whitespace-nowrap ml-10 -mt-2">
-            МОЖЛИВОСТІ
-          </p>
+        {/* Blue paint stroke decorations */}
+        <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+          <div
+            className="absolute bg-primary"
+            style={{
+              top: "-80px",
+              right: "-100px",
+              width: "540px",
+              height: "360px",
+              opacity: 0.07,
+              borderRadius: "68% 32% 71% 29% / 42% 61% 39% 58%",
+              transform: "rotate(-14deg)",
+            }}
+          />
+          <div
+            className="absolute bg-primary"
+            style={{
+              bottom: "-100px",
+              left: "-60px",
+              width: "460px",
+              height: "300px",
+              opacity: 0.055,
+              borderRadius: "38% 62% 49% 51% / 58% 41% 59% 42%",
+              transform: "rotate(9deg)",
+            }}
+          />
+          <div
+            className="absolute bg-primary"
+            style={{
+              top: "40%",
+              right: "30%",
+              width: "180px",
+              height: "110px",
+              opacity: 0.04,
+              borderRadius: "55% 45% 60% 40% / 48% 56% 44% 52%",
+              transform: "rotate(-6deg)",
+            }}
+          />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
@@ -36,12 +66,6 @@ export default function Home() {
 
             {/* Left: content */}
             <div className="flex flex-col gap-6">
-              {/* Blue glow accent line */}
-              <div className="self-start relative h-px w-24" aria-hidden>
-                <div className="absolute inset-0 rounded-full bg-primary/50" />
-                <div className="absolute inset-0 rounded-full bg-primary blur-lg scale-y-[5] opacity-40" />
-              </div>
-
               <h1 className="text-6xl md:text-7xl lg:text-[5.5rem] font-black text-gray-900 tracking-tight leading-[0.92]">
                 Знайди<br />
                 <span className="text-primary">свою</span><br />
