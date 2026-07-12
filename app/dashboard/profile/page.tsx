@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import CoverPickerModal, { type CoverResult } from "@/components/CoverPickerModal";
