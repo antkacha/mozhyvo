@@ -322,43 +322,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Marquee ──────────────────────────────────────────────────── */}
-      <div className="bg-foreground py-4 overflow-hidden">
+      {/* ── Marquee — blue ───────────────────────────────────────────── */}
+      <div className="bg-primary py-4 overflow-hidden">
         <div className="flex animate-marquee whitespace-nowrap w-max">
           {[0, 1].map((i) => (
             <div key={i} className="flex items-center flex-none">
               {marqueeItems.map((item) => (
-                <span key={`${i}-${item}`} className="inline-flex items-center gap-6 text-xs font-bold tracking-[0.2em] text-white/40 px-6">
+                <span key={`${i}-${item}`} className="inline-flex items-center gap-6 text-xs font-bold tracking-[0.2em] text-white/55 px-6">
                   {item}
-                  <span className="text-primary font-black">·</span>
+                  <span className="text-white/30 font-black">·</span>
                 </span>
               ))}
             </div>
           ))}
         </div>
       </div>
-
-      {/* ── Telegram ─────────────────────────────────────────────────── */}
-      <section className="bg-primary-light border-t border-primary/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-[#2AABEE] flex items-center justify-center flex-shrink-0 shadow-md">
-                <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.01 9.473c-.148.664-.537.826-1.088.514l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.462c.537-.194 1.006.13.877.743z" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-black text-foreground text-lg">Telegram-бот Моживо</p>
-                <p className="text-sm text-muted mt-0.5">Отримуй нові можливості та нагадування прямо в Telegram</p>
-              </div>
-            </div>
-            <a href="https://t.me/mozhyvo_bot" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#2AABEE] text-white font-semibold text-sm hover:bg-[#229ED9] transition-all shadow-md flex-shrink-0">
-              Відкрити бота →
-            </a>
-          </div>
-        </div>
-      </section>
 
       {/* ── Newsletter ───────────────────────────────────────────────── */}
       <section id="newsletter" className="bg-white border-t border-gray-100">
