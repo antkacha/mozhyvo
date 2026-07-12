@@ -10,7 +10,7 @@ async function getCallerOrgId(userId: string): Promise<string | null> {
   return member?.org_id ?? null;
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
