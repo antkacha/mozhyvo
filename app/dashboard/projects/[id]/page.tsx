@@ -337,7 +337,7 @@ function EditProjectContent() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={label}>Дедлайн</label>
-              <input type="date" value={form.deadline} onChange={(e) => set("deadline", e.target.value)} className={input} />
+              <input type="date" value={form.deadline} min={new Date().toISOString().split("T")[0]} onChange={(e) => set("deadline", e.target.value)} className={input} />
             </div>
             <div>
               <label className={label}>Тривалість</label>

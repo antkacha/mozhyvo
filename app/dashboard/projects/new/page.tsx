@@ -597,6 +597,7 @@ function NewProjectContent() {
                 <input
                   type="date"
                   value={form.deadline}
+                  min={new Date().toISOString().split("T")[0]}
                   onChange={(e) => set("deadline", e.target.value)}
                   className={`${input} ${errors.deadline ? err : ""}`}
                 />
