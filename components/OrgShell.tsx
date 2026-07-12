@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgProjects } from "@/hooks/useOrgProjects";
@@ -280,10 +281,17 @@ function MobileNav() {
 export default function OrgShell({ children }: { children: React.ReactNode }) {
   const { org, ready } = useOrgSession();
   const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    if (ready && !org) router.replace("/login");
-  }, [ready, org, router]);
+    if (!ready || org) return;
+    // Only redirect to /login if the user truly has no session.
+    // If they are authenticated but org is missing, stay and retry —
+    // the org row may still be bootstrapping (first login after email confirm).
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) router.replace("/login");
+    });
+  }, [ready, org, router, supabase]);
 
   if (!ready || !org) {
     return (

@@ -32,8 +32,8 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Protect /cabinet and /admin
-  if (!user && (pathname.startsWith("/cabinet") || pathname.startsWith("/admin"))) {
+  // Protect /cabinet, /dashboard and /admin
+  if (!user && (pathname.startsWith("/cabinet") || pathname.startsWith("/dashboard") || pathname.startsWith("/admin"))) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
