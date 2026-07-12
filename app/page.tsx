@@ -137,7 +137,7 @@ export default function Home() {
                         1 лип
                       </span>
                     </div>
-                    <p className="font-extrabold text-base leading-tight mb-1 text-foreground">Erasmus+ 2025</p>
+                    <p className="font-extrabold text-base leading-tight mb-1 text-foreground">Erasmus+ 2026</p>
                     <p className="text-muted text-xs mb-4">Навчання в ЄС · До 1 000€/міс</p>
                     <div className="flex items-center justify-between pt-3 border-t border-border">
                       <span className="text-xs text-muted">🇪🇺 Євросоюз</span>

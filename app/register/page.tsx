@@ -367,9 +367,9 @@ export default function RegisterPage() {
                           className="mt-0.5 w-4 h-4 rounded border-border accent-primary cursor-pointer flex-shrink-0" />
                         <span className="text-xs text-muted leading-relaxed">
                           Я погоджуюсь з{" "}
-                          <Link href="#" className="text-primary hover:underline">Умовами використання</Link>{" "}
+                          <Link href="/terms" className="text-primary hover:underline">Умовами використання</Link>{" "}
                           та{" "}
-                          <Link href="#" className="text-primary hover:underline">Політикою конфіденційності</Link>
+                          <Link href="/privacy" className="text-primary hover:underline">Політикою конфіденційності</Link>
                         </span>
                       </label>
                       {errors.agreed && <p className="text-xs text-red-500 mt-1">{errors.agreed}</p>}
