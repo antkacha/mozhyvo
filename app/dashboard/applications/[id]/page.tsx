@@ -154,7 +154,11 @@ function ApplicationDetail() {
           </div>
           <div>
             <h1 className="text-xl font-black text-foreground">{app.firstName} {app.lastName}</h1>
-            <p className="text-sm text-muted mt-0.5">{app.institution} · {app.degree}</p>
+            {(app.institution || app.degree) && (
+              <p className="text-sm text-muted mt-0.5">
+                {[app.institution, app.degree].filter(Boolean).join(" · ")}
+              </p>
+            )}
             <div className="flex items-center gap-2 mt-2">
               <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_CHIP[app.status]}`}>{STATUS_LABEL[app.status]}</span>
               <span className="text-xs text-muted">{app.country}</span>
@@ -201,33 +205,39 @@ function ApplicationDetail() {
             </div>
           )}
 
-          {/* Languages & preferences */}
-          <div className="bg-white rounded-2xl border border-border p-6">
-            <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 bg-primary-light rounded-lg flex items-center justify-center text-xs">📋</span>
-              Деталі заявки
-            </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">Мови</p>
-                <div className="flex flex-wrap gap-1">
-                  {app.languages.map((l) => (
-                    <span key={l} className="text-xs font-medium bg-muted-bg text-foreground px-2.5 py-1 rounded-lg">{l}</span>
-                  ))}
-                </div>
+          {/* Details — only render if there's something to show */}
+          {(app.languages.length > 0 || app.degree || app.internalNote) && (
+            <div className="bg-white rounded-2xl border border-border p-6">
+              <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+                <span className="w-6 h-6 bg-primary-light rounded-lg flex items-center justify-center text-xs">📋</span>
+                Деталі заявки
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+                {app.languages.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">Мови</p>
+                    <div className="flex flex-wrap gap-1">
+                      {app.languages.map((l) => (
+                        <span key={l} className="text-xs font-medium bg-muted-bg text-foreground px-2.5 py-1 rounded-lg">{l}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {app.degree && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">Ступінь</p>
+                    <p className="text-sm font-medium text-foreground">{app.degree}</p>
+                  </div>
+                )}
+                {app.internalNote && (
+                  <div className="col-span-2">
+                    <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">Внутрішня нотатка</p>
+                    <p className="text-sm text-foreground leading-relaxed">{app.internalNote}</p>
+                  </div>
+                )}
               </div>
-              <div>
-                <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">Ступінь</p>
-                <p className="text-sm font-medium text-foreground">{app.degree}</p>
-              </div>
-              {app.internalNote && (
-                <div className="col-span-2">
-                  <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">Внутрішня нотатка</p>
-                  <p className="text-sm text-foreground leading-relaxed">{app.internalNote}</p>
-                </div>
-              )}
             </div>
-          </div>
+          )}
 
           {/* Documents */}
           {(app.cvUrl || app.portfolioUrl) && (

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import ConditionalFooter from "@/components/ConditionalFooter";
 import PageTransition from "@/components/PageTransition";
 import { SavedProvider } from "@/contexts/SavedContext";
 import { ToastProvider } from "@/contexts/ToastContext";
@@ -105,7 +105,7 @@ export default function RootLayout({
             <main className="flex-1">
               <PageTransition>{children}</PageTransition>
             </main>
-            <Footer />
+            <ConditionalFooter />
           </SavedProvider>
         </ToastProvider>
       </body>
