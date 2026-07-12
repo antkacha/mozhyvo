@@ -103,7 +103,6 @@ function AnalyticsContent() {
 
   const totalViews = projects.reduce((sum, p) => sum + (p.views ?? 0), 0);
   const totalSelected = applications.filter((a) => a.status === "selected").length;
-  const totalReviewing = applications.filter((a) => a.status === "reviewing").length;
   const convRate = applications.length > 0 ? Math.round((totalSelected / applications.length) * 100) : 0;
   const last7 = applications.filter((a) => {
     const d = new Date(a.submittedAt);
