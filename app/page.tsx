@@ -23,30 +23,36 @@ export default function Home() {
       <section className="bg-white relative overflow-hidden min-h-[90vh] flex items-center">
         {/* Blue paint stroke decorations */}
         <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-          {/* Top-right brush stroke */}
+          {/* Top-right brush stroke — thick SVG stroke = real paint brush */}
           <svg
-            className="absolute -top-6 -right-12 opacity-[0.08]"
-            width="600"
-            height="290"
-            viewBox="0 0 600 290"
+            className="absolute -top-10 -right-24 opacity-[0.075]"
+            width="680"
+            height="260"
+            viewBox="0 0 680 260"
             fill="none"
           >
             <path
-              d="M70,12 C190,-18 400,18 560,6 C586,55 582,150 548,168 C458,196 285,158 118,174 C46,181 4,136 2,92 C-3,52 28,24 70,12 Z"
-              fill="#3B4FE8"
+              d="M60,160 C180,80 360,110 520,70 C610,46 670,90 700,72"
+              stroke="#3B4FE8"
+              strokeWidth="100"
+              strokeLinecap="round"
+              fill="none"
             />
           </svg>
           {/* Bottom-left wave stroke */}
           <svg
-            className="absolute -bottom-6 -left-8 opacity-[0.065]"
-            width="660"
-            height="230"
-            viewBox="0 0 660 230"
+            className="absolute -bottom-12 -left-24 opacity-[0.065]"
+            width="700"
+            height="260"
+            viewBox="0 0 700 260"
             fill="none"
           >
             <path
-              d="M-20,78 C130,22 320,72 490,42 C590,22 648,64 668,50 L668,230 L-20,230 Z"
-              fill="#3B4FE8"
+              d="M-10,100 C140,40 320,85 490,52 C600,30 665,75 710,58"
+              stroke="#3B4FE8"
+              strokeWidth="110"
+              strokeLinecap="round"
+              fill="none"
             />
           </svg>
         </div>
@@ -323,16 +329,16 @@ export default function Home() {
             {/* Squiggle — top right */}
             <svg
               aria-hidden
-              className="absolute top-5 right-5 w-28 h-28"
-              viewBox="0 0 100 120"
+              className="absolute -top-2 -right-2 w-40 h-44"
+              viewBox="0 0 130 150"
               fill="none"
             >
               <path
-                d="M78,10 C104,10 104,44 78,44 C52,44 52,78 78,78 C104,78 104,110 78,110"
+                d="M100,14 C130,14 130,54 100,54 C70,54 70,94 100,94 C130,94 130,134 100,134"
                 stroke="#3B4FE8"
-                strokeWidth="4"
+                strokeWidth="5.5"
                 strokeLinecap="round"
-                opacity="0.4"
+                opacity="0.55"
               />
             </svg>
 
