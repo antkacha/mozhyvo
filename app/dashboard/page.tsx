@@ -25,7 +25,11 @@ function OrgOverview() {
   const { projects } = useOrgProjects(org?.id);
   const { applications } = useOrgApplications(org?.id);
 
+  const today = new Date().toISOString().split("T")[0];
   const published = projects.filter((p) => p.status === "published");
+  const activePublished = published.filter(
+    (p) => !p.deadline || !/^\d{4}-\d{2}-\d{2}$/.test(p.deadline) || p.deadline >= today,
+  );
   const drafts = projects.filter((p) => p.status === "draft");
   const newApps = applications.filter((a) => a.status === "new");
   const selected = applications.filter((a) => a.status === "selected");
@@ -35,9 +39,9 @@ function OrgOverview() {
 
   const stats = [
     {
-      value: published.length,
+      value: activePublished.length,
       label: "Активних проектів",
-      sub: `${drafts.length} чернеток`,
+      sub: `${drafts.length} чернеток · ${published.length - activePublished.length > 0 ? `${published.length - activePublished.length} в архіві` : ""}`,
       accent: false,
     },
     {
@@ -175,7 +179,7 @@ function OrgOverview() {
               Всі →
             </Link>
           </div>
-          {published.length === 0 ? (
+          {activePublished.length === 0 ? (
             <div className="px-5 py-10 text-center">
               <p className="text-sm text-muted mb-4">Немає опублікованих проектів</p>
               <Link href="/dashboard/projects/new" className="inline-flex text-xs font-semibold text-primary hover:underline">
@@ -184,7 +188,7 @@ function OrgOverview() {
             </div>
           ) : (
             <div>
-              {published.slice(0, 5).map((p, i) => {
+              {activePublished.slice(0, 5).map((p, i) => {
                 const count = applications.filter((a) => a.projectId === p.id).length;
                 const newCount = applications.filter(
                   (a) => a.projectId === p.id && a.status === "new"
@@ -192,7 +196,7 @@ function OrgOverview() {
                 return (
                   <div
                     key={p.id}
-                    className={`px-5 py-4 ${i !== Math.min(published.length, 5) - 1 ? "border-b border-border" : ""}`}
+                    className={`px-5 py-4 ${i !== Math.min(activePublished.length, 5) - 1 ? "border-b border-border" : ""}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
