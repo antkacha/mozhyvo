@@ -13,59 +13,39 @@ const STATUS_CHIP: Record<OrgApplication["status"], string> = { new: "bg-blue-50
 const STATUS_ACTIVE: Record<OrgApplication["status"], string> = { new: "bg-blue-500 text-white border-blue-500", reviewing: "bg-amber-400 text-white border-amber-400", selected: "bg-green-500 text-white border-green-500", rejected: "bg-red-400 text-white border-red-400" };
 const STATUS_DOT: Record<OrgApplication["status"], string> = { new: "bg-blue-500", reviewing: "bg-amber-400", selected: "bg-green-500", rejected: "bg-red-400" };
 
-// ── Export: dynamic, data-driven ─────────────────────────────────────
-type StdKey = "projectTitle" | "firstName" | "lastName" | "email" | "phone"
-  | "country" | "institution" | "degree" | "languages" | "motivation"
-  | "cvUrl" | "portfolioUrl" | "status" | "submittedAt";
+// ── Export: minimal metadata + custom answers only ────────────────────
+type MetaKey = "projectTitle" | "firstName" | "lastName" | "email" | "status" | "submittedAt";
 
-const STD_FIELDS: { key: StdKey; label: string; colW: number }[] = [
-  { key: "projectTitle", label: "Проєкт",             colW: 32 },
-  { key: "firstName",    label: "Ім'я",               colW: 12 },
-  { key: "lastName",     label: "Прізвище",           colW: 14 },
-  { key: "email",        label: "Email",              colW: 28 },
-  { key: "phone",        label: "Телефон",            colW: 16 },
-  { key: "country",      label: "Країна",             colW: 16 },
-  { key: "institution",  label: "Заклад освіти",      colW: 26 },
-  { key: "degree",       label: "Ступінь",            colW: 18 },
-  { key: "languages",    label: "Мови",               colW: 20 },
-  { key: "motivation",   label: "Мотиваційний лист",  colW: 80 },
-  { key: "cvUrl",        label: "CV",                 colW: 30 },
-  { key: "portfolioUrl", label: "Портфоліо",          colW: 30 },
-  { key: "status",       label: "Статус",             colW: 14 },
-  { key: "submittedAt",  label: "Дата подачі",        colW: 14 },
+const META_FIELDS: { key: MetaKey; label: string; colW: number }[] = [
+  { key: "projectTitle", label: "Проєкт",      colW: 32 },
+  { key: "firstName",    label: "Ім'я",         colW: 12 },
+  { key: "lastName",     label: "Прізвище",     colW: 14 },
+  { key: "email",        label: "Email",        colW: 28 },
+  { key: "status",       label: "Статус",       colW: 14 },
+  { key: "submittedAt",  label: "Дата подачі",  colW: 14 },
 ];
 
-function hasValue(app: OrgApplication, key: StdKey): boolean {
-  if (key === "languages") return app.languages.length > 0;
-  if (key === "status" || key === "submittedAt" || key === "projectTitle") return true;
-  const v = app[key as keyof OrgApplication];
-  return typeof v === "string" && v.trim() !== "";
-}
-
-function stdValue(app: OrgApplication, key: StdKey): string {
-  if (key === "languages")   return app.languages.join("; ");
+function metaValue(app: OrgApplication, key: MetaKey): string {
   if (key === "status")      return STATUS_LABEL[app.status];
   if (key === "submittedAt") return new Date(app.submittedAt).toLocaleDateString("uk-UA");
-  const v = app[key as keyof OrgApplication];
-  return typeof v === "string" ? v : "";
+  return (app[key as keyof OrgApplication] as string) ?? "";
 }
 
 function buildExportData(apps: OrgApplication[]) {
-  const activeStd = STD_FIELDS.filter((f) => apps.some((a) => hasValue(a, f.key)));
   const customKeys = Array.from(new Set(apps.flatMap((a) => Object.keys(a.customAnswers ?? {}))));
 
-  const headers = [...activeStd.map((f) => f.label), ...customKeys];
+  const headers = [...META_FIELDS.map((f) => f.label), ...customKeys];
   const colWidths = [
-    ...activeStd.map((f) => ({ wch: f.colW })),
+    ...META_FIELDS.map((f) => ({ wch: f.colW })),
     ...customKeys.map(() => ({ wch: 30 })),
   ];
   const rows = apps.map((a) => {
-    const std = activeStd.map((f) => stdValue(a, f.key));
+    const meta = META_FIELDS.map((f) => metaValue(a, f.key));
     const custom = customKeys.map((k) => {
       const v = (a.customAnswers ?? {})[k];
       return Array.isArray(v) ? v.join("; ") : (v ?? "");
     });
-    return [...std, ...custom];
+    return [...meta, ...custom];
   });
 
   return { headers, rows, colWidths };
@@ -102,8 +82,7 @@ function ExportModal({ open, apps, onClose }: { open: boolean; apps: OrgApplicat
   const n = apps.length;
   const label = n === 1 ? "заявка" : n < 5 ? "заявки" : "заявок";
   const customKeys = Array.from(new Set(apps.flatMap((a) => Object.keys(a.customAnswers ?? {}))));
-  const activeStd = STD_FIELDS.filter((f) => apps.some((a) => hasValue(a, f.key)));
-  const totalCols = activeStd.length + customKeys.length;
+  const totalCols = META_FIELDS.length + customKeys.length;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
@@ -137,7 +116,7 @@ function ExportModal({ open, apps, onClose }: { open: boolean; apps: OrgApplicat
         <div className="px-6 py-4">
           <p className="text-[10px] font-bold text-muted/70 uppercase tracking-[0.1em] mb-2.5">Що буде в файлі</p>
           <div className="flex flex-wrap gap-1.5">
-            {activeStd.map((f) => (
+            {META_FIELDS.map((f) => (
               <span key={f.key} className="text-xs px-2.5 py-1 rounded-lg bg-muted-bg text-muted font-medium">
                 {f.label}
               </span>
