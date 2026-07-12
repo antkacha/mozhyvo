@@ -11,17 +11,9 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "invalid">("idle");
   const [errorMsg, setErrorMsg] = useState("");
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Supabase sends #access_token=... in the hash on password reset links
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") setReady(true);
-    });
-    // If user already has session (came via token exchange)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true);
-    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {});
     return () => subscription.unsubscribe();
   }, [supabase]);
 
