@@ -298,30 +298,30 @@ export default function OpportunitiesCatalog() {
       {/* Search + sort */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
-          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
             type="text" value={rawSearch}
             onChange={(e) => setRawSearch(e.target.value)}
             placeholder="Пошук за назвою, організацією, тегами..."
-            className="w-full pl-10 pr-10 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white"
+            className="w-full pl-11 pr-10 py-3 text-sm border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white shadow-sm"
           />
           {rawSearch && (
-            <button onClick={() => { setRawSearch(""); setSearch(""); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
+            <button onClick={() => { setRawSearch(""); setSearch(""); }} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           )}
         </div>
         <select
           value={sort} onChange={(e) => { setSort(e.target.value as SortValue); resetPage(); }}
-          className="text-sm border border-border rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground flex-shrink-0"
+          className="text-sm border border-border rounded-2xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground flex-shrink-0 shadow-sm"
         >
           {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
         <button
           onClick={() => setMobileOpen(true)}
-          className="lg:hidden flex items-center gap-2 px-4 py-2.5 border border-border rounded-xl text-sm font-medium hover:border-primary hover:text-primary transition-all bg-white flex-shrink-0"
+          className="lg:hidden flex items-center gap-2 px-4 py-3 border border-border rounded-2xl text-sm font-medium hover:border-primary hover:text-primary transition-all bg-white flex-shrink-0 shadow-sm"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 8h10M11 12h4" /></svg>
           Фільтри
@@ -346,13 +346,19 @@ export default function OpportunitiesCatalog() {
 
       <div className="flex gap-8">
         {/* Desktop sidebar */}
-        <aside className="hidden lg:block w-52 flex-shrink-0">
+        <aside className="hidden lg:block w-56 flex-shrink-0">
           <div className="sticky top-24">
-            <div className="flex items-center justify-between mb-4">
-              <p className="font-semibold text-sm text-foreground">Фільтри</p>
-              {activeCount > 0 && <button onClick={clearAll} className="text-xs text-primary hover:underline">Очистити</button>}
+            <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <p className="font-bold text-sm text-foreground">Фільтри</p>
+                {activeCount > 0 && (
+                  <button onClick={clearAll} className="text-xs text-primary hover:underline font-medium">
+                    Очистити ({activeCount})
+                  </button>
+                )}
+              </div>
+              <FilterPanel />
             </div>
-            <FilterPanel />
           </div>
         </aside>
 
