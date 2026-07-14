@@ -53,44 +53,48 @@ export default function OpportunitiesHero() {
             </div>
           </div>
 
-          {/* Right: abstract constellation */}
+          {/* Right: orbital accent */}
           <div className="hidden lg:flex items-center justify-center h-[300px]">
             <svg viewBox="0 0 480 300" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Lines */}
-              <line x1="80"  y1="60"  x2="200" y2="130" stroke="#3B4FE8" strokeOpacity=".15" strokeWidth="1"/>
-              <line x1="200" y1="130" x2="340" y2="80"  stroke="#3B4FE8" strokeOpacity=".15" strokeWidth="1"/>
-              <line x1="340" y1="80"  x2="400" y2="180" stroke="#3B4FE8" strokeOpacity=".15" strokeWidth="1"/>
-              <line x1="200" y1="130" x2="260" y2="220" stroke="#3B4FE8" strokeOpacity=".15" strokeWidth="1"/>
-              <line x1="260" y1="220" x2="400" y2="180" stroke="#3B4FE8" strokeOpacity=".15" strokeWidth="1"/>
-              <line x1="80"  y1="60"  x2="120" y2="190" stroke="#3B4FE8" strokeOpacity=".1"  strokeWidth="1"/>
-              <line x1="120" y1="190" x2="260" y2="220" stroke="#3B4FE8" strokeOpacity=".1"  strokeWidth="1"/>
-              <line x1="340" y1="80"  x2="260" y2="220" stroke="#3B4FE8" strokeOpacity=".08" strokeWidth="1"/>
-              <line x1="200" y1="130" x2="120" y2="190" stroke="#3B4FE8" strokeOpacity=".08" strokeWidth="1"/>
-              <line x1="80"  y1="60"  x2="340" y2="80"  stroke="#3B4FE8" strokeOpacity=".06" strokeWidth="1"/>
-              <line x1="400" y1="180" x2="440" y2="100" stroke="#3B4FE8" strokeOpacity=".1"  strokeWidth="1"/>
-              <line x1="340" y1="80"  x2="440" y2="100" stroke="#3B4FE8" strokeOpacity=".1"  strokeWidth="1"/>
-              <line x1="40"  y1="200" x2="120" y2="190" stroke="#3B4FE8" strokeOpacity=".08" strokeWidth="1"/>
-              <line x1="40"  y1="200" x2="80"  y2="60"  stroke="#3B4FE8" strokeOpacity=".05" strokeWidth="1"/>
+              <defs>
+                <linearGradient id="orb" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#5B6FFF"/>
+                  <stop offset="100%" stopColor="#3B4FE8"/>
+                </linearGradient>
+              </defs>
 
-              {/* Outer glow rings on key nodes */}
-              <circle cx="200" cy="130" r="22" fill="#3B4FE8" fillOpacity=".06"/>
-              <circle cx="340" cy="80"  r="16" fill="#3B4FE8" fillOpacity=".06"/>
-              <circle cx="260" cy="220" r="14" fill="#3B4FE8" fillOpacity=".06"/>
+              {/* Outer decorative rings */}
+              <circle cx="270" cy="150" r="142" stroke="#3B4FE8" strokeOpacity=".06" strokeWidth="1"/>
+              <circle cx="270" cy="150" r="113" stroke="#3B4FE8" strokeOpacity=".12" strokeWidth="1"/>
+              <circle cx="270" cy="150" r="86"  stroke="#3B4FE8" strokeOpacity=".22" strokeWidth="1.5"/>
 
-              {/* Nodes — small */}
-              <circle cx="80"  cy="60"  r="3.5" fill="#3B4FE8" fillOpacity=".3"/>
-              <circle cx="120" cy="190" r="3.5" fill="#3B4FE8" fillOpacity=".3"/>
-              <circle cx="400" cy="180" r="3.5" fill="#3B4FE8" fillOpacity=".3"/>
-              <circle cx="440" cy="100" r="3"   fill="#3B4FE8" fillOpacity=".2"/>
-              <circle cx="40"  cy="200" r="3"   fill="#3B4FE8" fillOpacity=".2"/>
+              {/* Soft glow behind main circle */}
+              <circle cx="270" cy="150" r="70" fill="#3B4FE8" fillOpacity=".1"/>
 
-              {/* Nodes — medium */}
-              <circle cx="340" cy="80"  r="6"   fill="#3B4FE8" fillOpacity=".4"/>
-              <circle cx="260" cy="220" r="5"   fill="#3B4FE8" fillOpacity=".35"/>
+              {/* Main bold circle */}
+              <circle cx="270" cy="150" r="57" fill="url(#orb)"/>
+              {/* Inner shimmer */}
+              <circle cx="270" cy="150" r="42" fill="white" fillOpacity=".1"/>
 
-              {/* Main node */}
-              <circle cx="200" cy="130" r="10"  fill="#3B4FE8" fillOpacity=".9"/>
-              <circle cx="200" cy="130" r="5"   fill="white"/>
+              {/* Arrow icon → */}
+              <path d="M255 150 L281 150" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M274 142 L283 150 L274 158" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+
+              {/* Satellite dots on ring 113 */}
+              <circle cx="270" cy="37"  r="7"   fill="#3B4FE8" fillOpacity=".55"/>
+              <circle cx="383" cy="150" r="6"   fill="#3B4FE8" fillOpacity=".5"/>
+              <circle cx="270" cy="263" r="5.5" fill="#3B4FE8" fillOpacity=".45"/>
+              <circle cx="157" cy="150" r="5"   fill="#3B4FE8" fillOpacity=".4"/>
+              <circle cx="352" cy="67"  r="4.5" fill="#3B4FE8" fillOpacity=".38"/>
+              <circle cx="188" cy="67"  r="4"   fill="#3B4FE8" fillOpacity=".32"/>
+
+              {/* Small accent dots */}
+              <circle cx="100" cy="75"  r="3.5" fill="#3B4FE8" fillOpacity=".2"/>
+              <circle cx="432" cy="98"  r="3"   fill="#3B4FE8" fillOpacity=".18"/>
+              <circle cx="420" cy="215" r="3.5" fill="#3B4FE8" fillOpacity=".18"/>
+              <circle cx="108" cy="232" r="3"   fill="#3B4FE8" fillOpacity=".15"/>
+              <circle cx="46"  cy="150" r="2.5" fill="#3B4FE8" fillOpacity=".15"/>
+              <circle cx="460" cy="150" r="2.5" fill="#3B4FE8" fillOpacity=".12"/>
             </svg>
           </div>
 
