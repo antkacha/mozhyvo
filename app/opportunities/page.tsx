@@ -5,12 +5,12 @@ import OpportunitiesCatalog from "@/components/OpportunitiesCatalog";
 import GuestBanner from "@/components/GuestBanner";
 
 const quickFilters = [
-  { emoji: "🎓", label: "Стипендії",   slug: "scholarships" },
-  { emoji: "💼", label: "Стажування",  slug: "internships" },
-  { emoji: "🌍", label: "Обміни",      slug: "exchanges" },
-  { emoji: "🤝", label: "Волонтерство",slug: "volunteering" },
-  { emoji: "🏆", label: "Конкурси",    slug: "competitions" },
-  { emoji: "🚀", label: "Гранти",      slug: "grants" },
+  { emoji: "🎓", label: "Стипендії", slug: "scholarships", color: "bg-primary-light text-primary hover:bg-primary hover:text-white" },
+  { emoji: "💼", label: "Стажування", slug: "internships", color: "bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white" },
+  { emoji: "🌍", label: "Обміни", slug: "exchanges", color: "bg-green-50 text-green-700 hover:bg-green-600 hover:text-white" },
+  { emoji: "🤝", label: "Волонтерство", slug: "volunteering", color: "bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white" },
+  { emoji: "🏆", label: "Конкурси", slug: "competitions", color: "bg-orange-50 text-orange-700 hover:bg-orange-500 hover:text-white" },
+  { emoji: "🚀", label: "Гранти", slug: "grants", color: "bg-yellow-50 text-yellow-700 hover:bg-yellow-500 hover:text-white" },
 ];
 
 export const metadata: Metadata = {
@@ -35,7 +35,7 @@ function CatalogSkeleton() {
     <div className="animate-pulse">
       <div className="h-11 bg-muted-bg rounded-xl mb-6 max-w-xl" />
       <div className="flex gap-8">
-        <div className="hidden lg:block w-56 flex-shrink-0 space-y-3">
+        <div className="hidden lg:block w-52 flex-shrink-0 space-y-3">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-5 bg-muted-bg rounded" />
           ))}
@@ -53,62 +53,55 @@ function CatalogSkeleton() {
 export default function OpportunitiesPage() {
   return (
     <>
-      {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-primary">
-        {/* Dot grid */}
+      {/* ── Hero header ─────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-white border-b border-gray-100">
+        {/* Soft glow */}
         <div
           aria-hidden
-          className="absolute inset-0 pointer-events-none opacity-[0.07]"
-          style={{
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-          }}
+          className="absolute -top-20 right-0 w-[600px] h-[600px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(59,79,232,0.05) 0%, transparent 65%)" }}
         />
-        {/* Bottom fade into page */}
-        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#f5f6fb] to-transparent pointer-events-none" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
-            {/* Left */}
+            {/* Left: text + stats + chips */}
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 text-white text-xs font-semibold mb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/25 bg-white text-primary text-xs font-semibold shadow-sm mb-6">
                 <span>✦</span>
                 Всі можливості в одному місці
               </div>
-
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.02] mb-4">
+              <h1 className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.05] mb-4">
                 Можливості
               </h1>
-              <p className="text-white/60 text-lg max-w-md mb-8">
-                Гранти, стипендії, стажування та обміни — безкоштовно для молоді України.
+              <p className="text-gray-500 text-lg max-w-md">
+                Гранти, стипендії, стажування, обміни та більше — для молоді України.
               </p>
 
-              {/* Stats */}
-              <div className="flex items-stretch gap-8 mb-8">
+              <div className="flex items-stretch gap-8 mt-8 mb-8">
                 <div>
-                  <p className="text-3xl font-black text-white leading-none">1200+</p>
-                  <p className="text-sm text-white/50 mt-1.5">можливостей</p>
+                  <p className="text-3xl font-black text-primary leading-none">1200+</p>
+                  <p className="text-sm text-gray-500 mt-1.5">можливостей</p>
                 </div>
-                <div className="w-px bg-white/15" />
+                <div className="w-px bg-gray-100" />
                 <div>
-                  <p className="text-3xl font-black text-white leading-none">40+</p>
-                  <p className="text-sm text-white/50 mt-1.5">країн</p>
+                  <p className="text-3xl font-black text-primary leading-none">40+</p>
+                  <p className="text-sm text-gray-500 mt-1.5">країн</p>
                 </div>
-                <div className="w-px bg-white/15" />
+                <div className="w-px bg-gray-100" />
                 <div>
-                  <p className="text-3xl font-black text-white leading-none">0₴</p>
-                  <p className="text-sm text-white/50 mt-1.5">завжди безкоштовно</p>
+                  <p className="text-3xl font-black text-primary leading-none">0₴</p>
+                  <p className="text-sm text-gray-500 mt-1.5">завжди безкоштовно</p>
                 </div>
               </div>
 
-              {/* Category chips */}
-              <div className="flex flex-wrap gap-2">
+              {/* Quick-filter category chips */}
+              <div className="flex flex-wrap gap-2.5">
                 {quickFilters.map((f) => (
                   <Link
                     key={f.slug}
                     href={`/opportunities?category=${f.slug}`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border border-white/20 bg-white/10 text-white hover:bg-white hover:text-primary transition-all duration-200"
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${f.color}`}
                   >
                     <span>{f.emoji}</span>
                     {f.label}
@@ -117,16 +110,18 @@ export default function OpportunitiesPage() {
               </div>
             </div>
 
-            {/* Right: decorative floating cards */}
-            <div className="hidden lg:block relative h-[300px]">
-              <div className="absolute animate-float1" style={{ top: "16px", left: "16px", width: "270px" }}>
-                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-5 text-white">
+            {/* Right: decorative floating cards (desktop only) */}
+            <div className="hidden lg:block relative h-[320px]">
+
+              {/* Card 1 — Erasmus, primary bg, float1 */}
+              <div className="absolute animate-float1" style={{ top: "20px", left: "20px", width: "270px" }}>
+                <div className="bg-primary rounded-2xl p-5 shadow-2xl shadow-primary/25 text-white">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/15">🎓 Стипендія</span>
                     <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-accent text-foreground">Топ</span>
                   </div>
                   <p className="font-extrabold text-base leading-tight mb-1">Erasmus+ 2025</p>
-                  <p className="text-white/60 text-xs mb-3">Навчання в ЄС · До 1 000€/міс</p>
+                  <p className="text-white/65 text-xs mb-3">Навчання в ЄС · До 1 000€/міс</p>
                   <div className="bg-white/10 rounded-full h-1.5 mb-1">
                     <div className="bg-accent h-1.5 rounded-full w-[65%]" />
                   </div>
@@ -134,7 +129,8 @@ export default function OpportunitiesPage() {
                 </div>
               </div>
 
-              <div className="absolute animate-float2" style={{ top: "148px", left: "72px", width: "252px" }}>
+              {/* Card 2 — white, float2 */}
+              <div className="absolute animate-float2" style={{ top: "155px", left: "80px", width: "250px" }}>
                 <div className="bg-white rounded-2xl p-4 shadow-xl border border-border">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">🌍 Обмін</span>
@@ -145,7 +141,8 @@ export default function OpportunitiesPage() {
                 </div>
               </div>
 
-              <div className="absolute animate-float3" style={{ top: "8px", right: "0px", width: "170px" }}>
+              {/* Card 3 — notification, float3 */}
+              <div className="absolute animate-float3" style={{ top: "10px", right: "0px", width: "170px" }}>
                 <div className="bg-white rounded-2xl p-3.5 shadow-lg border border-border">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0 text-sm">🔔</div>
@@ -156,20 +153,18 @@ export default function OpportunitiesPage() {
                   </div>
                 </div>
               </div>
-            </div>
 
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── Catalog ─────────────────────────────────────────────── */}
-      <div className="bg-[#f5f6fb] min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <GuestBanner />
-          <Suspense fallback={<CatalogSkeleton />}>
-            <OpportunitiesCatalog />
-          </Suspense>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <GuestBanner />
+        <Suspense fallback={<CatalogSkeleton />}>
+          <OpportunitiesCatalog />
+        </Suspense>
       </div>
     </>
   );
