@@ -91,16 +91,16 @@ function OrgOverview() {
 
       {/* Verification banner */}
       {org?.status === "pending" && (
-        <div className="flex items-start gap-3.5 p-4 bg-amber-50 border border-amber-200 rounded-2xl mb-8">
-          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className="flex items-start gap-3.5 p-4 bg-blue-50 border border-blue-200 rounded-2xl mb-8">
+          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <p className="text-sm font-semibold text-amber-800">Профіль проходить верифікацію</p>
-            <p className="text-xs text-amber-600 mt-0.5 leading-relaxed">
-              Ми перевіряємо вашу організацію — зазвичай це займає 1–3 робочих дні. Ви вже можете створювати проекти.
+            <p className="text-sm font-semibold text-blue-800">Верифікація на розгляді</p>
+            <p className="text-xs text-blue-600 mt-0.5 leading-relaxed">
+              Ваші опубліковані проекти вже видно в каталозі. Після верифікації командою Моживо ви отримаєте бейдж ✓ на сторінці організації.
             </p>
           </div>
         </div>

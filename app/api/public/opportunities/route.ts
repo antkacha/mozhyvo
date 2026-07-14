@@ -9,7 +9,7 @@ export async function GET() {
     .from("org_projects")
     .select("*, orgs!inner(id, name, status, slug)")
     .eq("status", "published")
-    .eq("orgs.status", "verified")
+    .in("orgs.status", ["pending", "verified"])
     .or(`deadline.is.null,deadline.eq.,deadline.gte.${new Date().toISOString().split("T")[0]}`)
     .order("created_at", { ascending: false });
 

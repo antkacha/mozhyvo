@@ -395,7 +395,7 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
     .from("orgs")
     .select("*")
     .eq("slug", slug)
-    .eq("status", "verified")
+    .not("status", "in", '("rejected","blocked")')
     .maybeSingle();
 
   // 3. Fallback: try by UUID id (only if slug looks like a UUID)
@@ -404,7 +404,7 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
       .from("orgs")
       .select("*")
       .eq("id", slug)
-      .eq("status", "verified")
+      .not("status", "in", '("rejected","blocked")')
       .maybeSingle();
     org = data;
   }
