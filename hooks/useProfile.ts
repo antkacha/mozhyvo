@@ -83,14 +83,18 @@ export function useProfile() {
   }, [load, supabase]);
 
   const save = useCallback(async (data: Partial<UserProfile>) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { error } = await supabase
-      .from("profiles")
-      .upsert({ id: user.id, ...toRow(data) }, { onConflict: "id" });
-    if (!error) setProfile((prev) => ({ ...prev, ...data }));
-    return error;
-  }, [supabase]);
+    const res = await fetch("/api/me/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(toRow(data)),
+    });
+    if (res.ok) {
+      setProfile((prev) => ({ ...prev, ...data }));
+      return null;
+    }
+    const json = await res.json() as { error?: string };
+    return { message: json.error ?? "Save failed" } as { message: string };
+  }, []);
 
   return { profile, save, ready };
 }
