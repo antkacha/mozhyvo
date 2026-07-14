@@ -32,24 +32,27 @@ function fromRow(row: Record<string, unknown>, email?: string): UserProfile {
 
 function toRow(data: Partial<UserProfile>): Record<string, unknown> {
   const row: Record<string, unknown> = {};
-  if (data.firstName    !== undefined) row.first_name       = data.firstName;
-  if (data.lastName     !== undefined) row.last_name        = data.lastName;
-  if (data.phone        !== undefined) row.phone            = data.phone;
-  if (data.country      !== undefined) row.country          = data.country;
-  if (data.city         !== undefined) row.city             = data.city;
-  if (data.institution  !== undefined) row.institution      = data.institution;
-  if (data.degree       !== undefined) row.degree           = data.degree;
-  if (data.graduationYear!== undefined) row.graduation_year = data.graduationYear;
-  if (data.languages    !== undefined) row.languages        = data.languages;
-  if (data.bio          !== undefined) row.bio              = data.bio;
-  if (data.avatarUrl    !== undefined) row.avatar_url       = data.avatarUrl;
-  if (data.cvUrl        !== undefined) row.cv_url           = data.cvUrl;
-  if (data.linkedinUrl  !== undefined) row.linkedin_url     = data.linkedinUrl;
-  if (data.telegram     !== undefined) row.telegram         = data.telegram;
-  if (data.interests    !== undefined) row.interests        = data.interests;
-  if (data.onboardingDone !== undefined) row.onboarding_done = data.onboardingDone;
+  // Columns that exist in the schema
+  if (data.firstName    !== undefined) row.first_name    = data.firstName;
+  if (data.lastName     !== undefined) row.last_name     = data.lastName;
+  if (data.phone        !== undefined) row.phone         = data.phone;
+  if (data.country      !== undefined) row.country       = data.country;
+  if (data.institution  !== undefined) row.institution   = data.institution;
+  if (data.degree       !== undefined) row.degree        = data.degree;
+  if (data.languages    !== undefined) row.languages     = data.languages;
+  if (data.bio          !== undefined) row.bio           = data.bio;
+  // Extended columns (added in migration 002)
+  if (data.city            !== undefined) row.city            = data.city;
+  if (data.graduationYear  !== undefined) row.graduation_year = data.graduationYear;
+  if (data.avatarUrl       !== undefined) row.avatar_url      = data.avatarUrl;
+  if (data.cvUrl           !== undefined) row.cv_url          = data.cvUrl;
+  if (data.linkedinUrl     !== undefined) row.linkedin_url    = data.linkedinUrl;
+  if (data.telegram        !== undefined) row.telegram        = data.telegram;
+  if (data.interests       !== undefined) row.interests       = data.interests;
+  if (data.onboardingDone  !== undefined) row.onboarding_done = data.onboardingDone;
   return row;
 }
+
 
 export function useProfile() {
   const supabase = useMemo(() => createClient(), []);
