@@ -6,6 +6,7 @@ export interface OrgApplication {
   id: string;
   projectId: string;
   projectTitle: string;
+  applicantUserId?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -25,10 +26,11 @@ export interface OrgApplication {
 
 function fromRow(row: Record<string, unknown>): OrgApplication {
   return {
-    id:            (row.id as string) ?? "",
-    projectId:     (row.project_id as string) ?? "",
-    projectTitle:  (row.project_title as string) ?? "",
-    firstName:     (row.first_name as string) ?? "",
+    id:              (row.id as string) ?? "",
+    projectId:       (row.project_id as string) ?? "",
+    projectTitle:    (row.project_title as string) ?? "",
+    applicantUserId: (row.applicant_user_id as string) ?? undefined,
+    firstName:       (row.first_name as string) ?? "",
     lastName:      (row.last_name as string) ?? "",
     email:         (row.email as string) ?? "",
     phone:         (row.phone as string) ?? "",

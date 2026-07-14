@@ -371,6 +371,22 @@ function ApplicationDetail() {
                 Відкрити проєкт →
               </Link>
             </div>
+
+            {/* Applicant profile link */}
+            {app.applicantUserId && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <Link
+                  href={`/u/${app.applicantUserId}`}
+                  target="_blank"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-primary-light text-primary text-sm font-semibold rounded-xl hover:bg-primary/15 transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Переглянути профіль
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Notes */}

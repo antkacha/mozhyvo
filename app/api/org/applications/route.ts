@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
   const { error } = await admin.from("org_applications").insert({
     ...body,
     org_id: project.org_id,
+    applicant_user_id: user.id,
     status: "new",
   });
 
