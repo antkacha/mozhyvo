@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Політика конфіденційності — Моживо",
-  description: "Політика конфіденційності платформи Моживо",
+  title: "Політика конфіденційності — МОЖUВО",
+  description: "Політика конфіденційності платформи МОЖUВО",
 };
 
 export default function PrivacyPage() {
@@ -16,13 +16,13 @@ export default function PrivacyPage() {
       </div>
 
       <h1 className="text-3xl font-extrabold text-foreground mb-2">Політика конфіденційності</h1>
-      <p className="text-sm text-muted mb-10">Останнє оновлення: 1 липня 2026 р.</p>
+      <p className="text-sm text-muted mb-10">Останнє оновлення: 14 липня 2026 р.</p>
 
       <div className="prose prose-sm max-w-none space-y-8 text-foreground">
         <section>
           <h2 className="text-lg font-bold mb-3">1. Загальні положення</h2>
           <p className="text-muted leading-relaxed">
-            Платформа Моживо (<strong>mozhyvo.com.ua</strong>) збирає та обробляє персональні дані відповідно до чинного законодавства України та Загального регламенту про захист даних (GDPR). Реєструючись на платформі, ви погоджуєтесь з умовами цієї Політики.
+            Платформа МОЖUВО (<strong>mozhyvo.com.ua</strong>) збирає та обробляє персональні дані відповідно до чинного законодавства України та Загального регламенту про захист даних (GDPR). Реєструючись на платформі, ви погоджуєтесь з умовами цієї Політики.
           </p>
         </section>
 
