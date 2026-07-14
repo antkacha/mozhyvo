@@ -6,26 +6,27 @@ import ApplyForm from "@/components/ApplyForm";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Opportunity } from "@/lib/data";
+import type { FormQuestion } from "@/hooks/useOrgProjects";
 
 export const dynamic = "force-dynamic";
 
-async function fetchOrgProject(id: string): Promise<Opportunity | null> {
+async function fetchOrgProject(id: string): Promise<{ opp: Opportunity; formQuestions: FormQuestion[] } | null> {
   try {
     const admin = createAdminClient();
     const { data } = await admin
       .from("org_projects")
-      .select("*, orgs!inner(name, status, slug)")
+      .select("*, orgs!inner(id, name, status, slug)")
       .eq("id", id)
       .eq("status", "published")
-      .eq("orgs.status", "verified")
       .maybeSingle();
     if (!data) return null;
-    const org = data.orgs as { name: string; status: string; slug?: string };
-    return {
+    const org = data.orgs as { id: string; name: string; status?: string; slug?: string };
+    const opp: Opportunity = {
       slug:             data.id as string,
       type:             (data.type as Opportunity["type"]) ?? "exchange",
       typeName:         (data.type_name as string) ?? "",
       org:              org.name ?? "",
+      orgSlug:          org.slug || org.id,
       title:            (data.title as string) ?? "",
       shortDescription: (data.short_description as string) ?? "",
       fullDescription:  (data.full_description as string) ?? "",
@@ -45,7 +46,11 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
       tags:             (data.tags as string[]) ?? [],
       applyUrl:         (data.external_apply_url as string) || `/opportunities/${data.id}/apply`,
       duration:         (data.duration as string) ?? "",
+      projectId:        data.id as string,
+      orgVerified:      org.status === "verified",
     };
+    const formQuestions = (data.form_questions as FormQuestion[]) ?? [];
+    return { opp, formQuestions };
   } catch {
     return null;
   }
@@ -56,7 +61,8 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
-  const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);
+  const staticOpp = opportunities.find((o) => o.slug === params.slug);
+  const opp = staticOpp ?? (await fetchOrgProject(params.slug))?.opp ?? null;
   if (!opp) return {};
   return {
     title: `Подати заявку — ${opp.title} | Моживо`,
@@ -69,8 +75,12 @@ export default async function ApplyPage({ params }: { params: { slug: string } }
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/login?next=/opportunities/${params.slug}/apply`);
 
-  const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);
-  if (!opp) notFound();
+  const staticOpp = opportunities.find((o) => o.slug === params.slug);
+  const result = staticOpp
+    ? { opp: staticOpp, formQuestions: [] as FormQuestion[] }
+    : await fetchOrgProject(params.slug);
+  if (!result) notFound();
+  const { opp, formQuestions } = result;
 
   // If org project has an external apply URL, redirect there directly
   if (opp.applyUrl.startsWith("http")) redirect(opp.applyUrl);
@@ -128,7 +138,7 @@ export default async function ApplyPage({ params }: { params: { slug: string } }
         </div>
 
         {/* Form */}
-        <ApplyForm opp={opp} />
+        <ApplyForm opp={opp} formQuestions={formQuestions} />
       </div>
     </div>
   );

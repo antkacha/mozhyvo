@@ -120,7 +120,8 @@ export function useApplications() {
         })
         .select()
         .single();
-      if (!error && data) {
+      if (error) throw new Error(error.message);
+      if (data) {
         const newApp = fromRow(data);
         setApplications((prev) => [newApp, ...prev]);
 

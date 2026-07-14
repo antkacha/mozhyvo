@@ -22,10 +22,9 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
       .select("*, orgs!inner(id, name, status, slug)")
       .eq("id", id)
       .eq("status", "published")
-      .eq("orgs.status", "verified")
       .maybeSingle();
     if (!data) return null;
-    const org = data.orgs as { id: string; name: string; status: string; slug?: string };
+    const org = data.orgs as { id: string; name: string; status?: string; slug?: string };
     return {
       slug:             data.id as string,
       type:             (data.type as Opportunity["type"]) ?? "exchange",
@@ -53,6 +52,7 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
       duration:         (data.duration as string) ?? "",
       infoPackUrl:      (data.info_pack_url as string) || undefined,
       projectId:        data.id as string,
+      orgVerified:      org.status === "verified",
     };
   } catch {
     return null;
@@ -158,10 +158,16 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
                 {opp.funding === "partially-funded" && (
                   <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-700">Часткове фінансування</span>
                 )}
-                <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 inline-flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                  Верифікована організація
-                </span>
+                {(opp.orgVerified ?? !opp.projectId) ? (
+                  <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 inline-flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                    Верифікована організація
+                  </span>
+                ) : (
+                  <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 inline-flex items-center gap-1">
+                    На верифікації
+                  </span>
+                )}
               </div>
 
               {(opp.orgSlug ?? orgNameToSlug[opp.org]) ? (

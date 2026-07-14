@@ -40,6 +40,7 @@ export interface Opportunity {
   photo?: string;
   infoPackUrl?: string;
   projectId?: string;
+  orgVerified?: boolean;
 }
 
 export const typeNames: Record<OpportunityType, string> = {

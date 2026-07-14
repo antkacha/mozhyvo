@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { Opportunity } from "@/lib/data";
 import { useApplications } from "@/hooks/useApplications";
-import { createClient } from "@/lib/supabase/client";
+import { useProfile } from "@/hooks/useProfile";
 import type { FormQuestion } from "@/hooks/useOrgProjects";
 
 const DEGREES = [
@@ -115,23 +115,11 @@ function inputCls(error?: string) {
 
 // ── Main component ────────────────────────────────────────────────
 
-export default function ApplyForm({ opp }: { opp: Opportunity }) {
+export default function ApplyForm({ opp, formQuestions: initialFormQuestions = [] }: { opp: Opportunity; formQuestions?: FormQuestion[] }) {
   const { submit, hasApplied, ready } = useApplications();
-  const [customQuestions, setCustomQuestions] = useState<FormQuestion[]>([]);
-
-  useEffect(() => {
-    // Skip static text slugs like "erasmus-plus"; fetch for any UUID-based ID
-    if (!/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(opp.slug)) return;
-    const supabase = createClient();
-    supabase
-      .from("org_projects")
-      .select("form_questions")
-      .eq("id", opp.slug)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.form_questions) setCustomQuestions(data.form_questions as FormQuestion[]);
-      });
-  }, [opp.slug]);
+  const { profile, ready: profileReady } = useProfile();
+  const [customQuestions] = useState<FormQuestion[]>(initialFormQuestions);
+  const profileFilledRef = useRef(false);
 
   // Which standard blocks the org enabled
   const enabledBlocks = useMemo(
@@ -182,6 +170,26 @@ export default function ApplyForm({ opp }: { opp: Opportunity }) {
 
   const [step, setStep] = useState(0);
   const [data, setData] = useState<FormData>(EMPTY);
+
+  // Pre-fill from user profile once when it loads
+  useEffect(() => {
+    if (!profileReady || profileFilledRef.current) return;
+    profileFilledRef.current = true;
+    setData({
+      firstName:      profile.firstName || "",
+      lastName:       profile.lastName  || "",
+      email:          profile.email     || "",
+      phone:          profile.phone     || "",
+      country:        profile.country   || "",
+      institution:    profile.institution || "",
+      degree:         profile.degree    || "",
+      graduationYear: profile.graduationYear || "",
+      languages:      profile.languages ?? [],
+      motivation:     "",
+      cvUrl:          profile.cvUrl     || "",
+      portfolioUrl:   "",
+    });
+  }, [profileReady, profile]);
   const [customAnswers, setCustomAnswers] = useState<Record<string, string | string[]>>({});
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [customErrors, setCustomErrors] = useState<Record<string, string>>({});
