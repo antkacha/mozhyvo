@@ -10,6 +10,8 @@ async function getCallerOrgId(userId: string): Promise<string | null> {
   return member?.org_id ?? null;
 }
 
+const ALLOWED_APPLICATION_FIELDS = new Set(["status", "internal_note"]);
+
 // PATCH /api/org/applications/[id] — update status or internal note
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -20,13 +22,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!orgId) return NextResponse.json({ error: "No org" }, { status: 403 });
 
   const body = await req.json() as Record<string, unknown>;
+  const safeBody = Object.fromEntries(
+    Object.entries(body).filter(([k]) => ALLOWED_APPLICATION_FIELDS.has(k))
+  );
+  if (Object.keys(safeBody).length === 0) {
+    return NextResponse.json({ error: "No valid fields" }, { status: 400 });
+  }
+
   const admin = createAdminClient();
 
   const { error } = await admin
     .from("org_applications")
-    .update(body)
+    .update(safeBody)
     .eq("id", params.id)
-    .eq("org_id", orgId); // security: only update own org's applications
+    .eq("org_id", orgId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });

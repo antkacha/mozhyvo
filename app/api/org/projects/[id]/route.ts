@@ -10,6 +10,14 @@ async function getCallerOrgId(userId: string): Promise<string | null> {
   return member?.org_id ?? null;
 }
 
+const ALLOWED_PROJECT_FIELDS = new Set([
+  "title", "type", "type_name", "short_description", "full_description",
+  "requirements", "benefits", "tags", "deadline", "deadline_display",
+  "country", "city", "location", "flag", "format", "funding", "funding_details",
+  "duration", "languages", "age_min", "age_max", "status", "auto_close",
+  "form_questions", "external_apply_url", "info_pack_url",
+]);
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -22,11 +30,17 @@ export async function PATCH(
   if (!orgId) return NextResponse.json({ error: "No org" }, { status: 403 });
 
   const body = await req.json() as Record<string, unknown>;
+  const safeBody = Object.fromEntries(
+    Object.entries(body).filter(([k]) => ALLOWED_PROJECT_FIELDS.has(k))
+  );
+  if (Object.keys(safeBody).length === 0) {
+    return NextResponse.json({ error: "No valid fields" }, { status: 400 });
+  }
 
   const admin = createAdminClient();
   const { error } = await admin
     .from("org_projects")
-    .update(body)
+    .update(safeBody)
     .eq("id", params.id)
     .eq("org_id", orgId);
 

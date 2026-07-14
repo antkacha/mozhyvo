@@ -91,6 +91,11 @@ function dailyDigestHtml(p: DailyDigestPayload): string {
 }
 
 export async function POST(req: NextRequest) {
+  const internalKey = req.headers.get("x-internal-key");
+  if (!internalKey || internalKey !== process.env.INTERNAL_API_KEY) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const payload = (await req.json()) as Payload;
     const apiKey = process.env.RESEND_API_KEY;

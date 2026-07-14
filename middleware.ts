@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -32,11 +33,43 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Protect /cabinet, /dashboard and /admin
+  // Protect /cabinet, /dashboard and /admin — must be logged in
   if (!user && (pathname.startsWith("/cabinet") || pathname.startsWith("/dashboard") || pathname.startsWith("/admin"))) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // /admin — must have role = "admin" in profiles
+  if (user && pathname.startsWith("/admin")) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profile?.role !== "admin") {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
+
+  // /dashboard — must be an org owner or org member
+  if (user && pathname.startsWith("/dashboard")) {
+    const adminDb = createAdminClient();
+    const { data: orgOwner } = await adminDb
+      .from("orgs")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!orgOwner) {
+      const { data: member } = await adminDb
+        .from("org_members")
+        .select("org_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!member) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    }
   }
 
   return response;

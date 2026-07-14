@@ -31,10 +31,21 @@ const EMAIL_SUBTITLE: Record<string, string> = {
   reviewing: "Твоя заявка перебуває на розгляді. Ми повідомимо тебе про наступні зміни.",
 };
 
+async function getCallerOrgId(userId: string): Promise<string | null> {
+  const admin = createAdminClient();
+  const { data: org } = await admin.from("orgs").select("id").eq("user_id", userId).maybeSingle();
+  if (org) return org.id;
+  const { data: member } = await admin.from("org_members").select("org_id").eq("user_id", userId).maybeSingle();
+  return member?.org_id ?? null;
+}
+
 export async function POST(req: NextRequest) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const callerOrgId = await getCallerOrgId(user.id);
+  if (!callerOrgId) return NextResponse.json({ error: "No org" }, { status: 403 });
 
   const { orgAppId, orgStatus, projectId, email, projectTitle } = await req.json() as {
     orgAppId: string;
@@ -52,18 +63,29 @@ export async function POST(req: NextRequest) {
 
   const { data: orgApp } = await admin
     .from("org_applications")
-    .select("id, org_id")
+    .select("id, org_id, applicant_user_id")
     .eq("id", orgAppId)
     .single();
 
   if (!orgApp) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Verify caller owns the org that received this application
+  if (orgApp.org_id !== callerOrgId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const userStatus = USER_STATUS[orgStatus] ?? "pending";
 
-  const { error } = await admin
+  // Prefer matching by user_id; fall back to email for legacy records without applicant_user_id
+  let updateQuery = admin
     .from("applications")
     .update({ status: userStatus })
-    .eq("opportunity_slug", projectId)
-    .eq("email", email);
+    .eq("opportunity_slug", projectId);
+  updateQuery = orgApp.applicant_user_id
+    ? updateQuery.eq("user_id", orgApp.applicant_user_id)
+    : updateQuery.eq("email", email);
+
+  const { error } = await updateQuery;
 
   if (error) {
     console.error("[sync-status] failed:", error.message);
