@@ -7,24 +7,57 @@ export async function GET() {
   const admin = createAdminClient();
   const today = new Date().toISOString().split("T")[0];
 
-  // Step 1: fetch all published projects (no org-status gate — org can be pending or verified)
-  const { data, error } = await admin
+  // Step 1: fetch all published org_projects (no join — avoids PostgREST FK requirement)
+  const { data: projects, error: projError } = await admin
     .from("org_projects")
-    .select("*, orgs!inner(id, name, slug, status)")
+    .select("*")
     .eq("status", "published")
-    .or(`deadline.is.null,deadline.eq.,deadline.gte.${today}`)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("[public/opportunities] query error:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (projError) {
+    console.error("[public/opportunities] projects query error:", projError.message);
+    return NextResponse.json({ error: projError.message }, { status: 500 });
   }
 
-  // Step 2: exclude blocked/rejected orgs in JS (avoids PostgREST related-table filter quirks)
-  const visible = (data ?? []).filter((row) => {
-    const orgStatus = (row.orgs as { status?: string } | null)?.status;
-    return orgStatus !== "rejected" && orgStatus !== "blocked";
-  });
+  const rows = projects ?? [];
+
+  // Step 2: collect unique org_ids and fetch org info
+  const orgIds = Array.from(new Set(rows.map((r) => r.org_id as string).filter(Boolean)));
+  let orgsMap: Map<string, { id: string; name: string; slug?: string; status?: string }> = new Map();
+
+  if (orgIds.length > 0) {
+    const { data: orgs, error: orgsError } = await admin
+      .from("orgs")
+      .select("id, name, slug, status")
+      .in("id", orgIds);
+
+    if (orgsError) {
+      console.error("[public/opportunities] orgs query error:", orgsError.message);
+    } else {
+      orgsMap = new Map((orgs ?? []).map((o) => [o.id as string, o as { id: string; name: string; slug?: string; status?: string }]));
+    }
+  }
+
+  // Step 3: join + filter in JS
+  const visible = rows
+    .filter((row) => {
+      const org = orgsMap.get(row.org_id as string);
+
+      // Exclude projects whose org is blocked or rejected
+      if (org?.status === "rejected" || org?.status === "blocked") return false;
+
+      // Exclude expired deadlines (only YYYY-MM-DD format — empty string = rolling = always include)
+      const deadline = (row.deadline as string) ?? "";
+      if (deadline && /^\d{4}-\d{2}-\d{2}$/.test(deadline) && deadline < today) return false;
+
+      return true;
+    })
+    .map((row) => {
+      const org = orgsMap.get(row.org_id as string);
+      return { ...row, orgs: org ?? null };
+    });
+
+  console.log(`[public/opportunities] ${visible.length}/${rows.length} published projects returned`);
 
   return NextResponse.json(
     { projects: visible },
