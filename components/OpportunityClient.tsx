@@ -271,7 +271,7 @@ export default function OpportunityClient({ opp, related }: Props) {
                   </div>
                 )}
 
-                <div className="bg-white px-5 pb-5 flex flex-col gap-3">
+                <div className="bg-white px-5 py-5 flex flex-col gap-3">
                   {expired ? (
                     <div className="flex items-center justify-center gap-2 w-full py-3 px-6 bg-muted-bg text-muted font-semibold rounded-xl text-sm border border-border">
                       Прийом завершено
