@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 const quickFilters = [
   { emoji: "🎓", label: "Стипендії",    slug: "scholarships", color: "bg-primary-light text-primary hover:bg-primary hover:text-white" },
@@ -12,32 +11,7 @@ const quickFilters = [
   { emoji: "🚀", label: "Гранти",       slug: "grants",       color: "bg-yellow-50 text-yellow-700 hover:bg-yellow-500 hover:text-white" },
 ];
 
-// Countries where opportunities exist
-const COUNTRIES = [
-  { flag: "🇩🇪", name: "Німеччина" },
-  { flag: "🇺🇸", name: "США" },
-  { flag: "🇬🇧", name: "Велика Британія" },
-  { flag: "🇫🇷", name: "Франція" },
-  { flag: "🇵🇱", name: "Польща" },
-  { flag: "🇳🇱", name: "Нідерланди" },
-  { flag: "🇨🇿", name: "Чехія" },
-  { flag: "🇦🇹", name: "Австрія" },
-  { flag: "🇸🇪", name: "Швеція" },
-  { flag: "🇨🇦", name: "Канада" },
-  { flag: "🇯🇵", name: "Японія" },
-  { flag: "🇦🇺", name: "Австралія" },
-  { flag: "🇨🇭", name: "Швейцарія" },
-  { flag: "🇳🇴", name: "Норвегія" },
-  { flag: "🇧🇪", name: "Бельгія" },
-  { flag: "🇮🇹", name: "Італія" },
-  { flag: "🇪🇸", name: "Іспанія" },
-  { flag: "🇫🇮", name: "Фінляндія" },
-  { flag: "🇰🇷", name: "Корея" },
-  { flag: "🇺🇦", name: "Україна" },
-];
-
 export default function OpportunitiesHero() {
-  const router = useRouter();
 
   return (
     <section className="relative overflow-hidden bg-white border-b border-gray-100">
@@ -79,26 +53,45 @@ export default function OpportunitiesHero() {
             </div>
           </div>
 
-          {/* Right: country flags mosaic */}
-          <div className="hidden lg:block">
-            <p className="text-xs font-semibold text-muted uppercase tracking-widest mb-4">
-              Де шукати можливості
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {COUNTRIES.map((c) => (
-                <button
-                  key={c.name}
-                  onClick={() => router.push(`/opportunities?country=${encodeURIComponent(c.name)}`)}
-                  className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-xl text-sm text-foreground hover:border-primary hover:text-primary hover:shadow-sm transition-all duration-150"
-                >
-                  <span className="text-base leading-none">{c.flag}</span>
-                  <span className="font-medium text-[13px]">{c.name}</span>
-                </button>
-              ))}
-              <div className="inline-flex items-center px-3 py-2 rounded-xl text-sm text-muted">
-                та інші →
-              </div>
-            </div>
+          {/* Right: abstract constellation */}
+          <div className="hidden lg:flex items-center justify-center h-[300px]">
+            <svg viewBox="0 0 480 300" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Lines */}
+              <line x1="80"  y1="60"  x2="200" y2="130" stroke="#3B4FE8" strokeOpacity=".15" strokeWidth="1"/>
+              <line x1="200" y1="130" x2="340" y2="80"  stroke="#3B4FE8" strokeOpacity=".15" strokeWidth="1"/>
+              <line x1="340" y1="80"  x2="400" y2="180" stroke="#3B4FE8" strokeOpacity=".15" strokeWidth="1"/>
+              <line x1="200" y1="130" x2="260" y2="220" stroke="#3B4FE8" strokeOpacity=".15" strokeWidth="1"/>
+              <line x1="260" y1="220" x2="400" y2="180" stroke="#3B4FE8" strokeOpacity=".15" strokeWidth="1"/>
+              <line x1="80"  y1="60"  x2="120" y2="190" stroke="#3B4FE8" strokeOpacity=".1"  strokeWidth="1"/>
+              <line x1="120" y1="190" x2="260" y2="220" stroke="#3B4FE8" strokeOpacity=".1"  strokeWidth="1"/>
+              <line x1="340" y1="80"  x2="260" y2="220" stroke="#3B4FE8" strokeOpacity=".08" strokeWidth="1"/>
+              <line x1="200" y1="130" x2="120" y2="190" stroke="#3B4FE8" strokeOpacity=".08" strokeWidth="1"/>
+              <line x1="80"  y1="60"  x2="340" y2="80"  stroke="#3B4FE8" strokeOpacity=".06" strokeWidth="1"/>
+              <line x1="400" y1="180" x2="440" y2="100" stroke="#3B4FE8" strokeOpacity=".1"  strokeWidth="1"/>
+              <line x1="340" y1="80"  x2="440" y2="100" stroke="#3B4FE8" strokeOpacity=".1"  strokeWidth="1"/>
+              <line x1="40"  y1="200" x2="120" y2="190" stroke="#3B4FE8" strokeOpacity=".08" strokeWidth="1"/>
+              <line x1="40"  y1="200" x2="80"  y2="60"  stroke="#3B4FE8" strokeOpacity=".05" strokeWidth="1"/>
+
+              {/* Outer glow rings on key nodes */}
+              <circle cx="200" cy="130" r="22" fill="#3B4FE8" fillOpacity=".06"/>
+              <circle cx="340" cy="80"  r="16" fill="#3B4FE8" fillOpacity=".06"/>
+              <circle cx="260" cy="220" r="14" fill="#3B4FE8" fillOpacity=".06"/>
+
+              {/* Nodes — small */}
+              <circle cx="80"  cy="60"  r="3.5" fill="#3B4FE8" fillOpacity=".3"/>
+              <circle cx="120" cy="190" r="3.5" fill="#3B4FE8" fillOpacity=".3"/>
+              <circle cx="400" cy="180" r="3.5" fill="#3B4FE8" fillOpacity=".3"/>
+              <circle cx="440" cy="100" r="3"   fill="#3B4FE8" fillOpacity=".2"/>
+              <circle cx="40"  cy="200" r="3"   fill="#3B4FE8" fillOpacity=".2"/>
+
+              {/* Nodes — medium */}
+              <circle cx="340" cy="80"  r="6"   fill="#3B4FE8" fillOpacity=".4"/>
+              <circle cx="260" cy="220" r="5"   fill="#3B4FE8" fillOpacity=".35"/>
+
+              {/* Main node */}
+              <circle cx="200" cy="130" r="10"  fill="#3B4FE8" fillOpacity=".9"/>
+              <circle cx="200" cy="130" r="5"   fill="white"/>
+            </svg>
           </div>
 
         </div>
