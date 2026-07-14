@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { opportunities } from "@/lib/data";
 import { useApplications, Application } from "@/hooks/useApplications";
 import { useProfile, UserProfile } from "@/hooks/useProfile";
 import { useSaved } from "@/hooks/useSaved";
+import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
 import OpportunityCard from "@/components/OpportunityCard";
 
 const STATUS_LABELS: Record<Application["status"], string> = {
@@ -32,6 +33,7 @@ export default function ProfilePage() {
   const { applications, ready: appsReady } = useApplications();
   const { profile, save, ready: profileReady } = useProfile();
   const { saved, ready: savedReady } = useSaved();
+  const { projects: orgProjects } = usePublicOrgProjects();
 
   const [tab, setTab] = useState<Tab>("applications");
   const [form, setForm] = useState<UserProfile>(profile);
@@ -65,7 +67,8 @@ export default function ProfilePage() {
     }
   };
 
-  const savedOpps = opportunities.filter((o) => saved.includes(o.slug));
+  const allOpportunities = useMemo(() => [...opportunities, ...orgProjects], [orgProjects]);
+  const savedOpps = useMemo(() => allOpportunities.filter((o) => saved.includes(o.slug)), [allOpportunities, saved]);
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: "applications", label: "Мої заявки", count: appsReady ? applications.length : 0 },
