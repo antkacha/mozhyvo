@@ -18,8 +18,8 @@ export default function CabinetSavedPage() {
   );
 
   const savedOpps = allOpportunities.filter((o) => saved.includes(o.slug));
-  const expired   = savedOpps.filter((o) => getDaysUntilDeadline(o.deadline) <= 0);
-  const active    = savedOpps.filter((o) => getDaysUntilDeadline(o.deadline) > 0);
+  const expired   = savedOpps.filter((o) => !!o.deadline && getDaysUntilDeadline(o.deadline) <= 0);
+  const active    = savedOpps.filter((o) => !o.deadline || getDaysUntilDeadline(o.deadline) > 0);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
