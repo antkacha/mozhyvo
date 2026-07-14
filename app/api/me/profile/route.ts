@@ -12,7 +12,7 @@ export async function PATCH(req: Request) {
   const admin = createAdminClient();
   const { error } = await admin
     .from("profiles")
-    .upsert({ id: user.id, ...body, updated_at: new Date().toISOString() }, { onConflict: "id" });
+    .upsert({ id: user.id, ...body }, { onConflict: "id" });
 
   if (error) {
     console.error("[PATCH /api/me/profile] error:", error.message);

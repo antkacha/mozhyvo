@@ -55,7 +55,7 @@ export default function CabinetProfilePage() {
     const error = await save(form);
     setSaving(false);
     if (error) {
-      setSaveError("Не вдалося зберегти. Спробуй ще раз.");
+      setSaveError(`Помилка: ${error.message}`);
     } else {
       setSavedFlag(true);
       setTimeout(() => setSavedFlag(false), 3000);

@@ -48,7 +48,6 @@ function toRow(data: Partial<UserProfile>): Record<string, unknown> {
   if (data.telegram     !== undefined) row.telegram         = data.telegram;
   if (data.interests    !== undefined) row.interests        = data.interests;
   if (data.onboardingDone !== undefined) row.onboarding_done = data.onboardingDone;
-  row.updated_at = new Date().toISOString();
   return row;
 }
 
