@@ -87,8 +87,7 @@ export function useProfile() {
     if (!user) return;
     const { error } = await supabase
       .from("profiles")
-      .update(toRow(data))
-      .eq("id", user.id);
+      .upsert({ id: user.id, ...toRow(data) }, { onConflict: "id" });
     if (!error) setProfile((prev) => ({ ...prev, ...data }));
     return error;
   }, [supabase]);

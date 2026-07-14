@@ -57,10 +57,12 @@ export default function ProfilePage() {
     );
   };
 
-  const handleSaveProfile = () => {
-    save(form);
-    setFormDirty(false);
-    setSaved2(true);
+  const handleSaveProfile = async () => {
+    const error = await save(form);
+    if (!error) {
+      setFormDirty(false);
+      setSaved2(true);
+    }
   };
 
   const savedOpps = opportunities.filter((o) => saved.includes(o.slug));

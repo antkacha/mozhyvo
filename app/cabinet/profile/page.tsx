@@ -20,6 +20,7 @@ export default function CabinetProfilePage() {
   const [form, setForm] = useState<UserProfile>(profile);
   const [saving, setSaving] = useState(false);
   const [saved, setSavedFlag] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [langInput, setLangInput] = useState("");
 
   useEffect(() => {
@@ -50,10 +51,15 @@ export default function CabinetProfilePage() {
 
   async function handleSave() {
     setSaving(true);
-    await save(form);
+    setSaveError(null);
+    const error = await save(form);
     setSaving(false);
-    setSavedFlag(true);
-    setTimeout(() => setSavedFlag(false), 3000);
+    if (error) {
+      setSaveError("Не вдалося зберегти. Спробуй ще раз.");
+    } else {
+      setSavedFlag(true);
+      setTimeout(() => setSavedFlag(false), 3000);
+    }
   }
 
   const completeness = profileCompleteness(form);
@@ -223,7 +229,12 @@ export default function CabinetProfilePage() {
       </div>
 
       {/* Save button */}
-      <div className="sticky bottom-4 flex justify-end">
+      <div className="sticky bottom-4 flex items-center justify-end gap-3">
+        {saveError && (
+          <p className="text-sm font-medium text-red-600 bg-red-50 border border-red-200 px-4 py-2 rounded-xl">
+            {saveError}
+          </p>
+        )}
         <button onClick={handleSave} disabled={saving}
           className={`px-8 py-3 rounded-full font-semibold text-sm transition-all shadow-lg flex items-center gap-2 ${
             saved ? "bg-green-500 text-white" : "bg-primary text-white hover:bg-primary-dark shadow-primary/25"
