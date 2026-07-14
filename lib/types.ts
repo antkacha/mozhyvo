@@ -45,17 +45,25 @@ export const DEFAULT_PROFILE: UserProfile = {
   onboardingDone: false,
 };
 
+// Weighted profile completeness:
+// Base fields (required to be useful) = 70%, extra fields = 30%
+const BASE_FIELDS: (keyof UserProfile)[] = [
+  "firstName", "lastName", "country", "institution", "degree", "bio", "languages",
+];
+const EXTRA_FIELDS: (keyof UserProfile)[] = [
+  "phone", "city", "cvUrl", "linkedinUrl",
+];
+
+function isFilled(p: UserProfile, f: keyof UserProfile): boolean {
+  const v = p[f];
+  if (Array.isArray(v)) return v.length > 0;
+  return typeof v === "string" && v.trim() !== "";
+}
+
 export function profileCompleteness(p: UserProfile): number {
-  const fields: (keyof UserProfile)[] = [
-    "firstName", "lastName", "phone", "country", "city",
-    "institution", "degree", "bio", "cvUrl", "languages",
-  ];
-  const filled = fields.filter((f) => {
-    const v = p[f];
-    if (Array.isArray(v)) return v.length > 0;
-    return typeof v === "string" && v.trim() !== "";
-  }).length;
-  return Math.round((filled / fields.length) * 100);
+  const baseScore  = BASE_FIELDS.filter((f) => isFilled(p, f)).length / BASE_FIELDS.length * 70;
+  const extraScore = EXTRA_FIELDS.filter((f) => isFilled(p, f)).length / EXTRA_FIELDS.length * 30;
+  return Math.round(baseScore + extraScore);
 }
 
 export interface AdminNote {
