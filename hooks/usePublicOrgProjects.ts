@@ -15,11 +15,19 @@ export function usePublicOrgProjects() {
         const { projects: data } = await res.json() as { projects: Record<string, unknown>[] };
         if (!data) { setReady(true); return; }
 
+        // Normalize type values saved by the org form to lib/data.ts OpportunityType
+        const TYPE_NORM: Record<string, Opportunity["type"]> = {
+          volunteer:  "volunteering",
+          training:   "conference",
+          custom:     "grant",
+        };
+
         const mapped: Opportunity[] = data.map((row) => {
           const org = row.orgs as { id: string; name: string; slug?: string };
+          const rawType = (row.type as string) ?? "exchange";
           return {
             slug:             row.id as string,
-            type:             (row.type as Opportunity["type"]) ?? "exchange",
+            type:             TYPE_NORM[rawType] ?? (rawType as Opportunity["type"]),
             typeName:         (row.type_name as string) ?? "",
             org:              org?.name ?? "",
             orgSlug:          org?.slug || org?.id,
