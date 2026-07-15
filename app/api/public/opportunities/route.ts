@@ -57,7 +57,16 @@ export async function GET() {
       return { ...row, orgs: org ?? null };
     });
 
-  console.log(`[public/opportunities] ${visible.length}/${rows.length} published projects returned`);
+  // DIAGNOSTIC — remove after confirming cache source
+  console.log(
+    `[public/opportunities] DB_SELECT=${rows.length} AFTER_JS_FILTER=${visible.length} ts=${Date.now()}`,
+  );
+  if (rows.length > 0) {
+    console.log(
+      "[public/opportunities] SELECT titles:",
+      rows.map((r) => `${r.id?.slice(0, 8)}…${r.title}`).join(" | "),
+    );
+  }
 
   return NextResponse.json(
     { projects: visible },
