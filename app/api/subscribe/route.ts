@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   EMAIL_FROM, SITE_URL,
   wrapEmailTemplate, emailButton, emailDivider, emailSectionLabel, emailFeatureRow,
@@ -40,12 +40,12 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const supabase = await createClient();
-      await supabase
+      const admin = createAdminClient();
+      await admin
         .from("newsletter_subscribers")
         .upsert({ email, first_name: firstName ?? null, subscribed_at: new Date().toISOString() }, { onConflict: "email" });
     } catch {
-      // Table may not exist yet — not a hard failure
+      // Not a hard failure if table doesn't exist yet
     }
 
     return NextResponse.json({ success: true });

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { assertAffected, ApiError } from "@/lib/supabase/assert-rows";
 
 async function assertAdmin() {
   const supabase = createClient();
@@ -18,12 +19,19 @@ export async function DELETE(
   const user = await assertAdmin();
   if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from("org_projects")
-    .delete()
-    .eq("id", params.id);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  try {
+    const admin = createAdminClient();
+    assertAffected(
+      await admin
+        .from("org_projects")
+        .delete()
+        .eq("id", params.id)
+        .select("id"),
+      "Project"
+    );
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    if (e instanceof ApiError) return NextResponse.json({ error: e.message }, { status: e.status });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { assertAffected, ApiError } from "@/lib/supabase/assert-rows";
 
 async function getCallerOrgId(userId: string): Promise<string | null> {
   const admin = createAdminClient();
@@ -37,15 +38,22 @@ export async function PATCH(
     return NextResponse.json({ error: "No valid fields" }, { status: 400 });
   }
 
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from("org_projects")
-    .update(safeBody)
-    .eq("id", params.id)
-    .eq("org_id", orgId);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  try {
+    const admin = createAdminClient();
+    assertAffected(
+      await admin
+        .from("org_projects")
+        .update(safeBody)
+        .eq("id", params.id)
+        .eq("org_id", orgId)
+        .select("id"),
+      "Project"
+    );
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    if (e instanceof ApiError) return NextResponse.json({ error: e.message }, { status: e.status });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
 }
 
 export async function DELETE(
@@ -59,13 +67,20 @@ export async function DELETE(
   const orgId = await getCallerOrgId(user.id);
   if (!orgId) return NextResponse.json({ error: "No org" }, { status: 403 });
 
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from("org_projects")
-    .delete()
-    .eq("id", params.id)
-    .eq("org_id", orgId);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  try {
+    const admin = createAdminClient();
+    assertAffected(
+      await admin
+        .from("org_projects")
+        .delete()
+        .eq("id", params.id)
+        .eq("org_id", orgId)
+        .select("id"),
+      "Project"
+    );
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    if (e instanceof ApiError) return NextResponse.json({ error: e.message }, { status: e.status });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
 }

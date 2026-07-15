@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { assertAffected, ApiError } from "@/lib/supabase/assert-rows";
 
 // DELETE — remove member from org
 export async function DELETE(
@@ -13,22 +14,32 @@ export async function DELETE(
 
   const { userId } = params;
 
-  // Caller must be the org owner
   const admin = createAdminClient();
   const { data: org } = await admin.from("orgs").select("id").eq("user_id", user.id).maybeSingle();
   if (!org) return NextResponse.json({ error: "Only org owner can remove members" }, { status: 403 });
 
-  // Remove from org_members
-  await admin.from("org_members").delete().eq("org_id", org.id).eq("user_id", userId);
+  try {
+    assertAffected(
+      await admin
+        .from("org_members")
+        .delete()
+        .eq("org_id", org.id)
+        .eq("user_id", userId)
+        .select("id"),
+      "Member"
+    );
+  } catch (e) {
+    if (e instanceof ApiError) return NextResponse.json({ error: e.message }, { status: e.status });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
 
-  // Check if user is a member of any other org
+  // Remove has_org_access flag if user has no remaining memberships
   const { data: otherMembership } = await admin
     .from("org_members")
     .select("id")
     .eq("user_id", userId)
     .maybeSingle();
 
-  // If not member of any org, remove has_org_access flag
   if (!otherMembership) {
     const { data: targetUser } = await admin.auth.admin.getUserById(userId);
     if (targetUser.user) {
@@ -55,17 +66,23 @@ export async function PATCH(
 
   const { userId } = params;
 
-  // Caller must be the org owner
   const admin = createAdminClient();
   const { data: org } = await admin.from("orgs").select("id").eq("user_id", user.id).maybeSingle();
   if (!org) return NextResponse.json({ error: "Only org owner can change roles" }, { status: 403 });
 
-  const { error } = await admin
-    .from("org_members")
-    .update({ role })
-    .eq("org_id", org.id)
-    .eq("user_id", userId);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  try {
+    assertAffected(
+      await admin
+        .from("org_members")
+        .update({ role })
+        .eq("org_id", org.id)
+        .eq("user_id", userId)
+        .select("id"),
+      "Member"
+    );
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    if (e instanceof ApiError) return NextResponse.json({ error: e.message }, { status: e.status });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
 }

@@ -11,6 +11,7 @@ async function getCallerOrgId(userId: string): Promise<string | null> {
 }
 
 // GET /api/org/applications?projectId=xxx — list applications for caller's org
+// Withdrawn applications are excluded: the candidate cancelled, nothing to action.
 export async function GET(req: NextRequest) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -26,6 +27,7 @@ export async function GET(req: NextRequest) {
     .from("org_applications")
     .select("*")
     .eq("org_id", orgId)
+    .neq("status", "withdrawn")
     .order("submitted_at", { ascending: false });
 
   if (projectId) query = query.eq("project_id", projectId);

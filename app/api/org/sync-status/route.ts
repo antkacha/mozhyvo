@@ -85,11 +85,15 @@ export async function POST(req: NextRequest) {
     ? updateQuery.eq("user_id", orgApp.applicant_user_id)
     : updateQuery.eq("email", email);
 
-  const { error } = await updateQuery;
+  const { data: updated, error } = await updateQuery.select("id");
 
   if (error) {
     console.error("[sync-status] failed:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  if (!updated?.length) {
+    // Expected for external applicants who have no applications row (legacy/static opportunities)
+    console.warn(`[sync-status] 0 rows updated for project=${projectId} orgApp=${orgAppId}`);
   }
 
   const notifyStatuses = ["reviewing", "accepted", "rejected"];
