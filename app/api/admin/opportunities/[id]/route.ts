@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { assertAffected, ApiError } from "@/lib/supabase/assert-rows";
@@ -29,6 +30,7 @@ export async function DELETE(
         .select("id"),
       "Project"
     );
+    revalidateTag("projects");
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (e instanceof ApiError) return NextResponse.json({ error: e.message }, { status: e.status });
