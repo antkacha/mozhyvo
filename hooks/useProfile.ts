@@ -4,6 +4,10 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { type UserProfile, DEFAULT_PROFILE } from "@/lib/types";
 
+// All useProfile instances listen for this event so they stay in sync
+// when any one of them calls save() (e.g. avatar upload in cabinet updates the header)
+const PROFILE_UPDATED = "mozhyvo:profile-updated";
+
 export type { UserProfile };
 
 function fromRow(row: Record<string, unknown>, email?: string): UserProfile {
@@ -77,11 +81,15 @@ export function useProfile() {
 
   useEffect(() => {
     load();
+    window.addEventListener(PROFILE_UPDATED, load);
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") load();
       else if (event === "SIGNED_OUT") { setProfile(DEFAULT_PROFILE); setReady(true); }
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener(PROFILE_UPDATED, load);
+    };
   }, [load, supabase]);
 
   const save = useCallback(async (data: Partial<UserProfile>) => {
@@ -92,6 +100,8 @@ export function useProfile() {
     });
     if (res.ok) {
       setProfile((prev) => ({ ...prev, ...data }));
+      // Notify all other useProfile instances (Header, cabinet layout, etc.)
+      window.dispatchEvent(new CustomEvent(PROFILE_UPDATED));
       return null;
     }
     const json = await res.json() as { error?: string };
