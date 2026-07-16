@@ -187,6 +187,30 @@ export default function ApplyForm({ opp, formQuestions: initialFormQuestions = [
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [step, setStep] = useState(0);
+  const [data, setData] = useState<FormData>(EMPTY);
+
+  // Pre-fill from user profile once when it loads
+  useEffect(() => {
+    if (!profileReady || profileFilledRef.current) return;
+    profileFilledRef.current = true;
+    setData({
+      firstName:      profile.firstName || "",
+      lastName:       profile.lastName  || "",
+      email:          profile.email     || "",
+      phone:          profile.phone     || "",
+      country:        profile.country   || "",
+      institution:    profile.institution || "",
+      degree:         profile.degree    || "",
+      graduationYear: profile.graduationYear || "",
+      languages:      profile.languages ?? [],
+      motivation:     "",
+      cvUrl:          profile.cvUrl     || "",
+      portfolioUrl:   "",
+    });
+  }, [profileReady, profile]);
+  const [customAnswers, setCustomAnswers] = useState<Record<string, string | string[]>>({});
+
   // Debounced save — only after draft decision is resolved AND profile is filled
   useEffect(() => {
     if (!isDraftResolved.current && !profileFilledRef.current) return;
@@ -216,29 +240,6 @@ export default function ApplyForm({ opp, formQuestions: initialFormQuestions = [
     setHasDraft(false);
   }
 
-  const [step, setStep] = useState(0);
-  const [data, setData] = useState<FormData>(EMPTY);
-
-  // Pre-fill from user profile once when it loads
-  useEffect(() => {
-    if (!profileReady || profileFilledRef.current) return;
-    profileFilledRef.current = true;
-    setData({
-      firstName:      profile.firstName || "",
-      lastName:       profile.lastName  || "",
-      email:          profile.email     || "",
-      phone:          profile.phone     || "",
-      country:        profile.country   || "",
-      institution:    profile.institution || "",
-      degree:         profile.degree    || "",
-      graduationYear: profile.graduationYear || "",
-      languages:      profile.languages ?? [],
-      motivation:     "",
-      cvUrl:          profile.cvUrl     || "",
-      portfolioUrl:   "",
-    });
-  }, [profileReady, profile]);
-  const [customAnswers, setCustomAnswers] = useState<Record<string, string | string[]>>({});
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [customErrors, setCustomErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
