@@ -7,6 +7,7 @@ export interface OrgApplication {
   projectId: string;
   projectTitle: string;
   applicantUserId?: string;
+  avatarUrl?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -30,6 +31,7 @@ function fromRow(row: Record<string, unknown>): OrgApplication {
     projectId:       (row.project_id as string) ?? "",
     projectTitle:    (row.project_title as string) ?? "",
     applicantUserId: (row.applicant_user_id as string) ?? undefined,
+    avatarUrl:       (row.avatar_url as string) || undefined,
     firstName:       (row.first_name as string) ?? "",
     lastName:      (row.last_name as string) ?? "",
     email:         (row.email as string) ?? "",

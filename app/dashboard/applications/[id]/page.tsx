@@ -7,6 +7,7 @@ import { useOrgApplications, OrgApplication } from "@/hooks/useOrgApplications";
 import { useActivityLog } from "@/hooks/useActivityLog";
 import { useAppNotes } from "@/hooks/useAppNotes";
 import { useOrgSession } from "@/hooks/useOrgSession";
+import UserAvatar from "@/components/UserAvatar";
 
 // ── Status config ─────────────────────────────────────────────────────
 const STATUSES: OrgApplication["status"][] = ["new", "reviewing", "selected", "rejected"];
@@ -36,7 +37,6 @@ function formatDate(iso: string) {
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString("uk-UA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
-function avatarGradient() { return "linear-gradient(135deg,#3B4FE8,#7C3AED)"; }
 
 // ── Detail page ───────────────────────────────────────────────────────
 function ApplicationDetail() {
@@ -134,12 +134,12 @@ function ApplicationDetail() {
       {/* Header card */}
       <div className="bg-white rounded-2xl border border-border p-6 mb-5 flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-4">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-sm flex-shrink-0"
-            style={{ background: avatarGradient() }}
-          >
-            {app.firstName[0]}{app.lastName[0]}
-          </div>
+          <UserAvatar
+            url={app.avatarUrl}
+            initials={`${app.firstName[0] ?? ""}${app.lastName[0] ?? ""}`}
+            size={64}
+            rounded="2xl"
+          />
           <div>
             <h1 className="text-xl font-black text-foreground">{app.firstName} {app.lastName}</h1>
             {(app.institution || app.degree) && (

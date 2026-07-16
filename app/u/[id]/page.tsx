@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import UserAvatar from "@/components/UserAvatar";
 
 interface PublicProfile {
   first_name: string;
@@ -14,6 +15,7 @@ interface PublicProfile {
   graduation_year: string;
   languages: string[];
   bio: string;
+  avatar_url: string;
   linkedin_url: string;
   cv_url: string;
   telegram: string;
@@ -65,12 +67,7 @@ export default function PublicProfilePage() {
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 space-y-6">
       {/* Header card */}
       <div className="bg-white rounded-2xl border border-border p-6 flex items-start gap-5">
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-2xl flex-shrink-0"
-          style={{ background: "linear-gradient(135deg,#3B4FE8,#7C3AED)" }}
-        >
-          {initials}
-        </div>
+        <UserAvatar url={profile.avatar_url} initials={initials} size={64} rounded="2xl" />
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-black text-foreground">{fullName}</h1>
           {location && <p className="text-sm text-muted mt-0.5">{location}</p>}

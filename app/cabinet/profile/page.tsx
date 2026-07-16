@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { profileCompleteness } from "@/lib/types";
 import type { UserProfile } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
+import UserAvatar from "@/components/UserAvatar";
 
 const DEGREES = ["Аспірант", "Бакалавр", "Доктор наук", "Магістр", "Студент", "Інше"];
 const INTEREST_OPTIONS = [
@@ -15,6 +17,33 @@ const lbl = "block text-sm font-medium text-foreground mb-1.5";
 const inp = "w-full px-3.5 py-2.5 text-sm rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white transition-all";
 const section = "bg-white rounded-2xl border border-border p-6 space-y-4";
 
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_BYTES = 2 * 1024 * 1024;
+
+async function resizeImage(file: File, maxPx = 400): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objUrl);
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Resize failed"))),
+        "image/jpeg",
+        0.85,
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error("Image load failed")); };
+    img.src = objUrl;
+  });
+}
+
 export default function CabinetProfilePage() {
   const { profile, save, ready } = useProfile();
   const [form, setForm] = useState<UserProfile>(profile);
@@ -22,6 +51,11 @@ export default function CabinetProfilePage() {
   const [saved, setSavedFlag] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [langInput, setLangInput] = useState("");
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (ready) setForm(profile);
@@ -49,6 +83,56 @@ export default function CabinetProfilePage() {
     set("languages", form.languages.filter((l) => l !== lang));
   }
 
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setUploadError("Тільки JPG, PNG або WebP");
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      setUploadError("Файл більший за 2 МБ");
+      return;
+    }
+
+    setUploadError(null);
+    setUploading(true);
+
+    try {
+      const blob = await resizeImage(file);
+      const preview = URL.createObjectURL(blob);
+      setPreviewUrl(preview);
+
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const path = `${user.id}/avatar.jpg`;
+      const { error: storageError } = await supabase.storage
+        .from("avatars")
+        .upload(path, blob, { contentType: "image/jpeg", upsert: true });
+      if (storageError) throw storageError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(path);
+
+      const saveErr = await save({ avatarUrl: publicUrl });
+      if (saveErr) throw new Error(saveErr.message);
+
+      set("avatarUrl", publicUrl);
+      URL.revokeObjectURL(preview);
+      setPreviewUrl(null);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Помилка завантаження");
+      setPreviewUrl(null);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   async function handleSave() {
     setSaving(true);
     setSaveError(null);
@@ -63,6 +147,7 @@ export default function CabinetProfilePage() {
   }
 
   const completeness = profileCompleteness(form);
+  const avatarInitials = [form.firstName?.[0], form.lastName?.[0]].filter(Boolean).join("").toUpperCase() || "?";
 
   if (!ready) {
     return (
@@ -90,16 +175,40 @@ export default function CabinetProfilePage() {
         <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${completeness}%` }} />
       </div>
 
-      {/* Avatar placeholder */}
+      {/* Avatar upload */}
       <div className={section}>
         <h2 className="text-sm font-bold text-foreground">Фото профілю</h2>
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-primary-light flex items-center justify-center text-primary font-black text-2xl flex-shrink-0">
-            {form.firstName ? form.firstName[0].toUpperCase() : "?"}
+          <div className="relative flex-shrink-0">
+            <UserAvatar
+              url={previewUrl || form.avatarUrl}
+              initials={avatarInitials}
+              size={64}
+              rounded="2xl"
+            />
+            {uploading && (
+              <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              </div>
+            )}
           </div>
           <div>
-            <p className="text-sm text-foreground font-medium mb-1">Завантаження фото скоро буде доступне</p>
-            <p className="text-xs text-muted">Зараз показується перша літера імені</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark disabled:opacity-60 transition-all"
+            >
+              {uploading ? "Завантаження..." : "Завантажити фото"}
+            </button>
+            <p className="text-xs text-muted mt-1.5">JPG, PNG або WebP · до 2 МБ</p>
+            {uploadError && <p className="text-xs text-red-500 mt-1">{uploadError}</p>}
           </div>
         </div>
       </div>

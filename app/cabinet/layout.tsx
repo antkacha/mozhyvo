@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { profileCompleteness } from "@/lib/types";
+import UserAvatar from "@/components/UserAvatar";
 
 const NAV = [
   { href: "/cabinet",              label: "Огляд",        exact: true,
@@ -69,9 +70,11 @@ export default function CabinetLayout({ children }: { children: React.ReactNode 
         {/* Profile mini */}
         <div className="px-5 py-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-primary-light flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
-              {profile.firstName ? profile.firstName[0].toUpperCase() : "?"}
-            </div>
+            <UserAvatar
+              url={profile.avatarUrl}
+              initials={[profile.firstName?.[0], profile.lastName?.[0]].filter(Boolean).join("").toUpperCase() || "?"}
+              size={36}
+            />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-foreground truncate">
                 {profile.firstName || profile.email || "Користувач"}

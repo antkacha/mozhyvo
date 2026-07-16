@@ -8,6 +8,7 @@ import { useSaved } from "@/hooks/useSaved";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import NotificationsBell from "@/components/NotificationsBell";
+import UserAvatar from "@/components/UserAvatar";
 
 const navLinks = [
   { label: "Головна", href: "/" },
@@ -112,9 +113,11 @@ export default function Header() {
                       : "border-border text-foreground hover:border-primary/50 hover:text-primary"
                   }`}
                 >
-                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 leading-none">
-                    {(user.user_metadata?.first_name?.[0] ?? user.email?.[0] ?? "?").toUpperCase()}
-                  </div>
+                  <UserAvatar
+                    url={profile.avatarUrl}
+                    initials={(user.user_metadata?.first_name?.[0] ?? user.email?.[0] ?? "?").toUpperCase()}
+                    size={20}
+                  />
                   <span className="max-w-[100px] truncate">
                     {user.user_metadata?.first_name ?? user.email?.split("@")[0]}
                   </span>

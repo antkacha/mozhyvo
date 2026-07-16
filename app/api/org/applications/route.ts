@@ -34,7 +34,31 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ applications: data ?? [] });
+
+  // Batch-fetch avatar_urls from profiles for all applicants
+  const userIds = (data ?? [])
+    .map((a) => a.applicant_user_id as string | null)
+    .filter((id): id is string => !!id);
+
+  let avatarMap: Record<string, string> = {};
+  if (userIds.length > 0) {
+    const { data: profiles } = await admin
+      .from("profiles")
+      .select("id, avatar_url")
+      .in("id", userIds);
+    avatarMap = Object.fromEntries(
+      (profiles ?? [])
+        .filter((p) => p.avatar_url)
+        .map((p) => [p.id as string, p.avatar_url as string])
+    );
+  }
+
+  const result = (data ?? []).map((a) => ({
+    ...a,
+    avatar_url: a.applicant_user_id ? (avatarMap[a.applicant_user_id as string] ?? null) : null,
+  }));
+
+  return NextResponse.json({ applications: result });
 }
 
 // POST /api/org/applications — submit application to org (called after user submits)

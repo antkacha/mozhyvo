@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgApplications, OrgApplication } from "@/hooks/useOrgApplications";
 import { useOrgProjects } from "@/hooks/useOrgProjects";
+import UserAvatar from "@/components/UserAvatar";
 
 // ── Status config ─────────────────────────────────────────────────────
 const STATUSES: OrgApplication["status"][] = ["new", "reviewing", "selected", "rejected"];
@@ -762,12 +763,11 @@ function ApplicationsContent() {
 
                     {/* Row clickable area */}
                     <button className="flex items-center gap-3 flex-1 min-w-0 text-left" onClick={() => router.push(`/dashboard/applications/${app.id}`)}>
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
-                        style={{ background: "#EEF0FD", color: "#3B4FE8" }}
-                      >
-                        {app.firstName[0]}{app.lastName[0]}
-                      </div>
+                      <UserAvatar
+                        url={app.avatarUrl}
+                        initials={`${app.firstName[0] ?? ""}${app.lastName[0] ?? ""}`}
+                        size={32}
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate text-foreground group-hover:text-primary">{app.firstName} {app.lastName}</p>
                         <p className="text-xs text-muted truncate">{app.country} · {app.institution}</p>
