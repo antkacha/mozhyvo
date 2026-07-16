@@ -6,6 +6,7 @@ import { Opportunity } from "@/lib/data";
 import { useApplications } from "@/hooks/useApplications";
 import { useProfile } from "@/hooks/useProfile";
 import type { FormQuestion } from "@/hooks/useOrgProjects";
+import { saveDraft, loadDraft, clearDraft } from "@/lib/draft-storage";
 
 const DEGREES = [
   "Бакалавр",
@@ -168,6 +169,53 @@ export default function ApplyForm({ opp, formQuestions: initialFormQuestions = [
     return steps;
   }, [enabledBlocks, customGroups]);
 
+  const DRAFT_KEY = `mozhyvo_apply_draft_${opp.slug}`;
+  const [hasDraft, setHasDraft] = useState(false);
+  const isDraftResolved = useRef(false);
+  const draftTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // On mount: check for a useful draft (has email = was at least profile-filled)
+  useEffect(() => {
+    type ApplyDraft = { data: FormData; step: number; customAnswers: Record<string, string | string[]> };
+    const d = loadDraft<ApplyDraft>(DRAFT_KEY);
+    if (d?.data?.email) {
+      setHasDraft(true);
+    } else {
+      clearDraft(DRAFT_KEY); // clear empty/malformed drafts
+      isDraftResolved.current = true;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced save — only after draft decision is resolved AND profile is filled
+  useEffect(() => {
+    if (!isDraftResolved.current && !profileFilledRef.current) return;
+    if (draftTimer.current) clearTimeout(draftTimer.current);
+    draftTimer.current = setTimeout(() => {
+      saveDraft(DRAFT_KEY, { data, step, customAnswers });
+    }, 500);
+    return () => { if (draftTimer.current) clearTimeout(draftTimer.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, step, customAnswers]);
+
+  function restoreDraft() {
+    type ApplyDraft = { data: FormData; step: number; customAnswers: Record<string, string | string[]> };
+    const d = loadDraft<ApplyDraft>(DRAFT_KEY);
+    if (!d) return;
+    isDraftResolved.current = true;
+    profileFilledRef.current = true; // block profile prefill from overwriting restored data
+    setData(d.data);
+    setStep(d.step);
+    setCustomAnswers(d.customAnswers);
+    setHasDraft(false);
+  }
+
+  function discardApplyDraft() {
+    isDraftResolved.current = true;
+    clearDraft(DRAFT_KEY);
+    setHasDraft(false);
+  }
+
   const [step, setStep] = useState(0);
   const [data, setData] = useState<FormData>(EMPTY);
 
@@ -297,6 +345,7 @@ export default function ApplyForm({ opp, formQuestions: initialFormQuestions = [
         ...data,
         ...(Object.keys(customAnswers).length > 0 ? { customAnswers } : {}),
       });
+      clearDraft(DRAFT_KEY);
       setDone(true);
     } catch {
       setSubmitError("Помилка відправки заявки. Спробуй ще раз.");
@@ -410,6 +459,30 @@ export default function ApplyForm({ opp, formQuestions: initialFormQuestions = [
           </div>
         </div>
       </div>
+
+      {/* Draft restore banner */}
+      {hasDraft && (
+        <div className="flex items-center gap-3 px-6 py-3.5 border-b border-amber-200 bg-amber-50">
+          <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-xs font-medium text-amber-800 flex-1">Знайдено незавершену заявку.</p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={discardApplyDraft}
+              className="text-xs font-semibold text-amber-700 hover:text-amber-900 transition-colors"
+            >
+              Почати заново
+            </button>
+            <button
+              onClick={restoreDraft}
+              className="text-xs font-bold px-3 py-1 rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-all"
+            >
+              Продовжити
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Step content */}
       <div className="px-7 py-7">

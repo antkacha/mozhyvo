@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgProjects, OrgProject, FormQuestion } from "@/hooks/useOrgProjects";
 import FormBuilder from "@/components/FormBuilder";
+import { saveDraft, loadDraft, clearDraft } from "@/lib/draft-storage";
 
 const TYPE_OPTIONS = [
   { value: "exchange", label: "Обмін" },
@@ -157,8 +158,14 @@ function EditProjectContent() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  const editDraftKey = `mozhyvo_project_draft_edit_${params.id}`;
+  const [hasDraft, setHasDraft] = useState(() => !!loadDraft(editDraftKey));
+  const draftTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialized = useRef(false);
+
   useEffect(() => {
     if (project && !form) {
+      initialized.current = false; // mark as initialization so save effect skips first render
       setForm({
         ...project,
         requirementsText: project.requirements.join("\n"),
@@ -170,6 +177,37 @@ function EditProjectContent() {
       setApplyMode(project.externalApplyUrl ? "external" : "form");
     }
   }, [project, form]);
+
+  // Debounced draft save — skip the first render (initialization from DB)
+  useEffect(() => {
+    if (!form) return;
+    if (!initialized.current) {
+      initialized.current = true;
+      return;
+    }
+    if (draftTimer.current) clearTimeout(draftTimer.current);
+    draftTimer.current = setTimeout(() => {
+      saveDraft(editDraftKey, { form, formQuestions, applyMode });
+    }, 500);
+    return () => { if (draftTimer.current) clearTimeout(draftTimer.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form, formQuestions, applyMode]);
+
+  function restoreDraft() {
+    type EditDraft = { form: FormState; formQuestions: FormQuestion[]; applyMode: "form" | "external" };
+    const d = loadDraft<EditDraft>(editDraftKey);
+    if (!d) return;
+    initialized.current = true; // prevent next render from skipping save
+    setForm(d.form);
+    setFormQuestions(d.formQuestions);
+    setApplyMode(d.applyMode);
+    setHasDraft(false);
+  }
+
+  function discardDraft() {
+    clearDraft(editDraftKey);
+    setHasDraft(false);
+  }
 
   if (!project || !form) {
     return (
@@ -238,6 +276,7 @@ function EditProjectContent() {
     }
 
     setSaving(false);
+    clearDraft(editDraftKey);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   }
@@ -278,6 +317,33 @@ function EditProjectContent() {
           </div>
         );
       })()}
+
+      {/* Draft restore banner */}
+      {hasDraft && (
+        <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl mb-5">
+          <svg className="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-800">Знайдено незбережені зміни</p>
+            <p className="text-xs text-amber-600 mt-0.5">Ви вносили зміни у цей проект раніше і не зберегли їх.</p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={discardDraft}
+              className="text-xs font-semibold px-3 py-1.5 rounded-xl text-amber-700 hover:bg-amber-100 transition-all"
+            >
+              Відхилити
+            </button>
+            <button
+              onClick={restoreDraft}
+              className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition-all"
+            >
+              Відновити зміни
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-4 mb-7">
         <h1 className="text-2xl font-black text-foreground">Редагування</h1>

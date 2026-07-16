@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgProjects, OrgProject, FormQuestion } from "@/hooks/useOrgProjects";
 import FormBuilder from "@/components/FormBuilder";
+import { saveDraft, loadDraft, clearDraft } from "@/lib/draft-storage";
 
 const TYPE_OPTIONS = [
   { value: "exchange", label: "Обмін", desc: "Молодіжний чи академічний обмін" },
@@ -275,6 +276,18 @@ function splitLines(s: string) {
   return s.split("\n").map((x) => x.trim()).filter(Boolean);
 }
 
+const NEW_DRAFT_KEY = "mozhyvo_project_draft";
+
+type NewProjectDraft = {
+  form: FormData;
+  step: number;
+  formQuestions: FormQuestion[];
+  applyMode: "form" | "external";
+  durationMode: "dates" | "text";
+  deadlineMode: "date" | "rolling" | "asap";
+  templateChosen: boolean;
+};
+
 function NewProjectContent() {
   const router = useRouter();
   const { org } = useOrgSession();
@@ -290,6 +303,41 @@ function NewProjectContent() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Draft auto-save
+  const [hasDraft, setHasDraft] = useState(() => {
+    const d = loadDraft<NewProjectDraft>(NEW_DRAFT_KEY);
+    return !!(d?.templateChosen);
+  });
+  const draftTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounced save — only when the user is past the template picker
+  useEffect(() => {
+    if (!templateChosen) return;
+    if (draftTimer.current) clearTimeout(draftTimer.current);
+    draftTimer.current = setTimeout(() => {
+      saveDraft(NEW_DRAFT_KEY, { form, step, formQuestions, applyMode, durationMode, deadlineMode, templateChosen });
+    }, 500);
+    return () => { if (draftTimer.current) clearTimeout(draftTimer.current); };
+  }, [form, step, formQuestions, applyMode, durationMode, deadlineMode, templateChosen]);
+
+  function restoreDraft() {
+    const d = loadDraft<NewProjectDraft>(NEW_DRAFT_KEY);
+    if (!d) return;
+    setForm(d.form);
+    setStep(d.step);
+    setFormQuestions(d.formQuestions);
+    setApplyMode(d.applyMode);
+    setDurationMode(d.durationMode);
+    setDeadlineMode(d.deadlineMode);
+    setTemplateChosen(d.templateChosen);
+    setHasDraft(false);
+  }
+
+  function discardDraft() {
+    clearDraft(NEW_DRAFT_KEY);
+    setHasDraft(false);
+  }
 
   function set(field: keyof FormData, value: string) {
     setForm((p) => {
@@ -383,6 +431,7 @@ function NewProjectContent() {
         externalApplyUrl: applyMode === "external" ? form.externalApplyUrl.trim() : "",
         infoPackUrl: form.infoPackUrl.trim() || undefined,
       });
+      clearDraft(NEW_DRAFT_KEY);
       router.push("/dashboard/projects");
     } catch (e) {
       setSaving(false);
@@ -409,6 +458,33 @@ function NewProjectContent() {
       </div>
 
       <h1 className="text-2xl font-black text-foreground mb-6">Новий проект</h1>
+
+      {/* Draft restore banner */}
+      {hasDraft && (
+        <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl mb-5">
+          <svg className="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-800">Знайдено незбережену чернетку</p>
+            <p className="text-xs text-amber-600 mt-0.5">Ви починали заповнювати форму раніше. Відновити прогрес?</p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={discardDraft}
+              className="text-xs font-semibold px-3 py-1.5 rounded-xl text-amber-700 hover:bg-amber-100 transition-all"
+            >
+              Почати заново
+            </button>
+            <button
+              onClick={restoreDraft}
+              className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition-all"
+            >
+              Відновити
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Templates */}
       {!templateChosen && (
@@ -440,7 +516,7 @@ function NewProjectContent() {
       )}
       {templateChosen && (
         <button
-          onClick={() => { setForm(INITIAL); setTemplateChosen(false); setStep(0); }}
+          onClick={() => { setForm(INITIAL); setTemplateChosen(false); setStep(0); clearDraft(NEW_DRAFT_KEY); }}
           className="text-xs font-semibold text-muted hover:text-primary transition-colors mb-5 flex items-center gap-1.5"
         >
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
