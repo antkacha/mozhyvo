@@ -118,10 +118,12 @@ export default function CabinetProfilePage() {
         .from("avatars")
         .getPublicUrl(path);
 
-      const saveErr = await save({ avatarUrl: publicUrl });
+      // Append cache-bust so browser fetches the new file even when path is identical
+      const avatarUrl = `${publicUrl}?v=${Date.now()}`;
+      const saveErr = await save({ avatarUrl });
       if (saveErr) throw new Error(saveErr.message);
 
-      set("avatarUrl", publicUrl);
+      set("avatarUrl", avatarUrl);
       URL.revokeObjectURL(preview);
       setPreviewUrl(null);
     } catch (err) {
@@ -130,6 +132,24 @@ export default function CabinetProfilePage() {
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleDeleteAvatar() {
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      await supabase.storage.from("avatars").remove([`${user.id}/avatar.jpg`]);
+      const saveErr = await save({ avatarUrl: "" });
+      if (saveErr) throw new Error(saveErr.message);
+      set("avatarUrl", "");
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Помилка видалення");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -200,13 +220,24 @@ export default function CabinetProfilePage() {
               className="hidden"
               onChange={handleAvatarChange}
             />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark disabled:opacity-60 transition-all"
-            >
-              {uploading ? "Завантаження..." : "Завантажити фото"}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark disabled:opacity-60 transition-all"
+              >
+                {uploading ? "Завантаження..." : form.avatarUrl ? "Змінити фото" : "Завантажити фото"}
+              </button>
+              {form.avatarUrl && (
+                <button
+                  onClick={handleDeleteAvatar}
+                  disabled={uploading}
+                  className="px-4 py-2 bg-white text-red-500 border border-red-200 rounded-xl text-sm font-semibold hover:bg-red-50 disabled:opacity-60 transition-all"
+                >
+                  Видалити
+                </button>
+              )}
+            </div>
             <p className="text-xs text-muted mt-1.5">JPG, PNG або WebP · до 2 МБ</p>
             {uploadError && <p className="text-xs text-red-500 mt-1">{uploadError}</p>}
           </div>
