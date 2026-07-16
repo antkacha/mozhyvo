@@ -29,7 +29,7 @@ export default function PublicProfilePage() {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/users/${id}/profile`)
+    fetch(`/api/users/${id}/profile`, { cache: "no-store" })
       .then((r) => {
         if (r.status === 404) { setNotFound(true); return null; }
         return r.json();

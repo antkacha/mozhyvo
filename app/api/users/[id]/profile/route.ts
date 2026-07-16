@@ -17,5 +17,7 @@ export async function GET(
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!profile) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  return NextResponse.json({ profile });
+  return NextResponse.json({ profile }, {
+    headers: { "Cache-Control": "no-store" },
+  });
 }
