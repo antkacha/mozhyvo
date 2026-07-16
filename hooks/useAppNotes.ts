@@ -1,67 +1,72 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export interface AppNote {
   id: string;
-  applicationId: string;
+  application_id: string; // TEXT "app-<uuid>"
+  org_id: string;
+  author_id: string | null;
+  author_name: string;
   content: string;
-  authorName: string;
-  createdAt: string;
+  created_at: string;
 }
-
-const KEY = "mozhyvo_app_notes";
-const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
-
-const SEED: AppNote[] = [
-  { id: "note-001", applicationId: "oa-002", content: "Сильний кандидат. Перевірити рекомендаційного листа.", authorName: "Фонд «Молодь України»", createdAt: daysAgo(2) },
-  { id: "note-002", applicationId: "oa-003", content: "Відмінний профіль. Підтвердити участь.", authorName: "Фонд «Молодь України»", createdAt: daysAgo(1) },
-  { id: "note-003", applicationId: "oa-006", content: "Проект цікавий, але не відповідає цільовій аудиторії (молодь 16–30 р.). Порадити інший грант.", authorName: "Фонд «Молодь України»", createdAt: daysAgo(1) },
-];
-
-function load(): AppNote[] {
-  try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : []; } catch { return []; }
-}
-function save(n: AppNote[]) { localStorage.setItem(KEY, JSON.stringify(n)); }
 
 export function useAppNotes(applicationId?: string) {
   const [notes, setNotes] = useState<AppNote[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const reload = useCallback(() => {
-    let all = load();
-    if (all.length === 0) { all = SEED; save(all); }
-    setNotes(applicationId ? all.filter((n) => n.applicationId === applicationId) : all);
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id ?? null);
+    });
+  }, []);
+
+  const reload = useCallback(async () => {
+    if (!applicationId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/org/notes?applicationId=${encodeURIComponent(applicationId)}`);
+      if (!res.ok) throw new Error(await res.text());
+      const { notes: data } = await res.json() as { notes: AppNote[] };
+      setNotes(data);
+    } catch {
+      setError("Не вдалось завантажити нотатки");
+    } finally {
+      setLoading(false);
+    }
   }, [applicationId]);
 
   useEffect(() => { reload(); }, [reload]);
 
-  const addNote = useCallback(
-    (content: string, authorName: string): AppNote | undefined => {
-      if (!applicationId || !content.trim()) return undefined;
-      const all = load();
-      const note: AppNote = {
-        id: `note-${Date.now()}`,
-        applicationId,
-        content: content.trim(),
-        authorName,
-        createdAt: new Date().toISOString(),
-      };
-      const updated = [note, ...all];
-      save(updated);
-      setNotes(updated.filter((n) => n.applicationId === applicationId));
-      return note;
-    },
-    [applicationId]
-  );
+  const addNote = useCallback(async (content: string): Promise<AppNote> => {
+    if (!applicationId || !content.trim()) throw new Error("Missing data");
+    const res = await fetch("/api/org/notes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ applicationId, content: content.trim() }),
+    });
+    if (!res.ok) {
+      const { error } = await res.json() as { error: string };
+      throw new Error(error ?? "Failed to add note");
+    }
+    const { note } = await res.json() as { note: AppNote };
+    setNotes((prev) => [note, ...prev]);
+    return note;
+  }, [applicationId]);
 
-  const deleteNote = useCallback(
-    (id: string) => {
-      const updated = load().filter((n) => n.id !== id);
-      save(updated);
-      setNotes(applicationId ? updated.filter((n) => n.applicationId === applicationId) : updated);
-    },
-    [applicationId]
-  );
+  const deleteNote = useCallback(async (id: string) => {
+    const res = await fetch(`/api/org/notes/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const { error } = await res.json() as { error: string };
+      throw new Error(error ?? "Failed to delete note");
+    }
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  }, []);
 
-  return { notes, addNote, deleteNote, reload };
+  return { notes, loading, error, addNote, deleteNote, reload, currentUserId };
 }

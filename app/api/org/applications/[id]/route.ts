@@ -13,6 +13,13 @@ async function getCallerOrgId(userId: string): Promise<string | null> {
 
 const ALLOWED_APPLICATION_FIELDS = new Set(["status", "internal_note"]);
 
+const STATUS_LABEL: Record<string, string> = {
+  new: "Нова",
+  reviewing: "Розглядається",
+  selected: "Відібрано",
+  rejected: "Відхилено",
+};
+
 // PATCH /api/org/applications/[id] — update status or internal note
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -32,6 +39,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   try {
     const admin = createAdminClient();
+
+    // Pre-fetch old status before update so we can log the transition
+    let oldStatus: string | null = null;
+    if (safeBody.status) {
+      const { data: existing } = await admin
+        .from("org_applications")
+        .select("status")
+        .eq("id", params.id)
+        .eq("org_id", orgId)
+        .single();
+      oldStatus = existing?.status ?? null;
+    }
+
     assertAffected(
       await admin
         .from("org_applications")
@@ -41,6 +61,32 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         .select("id"),
       "Application"
     );
+
+    // Log status change to activity log
+    if (safeBody.status && oldStatus && oldStatus !== safeBody.status) {
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", user.id)
+        .single();
+      const actorName =
+        [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
+        user.email ||
+        "Учасник";
+
+      const oldLabel = STATUS_LABEL[oldStatus] ?? oldStatus;
+      const newLabel = STATUS_LABEL[safeBody.status as string] ?? (safeBody.status as string);
+
+      await admin.from("org_activity_log").insert({
+        application_id: params.id,
+        org_id: orgId,
+        actor_id: user.id,
+        actor_name: actorName,
+        action: "status_changed",
+        detail: `${oldLabel} → ${newLabel}`,
+      });
+    }
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (e instanceof ApiError) return NextResponse.json({ error: e.message }, { status: e.status });

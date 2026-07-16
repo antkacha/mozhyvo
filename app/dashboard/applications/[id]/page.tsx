@@ -28,8 +28,6 @@ const STATUS_BTN_OUTLINE: Record<OrgApplication["status"], string> = {
 const ACTION_ICON: Record<string, string> = {
   status_changed: "🔄",
   note_added: "📝",
-  exported: "📤",
-  viewed: "👁",
 };
 
 function formatDate(iso: string) {
@@ -47,8 +45,8 @@ function ApplicationDetail() {
   const id = params.id as string;
   const { org } = useOrgSession();
   const { applications, updateApp, ready } = useOrgApplications(org?.id);
-  const { entries, addEntry } = useActivityLog(id);
-  const { notes, addNote, deleteNote } = useAppNotes(id);
+  const { entries, loading: activityLoading, error: activityError, reload: reloadActivity } = useActivityLog(id);
+  const { notes, loading: notesLoading, error: notesError, addNote, deleteNote, currentUserId } = useAppNotes(id);
 
   const [newNote, setNewNote] = useState("");
   const [savingStatus, setSavingStatus] = useState(false);
@@ -62,42 +60,32 @@ function ApplicationDetail() {
   const prevId = currentIndex > 0 ? allIds[currentIndex - 1] : null;
   const nextId = currentIndex < allIds.length - 1 ? allIds[currentIndex + 1] : null;
 
-  const appLog = useMemo(() => [...entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)), [entries]);
-  const appNotes = useMemo(() => [...notes].sort((a, b) => b.createdAt.localeCompare(a.createdAt)), [notes]);
-
-  // Record view
-  useEffect(() => {
-    if (app) {
-      addEntry({ applicationId: id, action: "viewed", detail: "Заявку переглянуто", author: org?.name ?? "Організація" });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  const appLog = useMemo(() => [...entries].sort((a, b) => b.created_at.localeCompare(a.created_at)), [entries]);
+  const appNotes = useMemo(() => [...notes].sort((a, b) => b.created_at.localeCompare(a.created_at)), [notes]);
 
   async function handleStatusChange(status: OrgApplication["status"]) {
     if (!app || app.status === status) return;
     setSavingStatus(true);
-    const prev = app.status;
     try {
       await updateApp(id, { status });
+      reloadActivity();
     } catch {
       setSavingStatus(false);
       return;
     }
-    addEntry({
-      applicationId: id,
-      action: "status_changed",
-      detail: `${STATUS_LABEL[prev]} → ${STATUS_LABEL[status]}`,
-      author: org?.name ?? "Організація",
-    });
     setStatusMsg(`Статус змінено на «${STATUS_LABEL[status]}»`);
     setTimeout(() => { setSavingStatus(false); setStatusMsg(null); }, 2000);
   }
 
-  function handleAddNote() {
+  async function handleAddNote() {
     if (!newNote.trim()) return;
-    addNote(newNote.trim(), org?.name ?? "Організація");
-    addEntry({ applicationId: id, action: "note_added", detail: "Додано нотатку", author: org?.name ?? "Організація" });
-    setNewNote("");
+    try {
+      await addNote(newNote.trim());
+      reloadActivity();
+      setNewNote("");
+    } catch {
+      // note error is surfaced via notesError state if reload fails; no-op here
+    }
   }
 
   if (!ready) {
@@ -293,7 +281,13 @@ function ApplicationDetail() {
               <span className="w-6 h-6 bg-primary-light rounded-lg flex items-center justify-center text-xs">📜</span>
               Журнал активності
             </h2>
-            {appLog.length === 0 ? (
+            {activityLoading ? (
+              <div className="flex justify-center py-6">
+                <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : activityError ? (
+              <p className="text-sm text-red-500 text-center py-6">{activityError}</p>
+            ) : appLog.length === 0 ? (
               <p className="text-sm text-muted text-center py-6">Поки що немає записів</p>
             ) : (
               <div className="space-y-0">
@@ -304,7 +298,7 @@ function ApplicationDetail() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-foreground font-medium">{entry.detail}</p>
-                      <p className="text-xs text-muted mt-0.5">{entry.author} · {formatDateTime(entry.createdAt)}</p>
+                      <p className="text-xs text-muted mt-0.5">{entry.actor_name} · {formatDateTime(entry.created_at)}</p>
                     </div>
                   </div>
                 ))}
@@ -397,23 +391,31 @@ function ApplicationDetail() {
             </h2>
 
             {/* Existing notes */}
-            {appNotes.length > 0 && (
+            {notesLoading ? (
+              <div className="flex justify-center py-4 mb-4">
+                <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : notesError ? (
+              <p className="text-sm text-red-500 text-center py-4 mb-4">{notesError}</p>
+            ) : appNotes.length > 0 ? (
               <div className="space-y-3 mb-4">
                 {appNotes.map((note) => (
                   <div key={note.id} className="bg-muted-bg rounded-xl p-3 relative group">
                     <p className="text-sm text-foreground leading-relaxed pr-6">{note.content}</p>
-                    <p className="text-[11px] text-muted mt-2">{note.authorName} · {formatDateTime(note.createdAt)}</p>
-                    <button
-                      onClick={() => deleteNote(note.id)}
-                      className="absolute top-3 right-3 w-5 h-5 rounded-full bg-border/70 text-muted hover:bg-red-100 hover:text-red-500 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all"
-                      title="Видалити"
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
+                    <p className="text-[11px] text-muted mt-2">{note.author_name} · {formatDateTime(note.created_at)}</p>
+                    {note.author_id === currentUserId && (
+                      <button
+                        onClick={() => deleteNote(note.id)}
+                        className="absolute top-3 right-3 w-5 h-5 rounded-full bg-border/70 text-muted hover:bg-red-100 hover:text-red-500 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all"
+                        title="Видалити"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
-            )}
+            ) : null}
 
             {/* Add note */}
             <div className="space-y-2">
