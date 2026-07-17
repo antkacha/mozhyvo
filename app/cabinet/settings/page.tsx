@@ -95,7 +95,7 @@ export default function CabinetSettingsPage() {
     if (!user?.email) return;
     setPwResetLoading(true);
     await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
     });
     setPwResetLoading(false);
     setPwResetSent(true);

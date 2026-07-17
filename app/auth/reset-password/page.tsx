@@ -9,12 +9,32 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "invalid">("idle");
+  const [status, setStatus] = useState<"waiting" | "idle" | "loading" | "success" | "error" | "invalid">("waiting");
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {});
-    return () => subscription.unsubscribe();
+    let timeout: ReturnType<typeof setTimeout>;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setStatus("idle");
+        return;
+      }
+      // No session yet — wait for PASSWORD_RECOVERY event from URL token
+      timeout = setTimeout(() => setStatus("invalid"), 4000);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        clearTimeout(timeout);
+        setStatus("idle");
+      }
+    });
+
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, [supabase]);
 
   const canSubmit = password.length >= 8 && password === confirm;
@@ -26,10 +46,11 @@ export default function ResetPasswordPage() {
     const { error } = await supabase.auth.updateUser({ password });
     if (error) {
       setErrorMsg(error.message);
-      setStatus("error");
+      setStatus("idle");
     } else {
       setStatus("success");
-      setTimeout(() => { window.location.href = "/cabinet"; }, 2000);
+      await supabase.auth.signOut();
+      setTimeout(() => { window.location.href = "/login"; }, 2000);
     }
   }
 
@@ -37,7 +58,32 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#f7f8fc] px-5 py-12">
       <div className="w-full max-w-[420px]">
         <div className="bg-white rounded-2xl shadow-sm border border-border/60 p-8">
-          {status === "success" ? (
+          {status === "waiting" && (
+            <div className="text-center py-8">
+              <div className="w-8 h-8 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-sm text-muted">Перевіряємо посилання...</p>
+            </div>
+          )}
+
+          {status === "invalid" && (
+            <div className="text-center py-4">
+              <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <h1 className="text-lg font-bold text-foreground mb-2">Посилання недійсне</h1>
+              <p className="text-sm text-muted mb-5">Посилання застаріло або вже було використано. Запроси нове.</p>
+              <Link
+                href="/forgot-password"
+                className="inline-block px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-all"
+              >
+                Надіслати новий лист
+              </Link>
+            </div>
+          )}
+
+          {status === "success" && (
             <div className="text-center py-4">
               <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
                 <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,9 +91,11 @@ export default function ResetPasswordPage() {
                 </svg>
               </div>
               <h1 className="text-lg font-bold text-foreground mb-2">Пароль змінено!</h1>
-              <p className="text-sm text-muted">Перенаправляємо до кабінету...</p>
+              <p className="text-sm text-muted">Перенаправляємо до сторінки входу...</p>
             </div>
-          ) : (
+          )}
+
+          {(status === "idle" || status === "loading" || status === "error") && (
             <>
               <div className="text-center mb-6">
                 <div className="w-12 h-12 rounded-2xl bg-primary-light flex items-center justify-center mx-auto mb-3">
@@ -66,7 +114,7 @@ export default function ResetPasswordPage() {
                     <input
                       type={showPassword ? "text" : "password"}
                       value={password}
-                      onChange={(e) => { setPassword(e.target.value); setStatus("idle"); }}
+                      onChange={(e) => { setPassword(e.target.value); setErrorMsg(""); }}
                       placeholder="Мінімум 8 символів"
                       required
                       autoFocus
@@ -106,8 +154,8 @@ export default function ResetPasswordPage() {
                   )}
                 </div>
 
-                {status === "error" && (
-                  <p className="text-xs text-red-500">{errorMsg || "Помилка. Спробуй надіслати новий лист."}</p>
+                {errorMsg && (
+                  <p className="text-xs text-red-500">{errorMsg}</p>
                 )}
 
                 <button
