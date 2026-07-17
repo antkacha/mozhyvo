@@ -211,7 +211,7 @@ export default function Header() {
                     className="text-sm font-medium px-4 py-2.5 rounded-xl border border-border text-foreground text-center hover:border-primary hover:text-primary transition-all"
                     onClick={() => setMenuOpen(false)}
                   >
-                    {isOrg ? "Панель організації" : "Мій кабінет"}
+                    {hasDashboard ? "Панель організації" : "Мій кабінет"}
                   </Link>
                   {isAdmin && (
                     <Link
