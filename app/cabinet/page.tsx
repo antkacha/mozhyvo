@@ -42,6 +42,22 @@ export default function CabinetOverviewPage() {
         <p className="text-sm text-muted mt-1">Відстежуй заявки та знаходь нові можливості</p>
       </div>
 
+      {/* Onboarding banner — soft prompt, only for new users */}
+      {profileReady && !profile.onboardingDone && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-bold text-amber-900">Налаштуй свій профіль за 1 хвилину</p>
+            <p className="text-xs text-amber-700 mt-0.5">Вкажи інтереси, рівень освіти та мови — отримуй підходящі рекомендації</p>
+          </div>
+          <Link
+            href="/onboarding"
+            className="flex-shrink-0 px-4 py-2 bg-amber-500 text-white text-xs font-semibold rounded-xl hover:bg-amber-600 transition-all"
+          >
+            Налаштувати →
+          </Link>
+        </div>
+      )}
+
       {/* Profile completeness */}
       {profileReady && completeness < 100 && (
         <div className="bg-primary-light border border-primary/20 rounded-2xl p-5">

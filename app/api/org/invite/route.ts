@@ -31,10 +31,7 @@ export async function POST(req: NextRequest) {
 
   const roleLabel = role === "admin" ? "Адміністратора" : "Рецензента";
 
-  await admin.auth.admin.updateUserById(invitedUser.id, {
-    user_metadata: { ...invitedUser.user_metadata, has_org_access: true },
-  });
-
+  // Insert DB row FIRST — metadata is only written if this succeeds
   const { error: memberError } = await admin
     .from("org_members")
     .upsert({ org_id: org.id, user_id: invitedUser.id, role, invited_by: user.email }, { onConflict: "org_id,user_id" });
@@ -43,6 +40,10 @@ export async function POST(req: NextRequest) {
     console.error("[invite] org_members insert failed:", memberError.message);
     return NextResponse.json({ error: memberError.message }, { status: 500 });
   }
+
+  await admin.auth.admin.updateUserById(invitedUser.id, {
+    user_metadata: { ...invitedUser.user_metadata, has_org_access: true },
+  });
 
   await admin.from("user_notifications").insert({
     user_id: invitedUser.id,

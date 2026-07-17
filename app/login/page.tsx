@@ -37,15 +37,14 @@ function LoginContent() {
       return;
     }
     setStatus("success");
-    const role = data.user?.user_metadata?.role;
-    const hasOrgAccess = data.user?.user_metadata?.has_org_access === true;
     const next = searchParams.get("next");
-    const dest =
-      role === "org" || role === "coordinator" || hasOrgAccess
-        ? "/dashboard"
-        : next || "/cabinet";
-    // Full reload so middleware refreshes the session and Header picks up the new user
-    setTimeout(() => { window.location.href = dest; }, 400);
+    if (next) {
+      setTimeout(() => { window.location.href = next; }, 400);
+      return;
+    }
+    // Check real org membership — don't trust metadata which can be stale
+    const { hasDashboard } = await fetch("/api/me/org-access").then((r) => r.json() as Promise<{ hasDashboard: boolean }>);
+    setTimeout(() => { window.location.href = hasDashboard ? "/dashboard" : "/cabinet"; }, 400);
   };
 
   const handleGoogle = async () => {

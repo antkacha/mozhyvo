@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import NotificationsBell from "@/components/NotificationsBell";
 import UserAvatar from "@/components/UserAvatar";
+import { useOrgAccess } from "@/hooks/useOrgAccess";
 
 const navLinks = [
   { label: "Головна", href: "/" },
@@ -33,11 +34,8 @@ export default function Header() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile } = useProfile();
   const isAdmin = profile.role === "admin";
-  // org owner by metadata; invited members get has_org_access flag in metadata
-  const isOrg = user?.user_metadata?.role === "org"
-    || user?.user_metadata?.role === "coordinator"
-    || user?.user_metadata?.has_org_access === true;
-  const cabinetHref = isOrg ? "/dashboard" : "/cabinet";
+  const hasDashboard = useOrgAccess(user, authLoading);
+  const cabinetHref = hasDashboard ? "/dashboard" : "/cabinet";
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
