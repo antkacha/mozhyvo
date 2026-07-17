@@ -24,7 +24,7 @@ function LoginContent() {
     if (!canSubmit) return;
     setStatus("loading");
     setErrorMsg("");
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       if (error.message.toLowerCase().includes("email not confirmed")) {
         setErrorMsg("Підтверди email — ми надіслали листа при реєстрації");
