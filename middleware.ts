@@ -67,7 +67,7 @@ export async function middleware(request: NextRequest) {
         .eq("user_id", user.id)
         .maybeSingle();
       if (!member) {
-        return NextResponse.redirect(new URL("/", request.url));
+        return NextResponse.redirect(new URL("/cabinet", request.url));
       }
     }
   }

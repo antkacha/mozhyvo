@@ -31,7 +31,14 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      if (next !== "/") {
+        return NextResponse.redirect(`${origin}${next}`);
+      }
+      // No explicit next — use role-based default so Google OAuth lands in the right place
+      const { data: { user } } = await supabase.auth.getUser();
+      const role = user?.user_metadata?.role as string | undefined;
+      const dest = (role === "org" || role === "coordinator") ? "/dashboard" : "/cabinet";
+      return NextResponse.redirect(`${origin}${dest}`);
     }
   }
 
