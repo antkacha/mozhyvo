@@ -10,10 +10,22 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      setLoading(false);
-    });
+    // If a recovery token is still being processed from the URL (stale
+    // emails using the old Supabase-hosted verify link land here with the
+    // session in the hash), skip the initial fetch so we never resolve
+    // `loading=false` with the recovery user before RecoveryGate redirects.
+    // Header renders its logged-out nav while loading stays true — never
+    // the signed-in one, not even for a frame.
+    const isRecoveryLink =
+      window.location.hash.includes("type=recovery") ||
+      new URLSearchParams(window.location.search).get("type") === "recovery";
+
+    if (!isRecoveryLink) {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        setUser(user);
+        setLoading(false);
+      });
+    }
 
     const {
       data: { subscription },
