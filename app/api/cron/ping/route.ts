@@ -1,11 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-// Called by Vercel Cron every 3 days to keep Supabase project active.
-// Vercel verifies the CRON_SECRET header before executing.
-export async function GET(req: NextRequest) {
+// Keeps the Supabase project active by querying it on a schedule.
+// Triggered externally (cron-job.org, GitHub Actions, etc.) since Vercel
+// Hobby only allows daily cron. The caller passes CRON_SECRET either as
+// `Authorization: Bearer <secret>` or `?secret=<secret>` — some free
+// ping services can't set custom headers, so the query param is a fallback.
+function isAuthorized(req: NextRequest): boolean {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return false;
+
   const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const headerToken = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : null;
+  const provided = headerToken ?? req.nextUrl.searchParams.get("secret");
+  if (!provided) return false;
+
+  const a = Buffer.from(provided);
+  const b = Buffer.from(secret);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
+export async function GET(req: NextRequest) {
+  if (!isAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
