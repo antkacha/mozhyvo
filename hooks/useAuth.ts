@@ -17,7 +17,11 @@ export function useAuth() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // A recovery-link session is not a real login — RecoveryGate redirects
+      // it to /auth/reset-password. Treating it as signed-in would flash
+      // cabinet nav for anyone holding a password-reset link.
+      if (event === "PASSWORD_RECOVERY") return;
       setUser(session?.user ?? null);
       setLoading(false);
     });

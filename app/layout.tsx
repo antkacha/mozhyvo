@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import ConditionalFooter from "@/components/ConditionalFooter";
 import PageTransition from "@/components/PageTransition";
+import RecoveryGate from "@/components/RecoveryGate";
 import { SavedProvider } from "@/contexts/SavedContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 
@@ -96,6 +97,7 @@ export default function RootLayout({
       <body className="antialiased bg-background text-foreground min-h-screen flex flex-col">
         <ToastProvider>
           <SavedProvider>
+            <RecoveryGate />
             <Header />
             <main className="flex-1">
               <PageTransition>{children}</PageTransition>
