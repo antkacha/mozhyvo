@@ -8,9 +8,6 @@ import { useSaved } from "@/hooks/useSaved";
 import { getDaysUntilDeadline } from "@/lib/recommendations";
 import { orgNameToSlug } from "@/lib/organizations";
 
-const TABS = ["Опис", "Вимоги", "Як подати", "FAQ"] as const;
-type Tab = (typeof TABS)[number];
-
 interface Props {
   opp: Opportunity;
   related: Opportunity[];
@@ -66,7 +63,6 @@ function ShareButton({ title, url }: { title: string; url: string }) {
 }
 
 export default function OpportunityClient({ opp, related }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>("Опис");
   const { isSaved, toggle, ready: savedReady } = useSaved();
 
   const isExternal = opp.applyUrl.startsWith("http");
@@ -88,165 +84,112 @@ export default function OpportunityClient({ opp, related }: Props) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
-          {/* Left: tabs */}
-          <div className="lg:col-span-2">
-            {/* Tab bar */}
-            <div className="flex border-b border-border mb-8 gap-0">
-              {TABS.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all -mb-px ${
-                    activeTab === tab
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted hover:text-foreground hover:border-border"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+          {/* Left: single scrollable content stream */}
+          <div className="lg:col-span-2 flex flex-col gap-12">
 
-            {/* Tab: Опис */}
-            {activeTab === "Опис" && (
-              <div className="flex flex-col gap-10">
-                {/* Tags */}
-                {opp.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {opp.tags.map((tag) => (
-                      <span key={tag} className="text-xs bg-muted-bg text-muted px-2.5 py-1 rounded-full">#{tag}</span>
-                    ))}
-                  </div>
-                )}
-                {/* Description */}
-                <section>
-                  <h2 className="text-xl font-bold text-foreground mb-4">Про програму</h2>
-                  <div className={`border-l-4 pl-5 ${borderColor[opp.type] ?? "border-l-primary"}`}>
-                    <div className="text-base text-gray-600 leading-relaxed whitespace-pre-line break-words">
-                      {opp.fullDescription}
-                    </div>
-                  </div>
-                </section>
-                {/* Benefits */}
-                {opp.benefits.length > 0 && (
-                  <section>
-                    <h2 className="text-xl font-bold text-foreground mb-4">Що включає</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {opp.benefits.map((b, i) => (
-                        <div key={i} className="flex items-start gap-3 bg-primary-light rounded-xl p-4">
-                          <span className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 text-xs font-black mt-0.5">✓</span>
-                          <span className="text-sm text-gray-700 leading-relaxed">{b}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-              </div>
-            )}
-
-            {/* Tab: Вимоги */}
-            {activeTab === "Вимоги" && (
-              <div className="flex flex-col gap-8">
-                <section>
-                  <h2 className="text-xl font-bold text-foreground mb-5">Вимоги до учасників</h2>
-                  <ul className="flex flex-col gap-3">
-                    {opp.requirements.map((req, i) => (
-                      <li key={i} className="flex items-start gap-4">
-                        <span className="mt-0.5 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 text-xs font-black shadow-sm shadow-primary/25">{i + 1}</span>
-                        <span className="text-gray-600 leading-relaxed pt-0.5">{req}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-                {/* Languages */}
-                {opp.languages.length > 0 && (
-                  <section>
-                    <h2 className="text-xl font-bold text-foreground mb-4">Мова програми</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {opp.languages.map((lang) => (
-                        <span key={lang} className="px-4 py-2 bg-primary-light text-primary text-sm font-semibold rounded-full">{lang}</span>
-                      ))}
-                    </div>
-                  </section>
-                )}
-              </div>
-            )}
-
-            {/* Tab: Як подати */}
-            {activeTab === "Як подати" && (
-              <div className="flex flex-col gap-6">
-                <h2 className="text-xl font-bold text-foreground">Як подати заявку</h2>
-                <div className="flex flex-col gap-4">
-                  {[
-                    { step: 1, title: "Зареєструйтесь або увійдіть",   desc: "Створіть акаунт на Моживо або увійдіть у свій акаунт. Це займе менше хвилини." },
-                    { step: 2, title: "Заповніть профіль",              desc: "Повний профіль збільшує шанси на прийняття. Додайте освіту, мови та мотивацію." },
-                    { step: 3, title: "Натисніть «Подати заявку»",       desc: "Форма заявки автоматично підтягне ваші дані з профілю." },
-                    { step: 4, title: "Напишіть мотиваційний лист",     desc: "Розкажіть чому ви хочете взяти участь. Мінімум 300 символів, не більше 2000." },
-                    { step: 5, title: "Підтвердіть і надішліть",        desc: "Перевірте дані та натисніть «Надіслати заявку». Ви отримаєте email з підтвердженням." },
-                  ].map(({ step, title, desc }) => (
-                    <div key={step} className="flex gap-5 items-start">
-                      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 text-sm font-black shadow-sm shadow-primary/25">{step}</div>
-                      <div className="pt-1">
-                        <p className="font-bold text-foreground text-sm mb-1">{title}</p>
-                        <p className="text-sm text-muted leading-relaxed">{desc}</p>
-                      </div>
-                    </div>
+            {/* Про проект */}
+            <div className="flex flex-col gap-10">
+              {/* Tags */}
+              {opp.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {opp.tags.map((tag) => (
+                    <span key={tag} className="text-xs bg-muted-bg text-muted px-2.5 py-1 rounded-full">#{tag}</span>
                   ))}
                 </div>
-                {!expired && (
-                  <div className="mt-4 pt-6 border-t border-border">
-                    {isExternal ? (
-                      <a
-                        href={opp.applyUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block px-8 py-3.5 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 text-sm"
-                      >
-                        Подати заявку →
-                      </a>
-                    ) : (
-                      <Link
-                        href={`/opportunities/${opp.slug}/apply`}
-                        className="inline-block px-8 py-3.5 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 text-sm"
-                      >
-                        Почати заявку →
-                      </Link>
-                    )}
+              )}
+              {/* Description */}
+              <section>
+                <h2 className="text-xl font-bold text-foreground mb-4">Про програму</h2>
+                <div className={`border-l-4 pl-5 ${borderColor[opp.type] ?? "border-l-primary"}`}>
+                  <div className="text-base text-gray-600 leading-relaxed whitespace-pre-line break-words">
+                    {opp.fullDescription}
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              </section>
+              {/* Benefits */}
+              {opp.benefits.length > 0 && (
+                <section>
+                  <h2 className="text-xl font-bold text-foreground mb-4">Що включає</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {opp.benefits.map((b, i) => (
+                      <div key={i} className="flex items-start gap-3 bg-primary-light rounded-xl p-4">
+                        <span className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 text-xs font-black mt-0.5">✓</span>
+                        <span className="text-sm text-gray-700 leading-relaxed">{b}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
 
-            {/* Tab: FAQ */}
-            {activeTab === "FAQ" && (
+            {/* Вимоги до кандидатів */}
+            <div className="flex flex-col gap-8 pt-12 border-t border-border">
+              <section>
+                <h2 className="text-xl font-bold text-foreground mb-5">Вимоги до учасників</h2>
+                <ul className="flex flex-col gap-3">
+                  {opp.requirements.map((req, i) => (
+                    <li key={i} className="flex items-start gap-4">
+                      <span className="mt-0.5 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 text-xs font-black shadow-sm shadow-primary/25">{i + 1}</span>
+                      <span className="text-gray-600 leading-relaxed pt-0.5">{req}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+              {/* Languages */}
+              {opp.languages.length > 0 && (
+                <section>
+                  <h2 className="text-xl font-bold text-foreground mb-4">Мова програми</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {opp.languages.map((lang) => (
+                      <span key={lang} className="px-4 py-2 bg-primary-light text-primary text-sm font-semibold rounded-full">{lang}</span>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+
+            {/* Як подати заявку */}
+            <div className="flex flex-col gap-6 pt-12 border-t border-border">
+              <h2 className="text-xl font-bold text-foreground">Як подати заявку</h2>
               <div className="flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-foreground mb-2">Часті запитання</h2>
                 {[
-                  {
-                    q: "Чи можна подати заявку, якщо я ще навчаюсь?",
-                    a: "Так, більшість програм приймають заявки від студентів. Перевірте вимоги у вкладці «Вимоги» — там вказано, які ступені освіти підходять.",
-                  },
-                  {
-                    q: "Коли я отримаю відповідь на заявку?",
-                    a: "Терміни розгляду залежать від організації. Зазвичай рішення приймається протягом 2–8 тижнів після дедлайну. Ви отримаєте email сповіщення.",
-                  },
-                  {
-                    q: "Чи можна редагувати заявку після подачі?",
-                    a: "Після подачі заявку редагувати неможливо. Якщо у вас є питання — зв'яжіться напряму з організацією.",
-                  },
-                  {
-                    q: "Які документи потрібні?",
-                    a: "Зазвичай потрібне резюме/CV і, за потреби, додаткові матеріали. Завантажте їх на Google Drive або Dropbox і вставте посилання у форму.",
-                  },
-                  {
-                    q: "Чи коштує подача заявки?",
-                    a: "Подача заявки через Моживо безкоштовна. Деякі програми можуть мати власні вступні внески — про це буде вказано на сайті організатора.",
-                  },
-                ].map(({ q, a }, i) => (
-                  <FAQItem key={i} question={q} answer={a} />
+                  { step: 1, title: "Зареєструйтесь або увійдіть",   desc: "Створіть акаунт на Моживо або увійдіть у свій акаунт. Це займе менше хвилини." },
+                  { step: 2, title: "Заповніть профіль",              desc: "Повний профіль збільшує шанси на прийняття. Додайте освіту, мови та мотивацію." },
+                  { step: 3, title: "Натисніть «Подати заявку»",       desc: "Форма заявки автоматично підтягне ваші дані з профілю." },
+                  { step: 4, title: "Напишіть мотиваційний лист",     desc: "Розкажіть чому ви хочете взяти участь. Мінімум 300 символів, не більше 2000." },
+                  { step: 5, title: "Підтвердіть і надішліть",        desc: "Перевірте дані та натисніть «Надіслати заявку». Ви отримаєте email з підтвердженням." },
+                ].map(({ step, title, desc }) => (
+                  <div key={step} className="flex gap-5 items-start">
+                    <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 text-sm font-black shadow-sm shadow-primary/25">{step}</div>
+                    <div className="pt-1">
+                      <p className="font-bold text-foreground text-sm mb-1">{title}</p>
+                      <p className="text-sm text-muted leading-relaxed">{desc}</p>
+                    </div>
+                  </div>
                 ))}
               </div>
-            )}
+              {!expired && (
+                <div className="mt-4 pt-6 border-t border-border">
+                  {isExternal ? (
+                    <a
+                      href={opp.applyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block px-8 py-3.5 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 text-sm"
+                    >
+                      Подати заявку →
+                    </a>
+                  ) : (
+                    <Link
+                      href={`/opportunities/${opp.slug}/apply`}
+                      className="inline-block px-8 py-3.5 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 text-sm"
+                    >
+                      Почати заявку →
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right: sticky sidebar */}
@@ -402,32 +345,5 @@ export default function OpportunityClient({ opp, related }: Props) {
       </div>
 
     </>
-  );
-}
-
-function FAQItem({ question, answer }: { question: string; answer: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="border border-border rounded-2xl overflow-hidden">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-muted-bg/50 transition-colors"
-      >
-        <span className="text-sm font-semibold text-foreground">{question}</span>
-        <svg className={`w-4 h-4 text-muted flex-shrink-0 transition-transform duration-300 ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      <div
-        className="grid transition-all duration-300 ease-in-out"
-        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
-      >
-        <div className="overflow-hidden">
-          <div className="px-5 pb-4 text-sm text-muted leading-relaxed border-t border-border/50 pt-3">
-            {answer}
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
