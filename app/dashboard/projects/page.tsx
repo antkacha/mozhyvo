@@ -292,7 +292,8 @@ function ProjectsContent() {
             const appCount = appCountMap.app[p.id] ?? 0;
             const newCount = appCountMap.new[p.id] ?? 0;
             const typeInfo = TYPE_INFO[p.type];
-            const daysLeft = p.deadline ? Math.ceil((new Date(p.deadline).getTime() - Date.now()) / 86400000) : null;
+            const deadlineTime = p.deadline ? new Date(p.deadline).getTime() : NaN;
+            const daysLeft = isNaN(deadlineTime) ? null : Math.ceil((deadlineTime - Date.now()) / 86400000);
             const deadlinePast = daysLeft !== null && daysLeft < 0;
             const deadlineSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 3 && p.status === "published";
 

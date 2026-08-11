@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import type { Metadata } from "next";
 import { opportunities, typeColors, formatLabels, type Opportunity } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
+import { getDaysUntilDeadline } from "@/lib/recommendations";
 import OpportunityClient from "@/components/OpportunityClient";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -115,8 +116,8 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
   const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);
   if (!opp) notFound();
 
-  const days = (new Date(opp.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-  const expiring = days <= 14 && days > 0;
+  const days = getDaysUntilDeadline(opp.deadline);
+  const expiring = days !== null && days <= 14 && days > 0;
 
   const related = opportunities
     .filter((o) => o.slug !== opp.slug && (o.type === opp.type || o.country === opp.country))

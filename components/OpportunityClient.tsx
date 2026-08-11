@@ -15,6 +15,9 @@ interface Props {
 
 function DeadlineCountdown({ deadline }: { deadline: string }) {
   const days = getDaysUntilDeadline(deadline);
+  // No parseable deadline (rolling/ASAP/empty) — nothing to count down to.
+  // The status text is already shown above this block via deadlineDisplay.
+  if (days === null) return null;
   if (days < 0) return <span className="text-sm font-semibold text-muted">Завершено</span>;
   const urgent = days <= 7;
   const soon   = days <= 14;
@@ -68,7 +71,9 @@ export default function OpportunityClient({ opp, related }: Props) {
   const isExternal = opp.applyUrl.startsWith("http");
   const saved = isSaved(opp.slug);
   const days = getDaysUntilDeadline(opp.deadline);
-  const expired = days < 0;
+  // No parseable deadline (rolling/ASAP/empty) means it never "expires"
+  // on its own — closing is manual (status) for those programs.
+  const expired = days !== null && days < 0;
   const orgSlug = opp.orgSlug ?? orgNameToSlug[opp.org];
 
   const borderColor: Record<string, string> = {
@@ -198,7 +203,7 @@ export default function OpportunityClient({ opp, related }: Props) {
 
               {/* Deadline countdown + apply card */}
               <div className="rounded-2xl overflow-hidden border border-border shadow-sm">
-                <div className={`px-6 py-5 ${days <= 7 && !expired ? "bg-red-600" : expired ? "bg-muted-bg" : "bg-primary"}`}>
+                <div className={`px-6 py-5 ${days !== null && days <= 7 && !expired ? "bg-red-600" : expired ? "bg-muted-bg" : "bg-primary"}`}>
                   <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${expired ? "text-muted" : "text-white/70"}`}>
                     Дедлайн подачі
                   </p>

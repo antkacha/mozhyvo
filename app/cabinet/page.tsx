@@ -21,8 +21,8 @@ export default function CabinetOverviewPage() {
   const recentApps   = applications.slice(0, 5);
   const recommendations = (profileReady && projectsReady) ? getRecommendations(liveProjects, profile, 4) : [];
   const upcoming = applications
-    .filter((a) => getDaysUntilDeadline(a.deadline) > 0 && getDaysUntilDeadline(a.deadline) <= 14)
-    .sort((a, b) => getDaysUntilDeadline(a.deadline) - getDaysUntilDeadline(b.deadline))
+    .filter((a) => { const d = getDaysUntilDeadline(a.deadline); return d !== null && d > 0 && d <= 14; })
+    .sort((a, b) => (getDaysUntilDeadline(a.deadline) ?? Infinity) - (getDaysUntilDeadline(b.deadline) ?? Infinity))
     .slice(0, 3);
 
   const stats = [
@@ -95,6 +95,7 @@ export default function CabinetOverviewPage() {
           <div className="flex flex-col gap-2">
             {upcoming.map((a) => {
               const days = getDaysUntilDeadline(a.deadline);
+              if (days === null) return null; // upcoming is pre-filtered to have a real deadline
               return (
                 <div key={a.id} className={`flex items-center justify-between gap-3 p-4 rounded-2xl border ${days <= 3 ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}>
                   <div className="min-w-0">
@@ -157,7 +158,7 @@ export default function CabinetOverviewPage() {
                   className="bg-white border border-border rounded-2xl p-4 hover:border-primary/30 hover:shadow-sm transition-all group">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <span className="text-xs font-semibold text-muted">{opp.typeName}</span>
-                    {days <= 7 && <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">⏰ {days}д</span>}
+                    {days !== null && days <= 7 && <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">⏰ {days}д</span>}
                   </div>
                   <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-1">{opp.title}</p>
                   <p className="text-xs text-muted">{opp.flag} {opp.location}</p>

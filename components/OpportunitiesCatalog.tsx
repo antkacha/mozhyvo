@@ -86,6 +86,7 @@ function UrgentRow({ items }: { items: typeof opportunities }) {
       <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
         {items.map((opp) => {
           const days = getDaysUntilDeadline(opp.deadline);
+          if (days === null) return null; // items here are pre-filtered to have a real deadline
           return (
             <a
               key={opp.slug}
@@ -211,7 +212,16 @@ export default function OpportunitiesCatalog() {
     });
 
     if (sort === "deadline") {
-      result = [...result].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+      // Rolling/ASAP/no-deadline items have nothing to sort by — push them
+      // to the end instead of letting NaN scramble the order.
+      result = [...result].sort((a, b) => {
+        const da = getDaysUntilDeadline(a.deadline);
+        const db = getDaysUntilDeadline(b.deadline);
+        if (da === null && db === null) return 0;
+        if (da === null) return 1;
+        if (db === null) return -1;
+        return da - db;
+      });
     } else if (sort === "popular") {
       result = [...result].sort((a) => (a.featured ? -1 : 1));
     }
@@ -219,7 +229,7 @@ export default function OpportunitiesCatalog() {
   }, [allOpportunities, types, formats, fundings, countries, languages, search, sort]);
 
   const urgent = useMemo(() =>
-    allOpportunities.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d >= 0 && d <= 7; }).slice(0, 8),
+    allOpportunities.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d !== null && d >= 0 && d <= 7; }).slice(0, 8),
   [allOpportunities]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));

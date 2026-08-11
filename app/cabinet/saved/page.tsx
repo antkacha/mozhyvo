@@ -18,8 +18,8 @@ export default function CabinetSavedPage() {
   );
 
   const savedOpps = allOpportunities.filter((o) => saved.includes(o.slug));
-  const expired   = savedOpps.filter((o) => !!o.deadline && getDaysUntilDeadline(o.deadline) <= 0);
-  const active    = savedOpps.filter((o) => !o.deadline || getDaysUntilDeadline(o.deadline) > 0);
+  const expired   = savedOpps.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d !== null && d <= 0; });
+  const active    = savedOpps.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d === null || d > 0; });
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
@@ -57,8 +57,8 @@ export default function CabinetSavedPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {active.map((opp) => {
                   const days = getDaysUntilDeadline(opp.deadline);
-                  const urgent = days <= 7;
-                  const soon = days <= 14;
+                  const urgent = days !== null && days <= 7;
+                  const soon = days !== null && days <= 14;
                   return (
                     <div key={opp.slug}
                       className={`bg-white rounded-2xl border p-5 flex flex-col gap-3 transition-all hover:shadow-sm ${urgent ? "border-red-200" : soon ? "border-amber-200" : "border-border"}`}>

@@ -26,8 +26,14 @@ const TYPE_INTEREST_MAP: Record<string, string[]> = {
   hackathon:     ["хакатон", "програмування", "технології", "it"],
 };
 
-function daysUntil(deadline: string): number {
-  return (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+// deadline is either a real ISO date or "" for rolling/ASAP/no-deadline
+// programs (the human-readable text lives in deadlineDisplay instead) —
+// null means "no countdown applies", not an error.
+function daysUntil(deadline: string): number | null {
+  if (!deadline) return null;
+  const t = new Date(deadline).getTime();
+  if (isNaN(t)) return null;
+  return (t - Date.now()) / (1000 * 60 * 60 * 24);
 }
 
 export function scoreOpportunity(opp: Opportunity, profile: UserProfile): number {
@@ -63,9 +69,10 @@ export function scoreOpportunity(opp: Opportunity, profile: UserProfile): number
     score += WEIGHTS.languageMatch;
   }
 
-  // Deadline safety bonus (more than 7 days left)
+  // Deadline safety bonus (more than 7 days left) — no bonus either way
+  // when there's no countdown (rolling/ASAP)
   const days = daysUntil(opp.deadline);
-  if (days > 7) score += WEIGHTS.deadlineSafe;
+  if (days !== null && days > 7) score += WEIGHTS.deadlineSafe;
 
   // Verified org proxy (featured opportunities represent verified/established orgs)
   if (opp.featured) score += WEIGHTS.verifiedOrg;
@@ -81,8 +88,12 @@ export function getRecommendations(
   profile: UserProfile,
   limit = 6
 ): Opportunity[] {
-  // Only include open opportunities (deadline in the future)
-  const open = opportunities.filter((o) => daysUntil(o.deadline) > 0);
+  // Only include open opportunities — a deadline in the future, or no
+  // countdown at all (rolling/ASAP programs are always "open")
+  const open = opportunities.filter((o) => {
+    const d = daysUntil(o.deadline);
+    return d === null || d > 0;
+  });
 
   return open
     .map((opp) => ({ opp, score: scoreOpportunity(opp, profile) }))
@@ -94,10 +105,13 @@ export function getRecommendations(
 export function getUrgent(opportunities: Opportunity[], maxDays = 7): Opportunity[] {
   return opportunities.filter((o) => {
     const days = daysUntil(o.deadline);
-    return days > 0 && days <= maxDays;
-  }).sort((a, b) => daysUntil(a.deadline) - daysUntil(b.deadline));
+    return days !== null && days > 0 && days <= maxDays;
+  }).sort((a, b) => (daysUntil(a.deadline) ?? Infinity) - (daysUntil(b.deadline) ?? Infinity));
 }
 
-export function getDaysUntilDeadline(deadline: string): number {
-  return Math.ceil(daysUntil(deadline));
+// Returns null when the deadline is empty/unparseable (rolling/ASAP/no
+// deadline) — callers must handle that instead of assuming a number.
+export function getDaysUntilDeadline(deadline: string): number | null {
+  const d = daysUntil(deadline);
+  return d === null ? null : Math.ceil(d);
 }

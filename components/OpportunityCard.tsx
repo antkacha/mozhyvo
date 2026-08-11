@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Opportunity, typeColors, typeEmoji, formatLabels } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
 import { useSaved } from "@/hooks/useSaved";
+import { getDaysUntilDeadline } from "@/lib/recommendations";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 
 const typeAvatarBg: Record<string, string> = {
@@ -18,8 +19,8 @@ const typeAvatarBg: Record<string, string> = {
 };
 
 function isExpiringSoon(deadline: string): boolean {
-  const diff = (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-  return diff <= 14 && diff > 0;
+  const days = getDaysUntilDeadline(deadline);
+  return days !== null && days <= 14 && days > 0;
 }
 
 export default function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; index?: number }) {
