@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgProjects, OrgProject, FormQuestion } from "@/hooks/useOrgProjects";
 import FormBuilder from "@/components/FormBuilder";
+import CoverPhotoUpload from "@/components/CoverPhotoUpload";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/draft-storage";
+import { resizeToCover, validateCoverFile, uploadCoverPhoto } from "@/lib/cover-photo";
+import type { OpportunityType } from "@/lib/data";
+
+type PendingCover = { kind: "file"; blob: Blob } | { kind: "url"; url: string };
 
 const TYPE_OPTIONS = [
   { value: "exchange", label: "Обмін", desc: "Молодіжний чи академічний обмін" },
@@ -286,12 +291,15 @@ type NewProjectDraft = {
   durationMode: "dates" | "text";
   deadlineMode: "date" | "rolling" | "asap";
   templateChosen: boolean;
+  // Files/blobs can't be JSON-serialized into localStorage — only remember
+  // that a cover was pending so we can prompt the user to re-select it.
+  hadPendingCover: boolean;
 };
 
 function NewProjectContent() {
   const router = useRouter();
   const { org } = useOrgSession();
-  const { create } = useOrgProjects(org?.id);
+  const { create, update } = useOrgProjects(org?.id);
 
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(INITIAL);
@@ -303,6 +311,14 @@ function NewProjectContent() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Cover photo — deferred: the project doesn't exist yet, so the actual
+  // upload/import happens after create() returns an id (see handleSubmit).
+  const [pendingCover, setPendingCover] = useState<PendingCover | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | undefined>(undefined);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [coverError, setCoverError] = useState<string | null>(null);
+  const [restoredCoverNotice, setRestoredCoverNotice] = useState(false);
 
   // Draft auto-save
   const [hasDraft, setHasDraft] = useState(() => {
@@ -316,10 +332,13 @@ function NewProjectContent() {
     if (!templateChosen) return;
     if (draftTimer.current) clearTimeout(draftTimer.current);
     draftTimer.current = setTimeout(() => {
-      saveDraft(NEW_DRAFT_KEY, { form, step, formQuestions, applyMode, durationMode, deadlineMode, templateChosen });
+      saveDraft(NEW_DRAFT_KEY, {
+        form, step, formQuestions, applyMode, durationMode, deadlineMode, templateChosen,
+        hadPendingCover: !!pendingCover,
+      });
     }, 500);
     return () => { if (draftTimer.current) clearTimeout(draftTimer.current); };
-  }, [form, step, formQuestions, applyMode, durationMode, deadlineMode, templateChosen]);
+  }, [form, step, formQuestions, applyMode, durationMode, deadlineMode, templateChosen, pendingCover]);
 
   function restoreDraft() {
     const d = loadDraft<NewProjectDraft>(NEW_DRAFT_KEY);
@@ -331,7 +350,38 @@ function NewProjectContent() {
     setDurationMode(d.durationMode);
     setDeadlineMode(d.deadlineMode);
     setTemplateChosen(d.templateChosen);
+    setRestoredCoverNotice(!!d.hadPendingCover);
     setHasDraft(false);
+  }
+
+  async function handleCoverFile(file: File) {
+    const validationError = validateCoverFile(file);
+    if (validationError) { setCoverError(validationError); return; }
+    setCoverError(null);
+    setRestoredCoverNotice(false);
+    setCoverUploading(true);
+    try {
+      const blob = await resizeToCover(file);
+      setPendingCover({ kind: "file", blob });
+      setCoverPreviewUrl(URL.createObjectURL(blob));
+    } catch (e) {
+      setCoverError(e instanceof Error ? e.message : "Не вдалося обробити зображення");
+    } finally {
+      setCoverUploading(false);
+    }
+  }
+
+  function handleCoverUrlImport(url: string) {
+    setCoverError(null);
+    setRestoredCoverNotice(false);
+    setPendingCover({ kind: "url", url });
+    setCoverPreviewUrl(url); // hotlink preview only — real copy is fetched server-side after create()
+  }
+
+  function handleCoverDelete() {
+    setPendingCover(null);
+    setCoverPreviewUrl(undefined);
+    setRestoredCoverNotice(false);
   }
 
   function discardDraft() {
@@ -403,7 +453,7 @@ function NewProjectContent() {
 
     setSubmitError(null);
     try {
-      await create({
+      const project = await create({
         orgId: org.id,
         title: form.title.trim(),
         type: form.type,
@@ -431,6 +481,27 @@ function NewProjectContent() {
         externalApplyUrl: applyMode === "external" ? form.externalApplyUrl.trim() : "",
         infoPackUrl: form.infoPackUrl.trim() || undefined,
       });
+
+      // Cover can only be uploaded now that the project (and its id) exists —
+      // best-effort: the project is already saved either way, so a cover
+      // failure here shouldn't block navigation. It can be added from Edit.
+      if (pendingCover) {
+        try {
+          if (pendingCover.kind === "file") {
+            const photoUrl = await uploadCoverPhoto(project.id, pendingCover.blob);
+            await update(project.id, { photoUrl });
+          } else {
+            await fetch(`/api/org/projects/${project.id}/cover`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ url: pendingCover.url }),
+            });
+          }
+        } catch {
+          // Non-fatal — project is saved, cover can be (re)added from Edit.
+        }
+      }
+
       clearDraft(NEW_DRAFT_KEY);
       router.push("/dashboard/projects");
     } catch (e) {
@@ -561,6 +632,24 @@ function NewProjectContent() {
       {/* Step 0: Основна інформація */}
       {step === 0 && (
         <div className="bg-white rounded-2xl border border-border p-6 flex flex-col gap-5">
+          <div>
+            <label className={label}>Обкладинка</label>
+            {restoredCoverNotice && (
+              <p className="text-xs text-amber-600 mb-2">
+                Ви завантажували обкладинку в цій чернетці — файли не зберігаються між сесіями, оберіть її ще раз.
+              </p>
+            )}
+            <CoverPhotoUpload
+              previewUrl={coverPreviewUrl}
+              type={form.type as OpportunityType}
+              uploading={coverUploading}
+              error={coverError}
+              onFile={handleCoverFile}
+              onUrlImport={handleCoverUrlImport}
+              onDelete={handleCoverDelete}
+            />
+          </div>
+
           <div>
             <label className={label}>Назва проекту *</label>
             <input

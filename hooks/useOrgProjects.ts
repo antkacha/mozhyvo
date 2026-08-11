@@ -50,6 +50,7 @@ export interface OrgProject {
   formQuestions?: FormQuestion[];
   externalApplyUrl?: string;
   infoPackUrl?: string;
+  photoUrl?: string;
   views: number;
   saves: number;
   createdAt: string;
@@ -89,6 +90,7 @@ function fromRow(row: Record<string, unknown>): OrgProject {
     formQuestions:    (row.form_questions as FormQuestion[]) ?? [],
     externalApplyUrl: (row.external_apply_url as string) || undefined,
     infoPackUrl:      (row.info_pack_url as string) || undefined,
+    photoUrl:         (row.photo_url as string) || undefined,
     views:            (row.views as number) ?? 0,
     saves:            (row.saves as number) ?? 0,
     createdAt:        (row.created_at as string) ?? "",
@@ -124,6 +126,7 @@ function toRow(data: Partial<OrgProject>): Record<string, unknown> {
   if (data.formQuestions    !== undefined) row.form_questions    = data.formQuestions;
   if (data.externalApplyUrl) row.external_apply_url = data.externalApplyUrl;
   if (data.infoPackUrl)      row.info_pack_url      = data.infoPackUrl;
+  if (data.photoUrl          !== undefined) row.photo_url        = data.photoUrl;
   return row;
 }
 

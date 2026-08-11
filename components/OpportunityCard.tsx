@@ -1,20 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Opportunity, typeColors, formatLabels } from "@/lib/data";
+import { Opportunity, typeColors, typeEmoji, formatLabels } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
 import { useSaved } from "@/hooks/useSaved";
-
-const typeEmoji: Record<string, string> = {
-  scholarship: "🎓",
-  internship: "💼",
-  exchange: "🌍",
-  volunteering: "🤝",
-  competition: "🏆",
-  grant: "🚀",
-  conference: "🎙",
-  hackathon: "💻",
-};
+import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 
 const typeAvatarBg: Record<string, string> = {
   scholarship: "bg-primary-light",
@@ -43,6 +33,8 @@ export default function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; 
       className="card-animate bg-white rounded-2xl border border-border hover:border-primary/30 hover:shadow-xl hover:shadow-primary/[0.06] hover:-translate-y-1 transition-all duration-200 flex flex-col overflow-hidden group"
       style={{ animationDelay: `${index * 40}ms` }}
     >
+      <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} />
+
       <div className="p-5 flex flex-col gap-4 flex-1">
 
         {/* ── Header row: avatar + org + save ─────────────────── */}

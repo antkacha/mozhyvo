@@ -65,6 +65,29 @@ export const typeColors: Record<OpportunityType, string> = {
   hackathon: "bg-red-100 text-red-700",
 };
 
+export const typeEmoji: Record<OpportunityType, string> = {
+  scholarship: "🎓",
+  internship: "💼",
+  exchange: "🌍",
+  volunteering: "🤝",
+  competition: "🏆",
+  grant: "🚀",
+  conference: "🎙",
+  hackathon: "💻",
+};
+
+// Cover-photo placeholder background when an opportunity has no photo
+export const typeGradient: Record<OpportunityType, string> = {
+  scholarship: "linear-gradient(135deg,#3B4FE8,#7C3AED)",
+  internship: "linear-gradient(135deg,#3B82F6,#06B6D4)",
+  exchange: "linear-gradient(135deg,#10B981,#3B82F6)",
+  volunteering: "linear-gradient(135deg,#14B8A6,#10B981)",
+  competition: "linear-gradient(135deg,#F97316,#EF4444)",
+  grant: "linear-gradient(135deg,#F59E0B,#F97316)",
+  conference: "linear-gradient(135deg,#EC4899,#8B5CF6)",
+  hackathon: "linear-gradient(135deg,#EF4444,#EC4899)",
+};
+
 export const fundingLabels: Record<FundingType, string> = {
   "fully-funded": "Повне фінансування",
   "partially-funded": "Часткове фінансування",

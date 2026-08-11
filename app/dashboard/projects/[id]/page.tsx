@@ -5,7 +5,10 @@ import { useRouter, useParams } from "next/navigation";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgProjects, OrgProject, FormQuestion } from "@/hooks/useOrgProjects";
 import FormBuilder from "@/components/FormBuilder";
+import CoverPhotoUpload from "@/components/CoverPhotoUpload";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/draft-storage";
+import { resizeToCover, validateCoverFile, uploadCoverPhoto, deleteCoverPhoto } from "@/lib/cover-photo";
+import type { OpportunityType } from "@/lib/data";
 
 const TYPE_OPTIONS = [
   { value: "exchange", label: "Обмін" },
@@ -158,6 +161,9 @@ function EditProjectContent() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [coverError, setCoverError] = useState<string | null>(null);
+
   const editDraftKey = `mozhyvo_project_draft_edit_${params.id}`;
   const [hasDraft, setHasDraft] = useState(() => !!loadDraft(editDraftKey));
   const draftTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -207,6 +213,60 @@ function EditProjectContent() {
   function discardDraft() {
     clearDraft(editDraftKey);
     setHasDraft(false);
+  }
+
+  async function handleCoverFile(file: File) {
+    if (!project) return;
+    const validationError = validateCoverFile(file);
+    if (validationError) { setCoverError(validationError); return; }
+    setCoverError(null);
+    setCoverUploading(true);
+    try {
+      const blob = await resizeToCover(file);
+      const photoUrl = await uploadCoverPhoto(project.id, blob);
+      await update(project.id, { photoUrl });
+      setForm((p) => p ? { ...p, photoUrl } : p);
+    } catch (e) {
+      setCoverError(e instanceof Error ? e.message : "Помилка завантаження");
+    } finally {
+      setCoverUploading(false);
+    }
+  }
+
+  async function handleCoverUrlImport(url: string) {
+    if (!project) return;
+    setCoverError(null);
+    setCoverUploading(true);
+    try {
+      const res = await fetch(`/api/org/projects/${project.id}/cover`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const json = await res.json() as { photoUrl?: string; error?: string };
+      if (!res.ok) throw new Error(json.error ?? "Не вдалось завантажити зображення");
+      await update(project.id, { photoUrl: json.photoUrl });
+      setForm((p) => p ? { ...p, photoUrl: json.photoUrl } : p);
+    } catch (e) {
+      setCoverError(e instanceof Error ? e.message : "Помилка завантаження");
+    } finally {
+      setCoverUploading(false);
+    }
+  }
+
+  async function handleCoverDelete() {
+    if (!project) return;
+    setCoverError(null);
+    setCoverUploading(true);
+    try {
+      await deleteCoverPhoto(project.id);
+      await update(project.id, { photoUrl: "" });
+      setForm((p) => p ? { ...p, photoUrl: "" } : p);
+    } catch (e) {
+      setCoverError(e instanceof Error ? e.message : "Помилка видалення");
+    } finally {
+      setCoverUploading(false);
+    }
   }
 
   if (!project || !form) {
@@ -361,6 +421,20 @@ function EditProjectContent() {
       </div>
 
       <div className="flex flex-col gap-5">
+        {/* Обкладинка */}
+        <section className={section}>
+          <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Обкладинка</h2>
+          <CoverPhotoUpload
+            previewUrl={form.photoUrl}
+            type={(form.type as OpportunityType) ?? "grant"}
+            uploading={coverUploading}
+            error={coverError}
+            onFile={handleCoverFile}
+            onUrlImport={handleCoverUrlImport}
+            onDelete={handleCoverDelete}
+          />
+        </section>
+
         {/* Основна */}
         <section className={section}>
           <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Основна інформація</h2>

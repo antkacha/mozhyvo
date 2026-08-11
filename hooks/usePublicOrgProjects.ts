@@ -50,6 +50,7 @@ export function usePublicOrgProjects() {
             tags:             (row.tags as string[]) ?? [],
             applyUrl:         (row.external_apply_url as string) || `/opportunities/${row.id}/apply`,
             duration:         (row.duration as string) ?? "",
+            photo:            (row.photo_url as string) || undefined,
           };
         });
 

@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { opportunities, typeColors, formatLabels, type Opportunity } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
 import OpportunityClient from "@/components/OpportunityClient";
+import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ViewTracker from "./ViewTracker";
 
@@ -51,6 +51,7 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
       applyUrl:         (data.external_apply_url as string) || `/opportunities/${data.id}/apply`,
       duration:         (data.duration as string) ?? "",
       infoPackUrl:      (data.info_pack_url as string) || undefined,
+      photo:            (data.photo_url as string) || undefined,
       projectId:        data.id as string,
       orgVerified:      org.status === "verified",
     };
@@ -145,8 +146,11 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
             Назад до можливостей
           </Link>
 
-          <div className="flex items-start gap-10">
-            <div className="flex-1 min-w-0">
+          <div className="rounded-2xl overflow-hidden shadow-lg mb-7">
+            <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} />
+          </div>
+
+          <div className="min-w-0">
               {/* Badges */}
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${typeColors[opp.type]}`}>
@@ -200,20 +204,7 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
                   {expiring ? "⏰" : "📅"} Дедлайн: {opp.deadlineDisplay}
                 </span>
               </div>
-            </div>
-
-            {opp.photo && (
-              <div className="hidden lg:block flex-shrink-0 w-56 h-72 rounded-2xl overflow-hidden shadow-lg">
-                <Image src={opp.photo} alt={opp.title} width={224} height={288} className="w-full h-full object-cover" />
-              </div>
-            )}
           </div>
-
-          {opp.photo && (
-            <div className="lg:hidden mt-6 h-52 rounded-2xl overflow-hidden shadow-md">
-              <Image src={opp.photo} alt={opp.title} width={600} height={208} className="w-full h-full object-cover" />
-            </div>
-          )}
         </div>
       </section>
 
