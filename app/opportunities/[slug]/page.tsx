@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import type { Metadata } from "next";
 import { opportunities, typeColors, formatLabels, type Opportunity } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
@@ -14,8 +15,13 @@ export function generateStaticParams() {
 
 export const dynamicParams = true;
 
-async function fetchOrgProject(id: string): Promise<Opportunity | null> {
-  try {
+// Supabase-js's fetch is otherwise cached indefinitely and untagged by
+// Next.js's default fetch caching — revalidateTag("projects") (called by
+// every project mutation route, including the cover upload) would have no
+// entry to invalidate. Same tag/strategy as /api/public/opportunities so
+// catalog and detail page share one invalidation path.
+const fetchOrgProjectRow = unstable_cache(
+  async (id: string) => {
     const admin = createAdminClient();
     const { data } = await admin
       .from("org_projects")
@@ -23,6 +29,15 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
       .eq("id", id)
       .eq("status", "published")
       .maybeSingle();
+    return data;
+  },
+  ["org-project-detail"],
+  { tags: ["projects"], revalidate: 60 },
+);
+
+async function fetchOrgProject(id: string): Promise<Opportunity | null> {
+  try {
+    const data = await fetchOrgProjectRow(id);
     if (!data) return null;
     const org = data.orgs as { id: string; name: string; status?: string; slug?: string };
     return {
@@ -146,8 +161,8 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
             Назад до можливостей
           </Link>
 
-          <div className="rounded-2xl overflow-hidden shadow-lg mb-7">
-            <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} />
+          <div className="rounded-2xl overflow-hidden shadow-lg mb-7 h-[300px] sm:h-[360px] max-h-[35vh]">
+            <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} className="h-full" />
           </div>
 
           <div className="min-w-0">
