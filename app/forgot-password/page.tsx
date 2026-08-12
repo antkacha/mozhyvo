@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
         </div>
         <div className="relative z-10">
           <h2 className="text-3xl xl:text-4xl font-black text-white leading-tight mb-3">
-            Відновлення<br /><span className="text-accent">паролю</span>
+            Відновлення<br /><span className="text-white">паролю</span>
           </h2>
           <p className="text-white/55 text-sm leading-relaxed max-w-xs">
             Надішлемо посилання для скидання паролю на твій email

@@ -85,7 +85,7 @@ function LeftPanel({ format }: { format: Format }) {
           </div>
           <h2 className="text-3xl xl:text-4xl font-black text-white leading-tight">
             Розміщуйте<br />
-            <span className="text-accent">свої програми</span>
+            <span className="text-white">свої програми</span>
           </h2>
           <p className="text-white/55 text-sm mt-3 leading-relaxed max-w-xs">
             Тисячі молодих людей шукають можливості саме зараз. Станьте частиною платформи.

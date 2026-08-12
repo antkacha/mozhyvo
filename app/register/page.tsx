@@ -219,7 +219,7 @@ export default function RegisterPage() {
             </div>
             <h2 className="text-3xl xl:text-4xl font-black text-white leading-tight">
               Твоя можливість<br />
-              <span className="text-accent">починається тут</span>
+              <span className="text-white">починається тут</span>
             </h2>
             <p className="text-white/55 text-sm mt-3 leading-relaxed max-w-xs">
               Приєднуйся до тисяч молодих людей, які вже знайшли свій шлях через МОЖUВО

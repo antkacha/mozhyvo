@@ -81,7 +81,7 @@ function LoginContent() {
             </div>
             <h2 className="text-3xl xl:text-4xl font-black text-white leading-tight">
               Раді бачити<br />
-              <span className="text-accent">тебе знову</span>
+              <span className="text-white">тебе знову</span>
             </h2>
             <p className="text-white/55 text-sm mt-3 leading-relaxed max-w-xs">
               Заходь і переглядай нові можливості, які з&apos;явились поки тебе не було
