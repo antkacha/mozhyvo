@@ -68,6 +68,7 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
       duration:         (data.duration as string) ?? "",
       infoPackUrl:      (data.info_pack_url as string) || undefined,
       photo:            (data.photo_url as string) || undefined,
+      importantNote:    (data.important_note as string) || undefined,
       projectId:        data.id as string,
       orgVerified:      org.status === "verified",
     };

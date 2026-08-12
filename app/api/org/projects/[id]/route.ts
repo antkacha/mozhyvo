@@ -17,7 +17,7 @@ const ALLOWED_PROJECT_FIELDS = new Set([
   "requirements", "benefits", "tags", "deadline", "deadline_display",
   "country", "city", "location", "flag", "format", "funding", "funding_details",
   "duration", "languages", "age_min", "age_max", "status", "auto_close",
-  "form_questions", "external_apply_url", "info_pack_url", "photo_url",
+  "form_questions", "external_apply_url", "info_pack_url", "photo_url", "important_note",
 ]);
 
 export async function PATCH(

@@ -39,6 +39,7 @@ export interface Opportunity {
   duration?: string;
   photo?: string;
   infoPackUrl?: string;
+  importantNote?: string;
   projectId?: string;
   orgVerified?: boolean;
 }

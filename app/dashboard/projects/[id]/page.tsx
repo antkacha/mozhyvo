@@ -328,6 +328,7 @@ function EditProjectContent() {
       autoClose: form.autoClose,
       formQuestions,
       externalApplyUrl: form.externalApplyUrl ?? "",
+      importantNote: form.importantNote?.trim() ?? "",
     }); } catch (e) {
       setSaving(false);
       setSaveError(e instanceof Error ? e.message : "Помилка збереження. Спробуй ще раз.");
@@ -574,6 +575,28 @@ function EditProjectContent() {
               <textarea value={form.benefitsText} onChange={(e) => set("benefitsText", e.target.value)} rows={5} className={`${input} resize-none font-mono text-xs`} />
             </div>
           </div>
+        </section>
+
+        {/* Важлива інформація */}
+        <section className={section}>
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Важлива інформація (необов&apos;язково)</h2>
+          </div>
+          <p className="text-xs text-muted -mt-1">
+            Вкажіть критичні умови, про які учасник має знати заздалегідь — наприклад: організаційний внесок для відібраних, візові вимоги, рівень мови. Залиште порожнім, якщо немає.
+          </p>
+          <textarea
+            value={form.importantNote ?? ""}
+            onChange={(e) => set("importantNote", e.target.value)}
+            rows={3}
+            maxLength={500}
+            placeholder="Наприклад: Відібрані учасники сплачують організаційний внесок 50€. Потрібна дійсна віза до ЄС."
+            className={`${input} resize-none`}
+          />
+          <p className="text-xs text-muted text-right">{(form.importantNote ?? "").length}/500</p>
         </section>
 
         {/* Форма заявки */}

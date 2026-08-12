@@ -171,6 +171,7 @@ type FormData = {
   benefits: string;
   externalApplyUrl: string;
   infoPackUrl: string;
+  importantNote: string;
 };
 
 const INITIAL: FormData = {
@@ -181,7 +182,7 @@ const INITIAL: FormData = {
   deadline: "", startDate: "", endDate: "", durationText: "",
   ageMin: "", ageMax: "", languages: [], tags: "",
   requirements: "", benefits: "",
-  externalApplyUrl: "", infoPackUrl: "",
+  externalApplyUrl: "", infoPackUrl: "", importantNote: "",
 };
 
 const STEPS = ["Основна", "Місце і час", "Учасники", "Опис", "Заявка"];
@@ -474,6 +475,7 @@ function NewProjectContent() {
         formQuestions,
         externalApplyUrl: applyMode === "external" ? form.externalApplyUrl.trim() : "",
         infoPackUrl: form.infoPackUrl.trim() || undefined,
+        importantNote: form.importantNote.trim() || undefined,
       });
 
       // Cover can only be uploaded now that the project (and its id) exists —
@@ -936,6 +938,26 @@ function NewProjectContent() {
               placeholder={"Вік 18–28 років\nРівень англійської B1+\nДосвід волонтерства або громадської діяльності"}
               className={`${input} resize-none font-mono text-xs`}
             />
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+              <label className={label + " mb-0"}>Важлива інформація</label>
+              <span className="text-[10px] font-semibold text-muted bg-muted-bg px-2 py-0.5 rounded-full">необов&apos;язково</span>
+            </div>
+            <p className={hint + " mb-2"}>Вкажіть критичні умови, про які учасник має знати заздалегідь — наприклад: організаційний внесок для відібраних, візові вимоги, рівень мови. Залиште порожнім, якщо немає.</p>
+            <textarea
+              value={form.importantNote}
+              onChange={(e) => set("importantNote", e.target.value)}
+              rows={3}
+              maxLength={500}
+              placeholder="Наприклад: Відібрані учасники сплачують організаційний внесок 50€. Потрібна дійсна віза до ЄС."
+              className={`${input} resize-none`}
+            />
+            <p className={hint + " text-right"}>{form.importantNote.length}/500</p>
           </div>
 
           <div>

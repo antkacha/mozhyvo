@@ -64,6 +64,17 @@ export default function OpportunityClient({ opp, related }: Props) {
               )}
             </div>
 
+            {/* Важливо — critical conditions the applicant must know before applying */}
+            {opp.importantNote && (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">
+                <span className="text-xl flex-shrink-0" aria-hidden>⚠️</span>
+                <div>
+                  <p className="text-sm font-bold text-amber-900 mb-1">Важливо</p>
+                  <p className="text-sm text-amber-800 leading-relaxed whitespace-pre-line">{opp.importantNote}</p>
+                </div>
+              </div>
+            )}
+
             {/* Вимоги до кандидатів */}
             <div className="flex flex-col gap-8 pt-12 border-t border-border">
               <section>
