@@ -159,9 +159,11 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
             Назад до можливостей
           </Link>
 
-          {/* Photo (left, compact) + apply card (right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 items-start mb-8">
-            <div className="lg:col-span-3 rounded-2xl overflow-hidden shadow-lg aspect-[4/3]">
+          {/* Photo (left, compact) + apply card (right) — same height as the
+              card on desktop via grid stretch (default items-stretch), a
+              fixed 4:3 box on mobile where there's no sibling to match. */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 mb-8">
+            <div className="lg:col-span-3 rounded-2xl overflow-hidden shadow-lg aspect-[4/3] lg:aspect-auto lg:min-h-[380px] lg:max-h-[480px]">
               <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} className="h-full" />
             </div>
             <div className="lg:col-span-2">
