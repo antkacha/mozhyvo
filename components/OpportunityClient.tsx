@@ -1,11 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import type { Opportunity } from "@/lib/data";
 import { typeColors, fundingLabels, formatLabels } from "@/lib/data";
-import { useSaved } from "@/hooks/useSaved";
-import { getDaysUntilDeadline } from "@/lib/recommendations";
 import { orgNameToSlug } from "@/lib/organizations";
 
 interface Props {
@@ -13,67 +10,7 @@ interface Props {
   related: Opportunity[];
 }
 
-function DeadlineCountdown({ deadline }: { deadline: string }) {
-  const days = getDaysUntilDeadline(deadline);
-  // No parseable deadline (rolling/ASAP/empty) — nothing to count down to.
-  // The status text is already shown above this block via deadlineDisplay.
-  if (days === null) return null;
-  if (days < 0) return <span className="text-sm font-semibold text-muted">Завершено</span>;
-  const urgent = days <= 7;
-  const soon   = days <= 14;
-  return (
-    <div className={`rounded-xl px-4 py-3 text-center ${urgent ? "bg-red-50" : soon ? "bg-amber-50" : "bg-primary-light"}`}>
-      <p className={`text-3xl font-black ${urgent ? "text-red-600" : soon ? "text-amber-600" : "text-primary"}`}>
-        {days}
-      </p>
-      <p className={`text-xs font-semibold mt-0.5 ${urgent ? "text-red-500" : soon ? "text-amber-500" : "text-primary/70"}`}>
-        {days === 1 ? "день залишився" : days < 5 ? "дні залишилось" : "днів залишилось"}
-      </p>
-      {urgent && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">⏰ Дедлайн спливає!</p>}
-    </div>
-  );
-}
-
-function ShareButton({ title, url }: { title: string; url: string }) {
-  const [copied, setCopied] = useState(false);
-  async function handleShare() {
-    if (navigator.share) {
-      await navigator.share({ title, url });
-    } else {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  }
-  return (
-    <button
-      onClick={handleShare}
-      className="flex items-center justify-center gap-2 w-full py-2.5 px-4 border border-border rounded-xl text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-all"
-    >
-      {copied ? (
-        <>
-          <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-          Скопійовано!
-        </>
-      ) : (
-        <>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-          Поділитися
-        </>
-      )}
-    </button>
-  );
-}
-
 export default function OpportunityClient({ opp, related }: Props) {
-  const { isSaved, toggle, ready: savedReady } = useSaved();
-
-  const isExternal = opp.applyUrl.startsWith("http");
-  const saved = isSaved(opp.slug);
-  const days = getDaysUntilDeadline(opp.deadline);
-  // No parseable deadline (rolling/ASAP/empty) means it never "expires"
-  // on its own — closing is manual (status) for those programs.
-  const expired = days !== null && days < 0;
   const orgSlug = opp.orgSlug ?? orgNameToSlug[opp.org];
 
   const borderColor: Record<string, string> = {
@@ -152,123 +89,11 @@ export default function OpportunityClient({ opp, related }: Props) {
                 </section>
               )}
             </div>
-
-            {/* Як подати заявку */}
-            <div className="flex flex-col gap-6 pt-12 border-t border-border">
-              <h2 className="text-xl font-bold text-foreground">Як подати заявку</h2>
-              <div className="flex flex-col gap-4">
-                {[
-                  { step: 1, title: "Зареєструйтесь або увійдіть",   desc: "Створіть акаунт на Моживо або увійдіть у свій акаунт. Це займе менше хвилини." },
-                  { step: 2, title: "Заповніть профіль",              desc: "Повний профіль збільшує шанси на прийняття. Додайте освіту, мови та мотивацію." },
-                  { step: 3, title: "Натисніть «Подати заявку»",       desc: "Форма заявки автоматично підтягне ваші дані з профілю." },
-                  { step: 4, title: "Напишіть мотиваційний лист",     desc: "Розкажіть чому ви хочете взяти участь. Мінімум 300 символів, не більше 2000." },
-                  { step: 5, title: "Підтвердіть і надішліть",        desc: "Перевірте дані та натисніть «Надіслати заявку». Ви отримаєте email з підтвердженням." },
-                ].map(({ step, title, desc }) => (
-                  <div key={step} className="flex gap-5 items-start">
-                    <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 text-sm font-black shadow-sm shadow-primary/25">{step}</div>
-                    <div className="pt-1">
-                      <p className="font-bold text-foreground text-sm mb-1">{title}</p>
-                      <p className="text-sm text-muted leading-relaxed">{desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {!expired && (
-                <div className="mt-4 pt-6 border-t border-border">
-                  {isExternal ? (
-                    <a
-                      href={opp.applyUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block px-8 py-3.5 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 text-sm"
-                    >
-                      Подати заявку →
-                    </a>
-                  ) : (
-                    <Link
-                      href={`/opportunities/${opp.slug}/apply`}
-                      className="inline-block px-8 py-3.5 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 text-sm"
-                    >
-                      Почати заявку →
-                    </Link>
-                  )}
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Right: sticky sidebar */}
           <aside className="lg:col-span-1">
             <div className="sticky top-24 flex flex-col gap-4">
-
-              {/* Deadline countdown + apply card */}
-              <div className="rounded-2xl overflow-hidden border border-border shadow-sm">
-                <div className={`px-6 py-5 ${days !== null && days <= 7 && !expired ? "bg-red-600" : expired ? "bg-muted-bg" : "bg-primary"}`}>
-                  <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${expired ? "text-muted" : "text-white/70"}`}>
-                    Дедлайн подачі
-                  </p>
-                  <p className={`text-2xl font-black leading-tight ${expired ? "text-muted" : "text-white"}`}>
-                    {opp.deadlineDisplay}
-                  </p>
-                  {expired && <p className="text-sm text-muted mt-1">Прийом заявок завершено</p>}
-                </div>
-
-                {!expired && (
-                  <div className="bg-white px-5 py-4">
-                    <DeadlineCountdown deadline={opp.deadline} />
-                  </div>
-                )}
-
-                <div className="bg-white px-5 py-5 flex flex-col gap-3">
-                  {expired ? (
-                    <div className="flex items-center justify-center gap-2 w-full py-3 px-6 bg-muted-bg text-muted font-semibold rounded-xl text-sm border border-border">
-                      Прийом завершено
-                    </div>
-                  ) : isExternal ? (
-                    <a
-                      href={opp.applyUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full text-center py-3 px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 text-sm"
-                    >
-                      Заповнити форму →
-                    </a>
-                  ) : (
-                    <Link
-                      href={`/opportunities/${opp.slug}/apply`}
-                      className="block w-full text-center py-3 px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 text-sm"
-                    >
-                      Подати заявку →
-                    </Link>
-                  )}
-                  <button
-                    onClick={() => toggle(opp.slug)}
-                    disabled={!savedReady}
-                    className={`flex items-center justify-center gap-2 w-full py-2.5 px-6 border rounded-xl font-medium text-sm transition-all ${
-                      saved ? "border-primary bg-primary-light text-primary" : "border-border text-foreground hover:border-primary hover:text-primary"
-                    } disabled:opacity-50`}
-                  >
-                    <svg className="w-4 h-4 flex-shrink-0" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    {saved ? "Збережено" : "Зберегти"}
-                  </button>
-                  <ShareButton title={opp.title} url={typeof window !== "undefined" ? window.location.href : ""} />
-                  {opp.infoPackUrl && (
-                    <a
-                      href={opp.infoPackUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full py-2.5 px-6 border border-border rounded-xl text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-all"
-                    >
-                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Переглянути інфопак
-                    </a>
-                  )}
-                </div>
-              </div>
 
               {/* Details card */}
               <div className="bg-white border border-border rounded-2xl p-5 shadow-sm">

@@ -2,11 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import type { Metadata } from "next";
-import { opportunities, typeColors, formatLabels, type Opportunity } from "@/lib/data";
+import { opportunities, typeColors, type Opportunity } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
-import { getDaysUntilDeadline } from "@/lib/recommendations";
 import OpportunityClient from "@/components/OpportunityClient";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
+import OpportunityApplyCard from "@/components/OpportunityApplyCard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ViewTracker from "./ViewTracker";
 
@@ -116,9 +116,6 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
   const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);
   if (!opp) notFound();
 
-  const days = getDaysUntilDeadline(opp.deadline);
-  const expiring = days !== null && days <= 14 && days > 0;
-
   const related = opportunities
     .filter((o) => o.slug !== opp.slug && (o.type === opp.type || o.country === opp.country))
     .slice(0, 3);
@@ -162,8 +159,14 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
             Назад до можливостей
           </Link>
 
-          <div className="rounded-2xl overflow-hidden shadow-lg mb-7 h-[300px] sm:h-[360px] max-h-[35vh]">
-            <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} className="h-full" />
+          {/* Photo (left, compact) + apply card (right) */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 items-start mb-8">
+            <div className="lg:col-span-3 rounded-2xl overflow-hidden shadow-lg aspect-[4/3]">
+              <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} className="h-full" />
+            </div>
+            <div className="lg:col-span-2">
+              <OpportunityApplyCard opp={opp} />
+            </div>
           </div>
 
           <div className="min-w-0">
@@ -200,26 +203,7 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
               ) : (
                 <p className="text-sm font-semibold text-primary/60 uppercase tracking-widest mb-3">{opp.org}</p>
               )}
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground leading-[1.05] mb-6">{opp.title}</h1>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 text-sm text-gray-600 bg-white px-4 py-2 rounded-full border border-primary/15 shadow-sm">
-                  {opp.flag} {opp.location}
-                </span>
-                <span className="inline-flex items-center gap-1.5 text-sm text-gray-600 bg-white px-4 py-2 rounded-full border border-primary/15 shadow-sm">
-                  {formatLabels[opp.format]}
-                </span>
-                {opp.duration && (
-                  <span className="inline-flex items-center gap-1.5 text-sm text-gray-600 bg-white px-4 py-2 rounded-full border border-primary/15 shadow-sm">
-                    ⏱ {opp.duration}
-                  </span>
-                )}
-                <span className={`inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full border shadow-sm ${
-                  expiring ? "bg-red-50 text-red-600 border-red-200" : "bg-white text-gray-600 border-primary/15"
-                }`}>
-                  {expiring ? "⏰" : "📅"} Дедлайн: {opp.deadlineDisplay}
-                </span>
-              </div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground leading-[1.05]">{opp.title}</h1>
           </div>
         </div>
       </section>
