@@ -120,7 +120,6 @@ export default function OpportunityClient({ opp, related }: Props) {
                     { label: "Формат",      value: formatLabels[opp.format] },
                     { label: "Місце",       value: `${opp.flag} ${opp.location}` },
                     { label: "Фінансування",value: fundingLabels[opp.funding] },
-                    opp.fundingDetails ? { label: "Розмір", value: opp.fundingDetails } : null,
                     opp.duration ? { label: "Тривалість", value: opp.duration } : null,
                     opp.languages.length > 0 ? { label: "Мова", value: opp.languages.join(", ") } : null,
                     (opp.ageMin || opp.ageMax) ? { label: "Вік", value: opp.ageMin && opp.ageMax ? `${opp.ageMin}–${opp.ageMax} р.` : opp.ageMax ? `до ${opp.ageMax} р.` : `від ${opp.ageMin} р.` } : null,

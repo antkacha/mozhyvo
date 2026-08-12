@@ -159,7 +159,6 @@ type FormData = {
   city: string;
   format: OrgProject["format"];
   funding: OrgProject["funding"];
-  fundingDetails: string;
   deadline: string;
   startDate: string;
   endDate: string;
@@ -178,7 +177,7 @@ const INITIAL: FormData = {
   title: "", type: "exchange", typeName: "Обмін",
   shortDescription: "", fullDescription: "",
   flag: "", country: "", city: "",
-  format: "offline", funding: "fully-funded", fundingDetails: "",
+  format: "offline", funding: "fully-funded",
   deadline: "", startDate: "", endDate: "", durationText: "",
   ageMin: "", ageMax: "", languages: [], tags: "",
   requirements: "", benefits: "",
@@ -197,7 +196,6 @@ const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormD
       title: "Молодіжний обмін",
       shortDescription: "Двотижневий міжнародний обмін для молодих активістів.",
       format: "offline", funding: "fully-funded",
-      fundingDetails: "Перельоти, проживання, харчування",
       languages: ["Англійська"],
       ageMin: "18", ageMax: "28",
       requirements: "Вік 18–28 років\nРівень англійської B1+\nДосвід громадянської діяльності",
@@ -213,7 +211,6 @@ const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormD
       title: "Стипендіальна програма",
       shortDescription: "Щорічна стипендія для студентів та молодих дослідників.",
       format: "offline", funding: "fully-funded",
-      fundingDetails: "Щомісячна стипендія + навчання",
       languages: ["Англійська", "Українська"],
       ageMin: "18", ageMax: "35",
       requirements: "Студент або аспірант\nВисокий академічний рейтинг\nРекомендаційний лист",
@@ -229,7 +226,6 @@ const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormD
       title: "Волонтерська програма",
       shortDescription: "Міжнародна волонтерська програма для молодих людей.",
       format: "offline", funding: "fully-funded",
-      fundingDetails: "Проживання, харчування та кишенькові кошти",
       languages: ["Англійська"],
       ageMin: "18", ageMax: "30",
       requirements: "Вік 18–30 років\nМотивація та готовність волонтерити\nБазова англійська",
@@ -245,7 +241,6 @@ const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormD
       title: "Конкурс проєктів",
       shortDescription: "Конкурс мікрогрантів для соціальних ініціатив молоді.",
       format: "online", funding: "fully-funded",
-      fundingDetails: "До 5 000 грн на реалізацію проєкту",
       languages: ["Українська"],
       ageMin: "16", ageMax: "30",
       requirements: "Вік 16–30 років\nГотова ідея соціального проєкту\nКоманда мінімум 2 особи",
@@ -466,7 +461,6 @@ function NewProjectContent() {
         flag: flagEmoji,
         format: form.format,
         funding: form.funding,
-        fundingDetails: form.fundingDetails.trim(),
         deadline,
         deadlineDisplay,
         duration,
@@ -865,16 +859,6 @@ function NewProjectContent() {
             </div>
           </div>
 
-          <div>
-            <label className={label}>Що включає фінансування</label>
-            <p className={hint + " mb-2"}>Перелічіть конкретно, що покривається — це впливає на рішення учасників</p>
-            <input
-              value={form.fundingDetails}
-              onChange={(e) => set("fundingDetails", e.target.value)}
-              placeholder="Наприклад: перельоти, проживання, харчування та кишенькові кошти"
-              className={input}
-            />
-          </div>
 
           <div>
             <label className={label}>Вікові обмеження</label>

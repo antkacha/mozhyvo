@@ -315,7 +315,6 @@ function EditProjectContent() {
       flag: flagEmoji,
       format: form.format,
       funding: form.funding,
-      fundingDetails: form.fundingDetails?.trim() ?? "",
       deadline,
       deadlineDisplay,
       duration: form.duration?.trim() ?? "",
@@ -539,10 +538,6 @@ function EditProjectContent() {
                 {lbl}
               </button>
             ))}
-          </div>
-          <div>
-            <label className={label}>Деталі фінансування</label>
-            <input value={form.fundingDetails ?? ""} onChange={(e) => set("fundingDetails", e.target.value)} className={input} />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
