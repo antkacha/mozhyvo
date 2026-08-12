@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
 import { typeColors, typeNames, fundingLabels } from "@/lib/data";
 import type { Opportunity } from "@/lib/data";
+import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 
 function SmallCard({
   opp,
@@ -20,29 +21,32 @@ function SmallCard({
   return (
     <div
       ref={refProp}
-      className={`slide-in-right bg-white rounded-2xl border border-border border-t-4 shadow-sm flex flex-col p-6 gap-3 flex-1 ${accentColor}`}
+      className={`slide-in-right bg-white rounded-2xl border border-border border-t-4 shadow-sm flex flex-col flex-1 overflow-hidden ${accentColor}`}
       style={{ transitionDelay: delay }}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${typeColors[opp.type] ?? "bg-muted-bg text-muted"}`}>
-          {opp.typeName || typeNames[opp.type] || opp.type}
-        </span>
-        <span className="text-xs text-muted bg-muted-bg px-2.5 py-1 rounded-full font-medium">
-          {opp.deadlineDisplay || "—"}
-        </span>
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-primary mb-1 truncate">{opp.org}</p>
-        <p className="font-semibold text-foreground text-sm leading-snug line-clamp-2">{opp.title}</p>
-      </div>
-      <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
-        <span className="text-sm text-muted">{opp.flag} {opp.country}</span>
-        <Link
-          href={`/opportunities/${opp.slug}`}
-          className="text-sm font-semibold text-primary hover:underline"
-        >
-          Детальніше →
-        </Link>
+      <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} className="!aspect-auto h-24" />
+      <div className="flex flex-col p-6 gap-3 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${typeColors[opp.type] ?? "bg-muted-bg text-muted"}`}>
+            {opp.typeName || typeNames[opp.type] || opp.type}
+          </span>
+          <span className="text-xs text-muted bg-muted-bg px-2.5 py-1 rounded-full font-medium">
+            {opp.deadlineDisplay || "—"}
+          </span>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-primary mb-1 truncate">{opp.org}</p>
+          <p className="font-semibold text-foreground text-sm leading-snug line-clamp-2">{opp.title}</p>
+        </div>
+        <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
+          <span className="text-sm text-muted">{opp.flag} {opp.country}</span>
+          <Link
+            href={`/opportunities/${opp.slug}`}
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            Детальніше →
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -141,56 +145,66 @@ export default function FeaturedSection() {
 
           {/* Large left card */}
           <div ref={leftRef} className={`slide-in-left ${rest.length > 0 ? "lg:col-span-3" : ""}`}>
-            <div
-              className="relative h-full min-h-[320px] rounded-2xl p-6 flex flex-col gap-4 overflow-hidden"
-              style={{ background: "linear-gradient(135deg, #3B4FE8 0%, #6366F1 100%)" }}
-            >
+            <div className="relative h-full min-h-[320px] rounded-2xl p-6 flex flex-col gap-4 overflow-hidden">
+              {main.photo && (
+                <img src={main.photo} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              )}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: main.photo
+                    ? "linear-gradient(135deg, rgba(59,79,232,0.90) 0%, rgba(99,102,241,0.90) 100%)"
+                    : "linear-gradient(135deg, #3B4FE8 0%, #6366F1 100%)",
+                }}
+              />
               <div className="absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-white/10 pointer-events-none" />
 
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white text-primary">
-                  {main.typeName || typeNames[main.type] || main.type}
-                </span>
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-accent text-foreground">
-                  {main.deadlineDisplay || "—"}
-                </span>
-              </div>
-
-              <div>
-                <p className="text-sm text-white/75 mb-1">{main.org}</p>
-                <p className="text-xl font-bold text-white leading-snug">{main.title}</p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {main.funding && (
-                  <span className="px-3 py-1 rounded-full bg-white/20 text-sm text-white">
-                    💰 {fundingLabels[main.funding]}
+              <div className="relative flex flex-col gap-4 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white text-primary">
+                    {main.typeName || typeNames[main.type] || main.type}
                   </span>
-                )}
-                {main.duration && (
-                  <span className="px-3 py-1 rounded-full bg-white/20 text-sm text-white">
-                    📅 {main.duration}
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-accent text-foreground">
+                    {main.deadlineDisplay || "—"}
                   </span>
-                )}
-                {(main.ageMin || main.ageMax) && (
-                  <span className="px-3 py-1 rounded-full bg-white/20 text-sm text-white">
-                    🎓 {main.ageMin && main.ageMax ? `${main.ageMin}–${main.ageMax} р.` : main.ageMax ? `до ${main.ageMax} р.` : `від ${main.ageMin} р.`}
-                  </span>
-                )}
-              </div>
+                </div>
 
-              {main.shortDescription && (
-                <p className="text-sm text-white/80 leading-relaxed line-clamp-2">{main.shortDescription}</p>
-              )}
+                <div>
+                  <p className="text-sm text-white/75 mb-1">{main.org}</p>
+                  <p className="text-xl font-bold text-white leading-snug">{main.title}</p>
+                </div>
 
-              <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/15">
-                <span className="text-sm text-white/70">{main.flag} {main.country}</span>
-                <Link
-                  href={`/opportunities/${main.slug}`}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white text-primary font-semibold text-sm hover:bg-primary-light transition-all"
-                >
-                  Детальніше →
-                </Link>
+                <div className="flex flex-wrap gap-2">
+                  {main.funding && (
+                    <span className="px-3 py-1 rounded-full bg-white/20 text-sm text-white">
+                      💰 {fundingLabels[main.funding]}
+                    </span>
+                  )}
+                  {main.duration && (
+                    <span className="px-3 py-1 rounded-full bg-white/20 text-sm text-white">
+                      📅 {main.duration}
+                    </span>
+                  )}
+                  {(main.ageMin || main.ageMax) && (
+                    <span className="px-3 py-1 rounded-full bg-white/20 text-sm text-white">
+                      🎓 {main.ageMin && main.ageMax ? `${main.ageMin}–${main.ageMax} р.` : main.ageMax ? `до ${main.ageMax} р.` : `від ${main.ageMin} р.`}
+                    </span>
+                  )}
+                </div>
+
+                {main.shortDescription && (
+                  <p className="text-sm text-white/80 leading-relaxed line-clamp-2">{main.shortDescription}</p>
+                )}
+
+                <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/15">
+                  <span className="text-sm text-white/70">{main.flag} {main.country}</span>
+                  <Link
+                    href={`/opportunities/${main.slug}`}
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white text-primary font-semibold text-sm hover:bg-primary-light transition-all"
+                  >
+                    Детальніше →
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

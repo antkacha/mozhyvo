@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import type { Opportunity } from "@/lib/data";
-import { typeColors, fundingLabels, formatLabels } from "@/lib/data";
+import { fundingLabels, formatLabels } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
+import OpportunityCard from "@/components/OpportunityCard";
 
 interface Props {
   opp: Opportunity;
@@ -156,28 +157,8 @@ export default function OpportunityClient({ opp, related }: Props) {
               <Link href="/opportunities" className="text-sm font-semibold text-primary hover:underline">Всі можливості →</Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {related.map((r) => (
-                <Link key={r.slug} href={`/opportunities/${r.slug}`}
-                  className="group bg-white rounded-2xl border border-border border-t-4 border-t-primary p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${typeColors[r.type]}`}>{r.typeName}</span>
-                    {r.funding === "fully-funded" && (
-                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-50 text-green-700">Повне</span>
-                    )}
-                  </div>
-                  <div>
-                    {(() => { const s = orgNameToSlug[r.org]; return s ? (
-                      <Link href={`/organizations/${s}`} onClick={(e) => e.stopPropagation()}
-                        className="text-xs font-semibold text-muted mb-1 uppercase tracking-wide hover:text-primary transition-colors block">
-                        {r.org}
-                      </Link>
-                    ) : (
-                      <p className="text-xs font-semibold text-muted mb-1 uppercase tracking-wide">{r.org}</p>
-                    ); })()}
-                    <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">{r.title}</p>
-                  </div>
-                  <p className="text-xs text-muted mt-auto">{r.flag} {r.location} · {r.deadlineDisplay}</p>
-                </Link>
+              {related.map((r, i) => (
+                <OpportunityCard key={r.slug} opp={r} index={i} />
               ))}
             </div>
           </div>

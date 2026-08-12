@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import OpportunityCoverImage from "@/components/OpportunityCoverImage";
+import type { OpportunityType } from "@/lib/data";
 
 export type ArchiveProject = {
   id: string;
@@ -13,6 +15,7 @@ export type ArchiveProject = {
   deadline_display: string | null;
   funding: string | null;
   short_description: string | null;
+  photo_url: string | null;
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -94,8 +97,12 @@ export default function ArchiveSection({
               <Link
                 key={p.id}
                 href={`/opportunities/${p.id}`}
-                className="bg-white rounded-2xl border border-border/60 p-5 hover:shadow-sm hover:border-border transition-all group opacity-70 hover:opacity-100"
+                className="bg-white rounded-2xl border border-border/60 overflow-hidden hover:shadow-sm hover:border-border transition-all group opacity-70 hover:opacity-100"
               >
+                <div className="grayscale">
+                  <OpportunityCoverImage photo={p.photo_url ?? undefined} title={p.title} type={(p.type as OpportunityType) ?? "grant"} />
+                </div>
+                <div className="p-5">
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-muted-bg text-muted">
                     {TYPE_LABELS[p.type] ?? p.type}
@@ -124,6 +131,7 @@ export default function ArchiveSection({
                       <span className="text-xs text-muted/60">{p.funding}</span>
                     </>
                   )}
+                </div>
                 </div>
               </Link>
             ))}

@@ -8,6 +8,7 @@ import { profileCompleteness } from "@/lib/types";
 import { getRecommendations, getDaysUntilDeadline } from "@/lib/recommendations";
 import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
 import StatusBadge from "@/components/StatusBadge";
+import OpportunityCard from "@/components/OpportunityCard";
 
 const STAT_CLS = "bg-white rounded-2xl border border-border p-5 flex flex-col gap-1";
 
@@ -151,20 +152,9 @@ export default function CabinetOverviewPage() {
             <Link href="/opportunities" className="text-xs font-semibold text-primary hover:underline">Всі →</Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {recommendations.map((opp) => {
-              const days = getDaysUntilDeadline(opp.deadline);
-              return (
-                <Link key={opp.slug} href={`/opportunities/${opp.slug}`}
-                  className="bg-white border border-border rounded-2xl p-4 hover:border-primary/30 hover:shadow-sm transition-all group">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <span className="text-xs font-semibold text-muted">{opp.typeName}</span>
-                    {days !== null && days <= 7 && <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">⏰ {days}д</span>}
-                  </div>
-                  <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-1">{opp.title}</p>
-                  <p className="text-xs text-muted">{opp.flag} {opp.location}</p>
-                </Link>
-              );
-            })}
+            {recommendations.map((opp, i) => (
+              <OpportunityCard key={opp.slug} opp={opp} index={i} />
+            ))}
           </div>
         </section>
       )}

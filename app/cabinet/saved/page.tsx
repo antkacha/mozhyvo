@@ -6,7 +6,8 @@ import { useSaved } from "@/hooks/useSaved";
 import { opportunities } from "@/lib/data";
 import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
 import { getDaysUntilDeadline } from "@/lib/recommendations";
-import { typeColors } from "@/lib/data";
+import OpportunityCard from "@/components/OpportunityCard";
+import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 
 export default function CabinetSavedPage() {
   const { saved, toggle, ready } = useSaved();
@@ -55,39 +56,9 @@ export default function CabinetSavedPage() {
             <section>
               <h2 className="text-sm font-bold text-foreground mb-3">Активні ({active.length})</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {active.map((opp) => {
-                  const days = getDaysUntilDeadline(opp.deadline);
-                  const urgent = days !== null && days <= 7;
-                  const soon = days !== null && days <= 14;
-                  return (
-                    <div key={opp.slug}
-                      className={`bg-white rounded-2xl border p-5 flex flex-col gap-3 transition-all hover:shadow-sm ${urgent ? "border-red-200" : soon ? "border-amber-200" : "border-border"}`}>
-                      <div className="flex items-start justify-between gap-2">
-                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${typeColors[opp.type]}`}>{opp.typeName}</span>
-                        {urgent && <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">⏰ {days}д</span>}
-                        {!urgent && soon && <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{days}д</span>}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-muted mb-1">{opp.org}</p>
-                        <Link href={`/opportunities/${opp.slug}`}
-                          className="text-sm font-bold text-foreground hover:text-primary transition-colors line-clamp-2 leading-snug">
-                          {opp.title}
-                        </Link>
-                      </div>
-                      <p className="text-xs text-muted">{opp.flag} {opp.location} · {opp.deadlineDisplay}</p>
-                      <div className="flex gap-2 pt-1">
-                        <Link href={`/opportunities/${opp.slug}/apply`}
-                          className="flex-1 text-center py-2 bg-primary text-white text-xs font-semibold rounded-xl hover:bg-primary-dark transition-all">
-                          Подати заявку
-                        </Link>
-                        <button onClick={() => toggle(opp.slug)}
-                          className="px-3 py-2 border border-border rounded-xl text-xs text-muted hover:border-red-300 hover:text-red-500 transition-all">
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                {active.map((opp, i) => (
+                  <OpportunityCard key={opp.slug} opp={opp} index={i} />
+                ))}
               </div>
             </section>
           )}
@@ -98,8 +69,11 @@ export default function CabinetSavedPage() {
               <h2 className="text-sm font-bold text-muted mb-3">Дедлайн минув ({expired.length})</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 opacity-60">
                 {expired.map((opp) => (
-                  <div key={opp.slug} className="bg-white rounded-2xl border border-border p-4 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
+                  <div key={opp.slug} className="bg-white rounded-2xl border border-border p-4 flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 grayscale">
+                      <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} className="h-12" />
+                    </div>
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs text-muted mb-0.5">{opp.org}</p>
                       <p className="text-sm font-semibold text-foreground line-clamp-1">{opp.title}</p>
                       <p className="text-xs text-muted">{opp.deadlineDisplay}</p>

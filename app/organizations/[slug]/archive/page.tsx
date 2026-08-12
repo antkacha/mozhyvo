@@ -4,6 +4,8 @@ import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { orgsBySlug } from "@/lib/organizations";
+import OpportunityCoverImage from "@/components/OpportunityCoverImage";
+import type { OpportunityType } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -18,6 +20,7 @@ type Project = {
   deadline_display: string | null;
   funding: string | null;
   short_description: string | null;
+  photo_url: string | null;
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -66,7 +69,7 @@ export default async function OrgArchivePage({
 
   const { data: allProjects } = await admin
     .from("org_projects")
-    .select("id, title, type, country, flag, deadline, deadline_display, funding, short_description")
+    .select("id, title, type, country, flag, deadline, deadline_display, funding, short_description, photo_url")
     .eq("org_id", org.id)
     .eq("status", "published")
     .order("deadline", { ascending: false });
@@ -203,8 +206,12 @@ export default async function OrgArchivePage({
                 <Link
                   key={p.id}
                   href={`/opportunities/${p.id}`}
-                  className="bg-white rounded-2xl border border-border/70 p-5 hover:shadow-md hover:border-border transition-all group"
+                  className="bg-white rounded-2xl border border-border/70 overflow-hidden hover:shadow-md hover:border-border transition-all group"
                 >
+                  <div className="grayscale">
+                    <OpportunityCoverImage photo={p.photo_url ?? undefined} title={p.title} type={(p.type as OpportunityType) ?? "grant"} />
+                  </div>
+                  <div className="p-5">
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-muted-bg text-muted">
                       {TYPE_LABELS[p.type] ?? p.type}
@@ -239,6 +246,7 @@ export default async function OrgArchivePage({
                         </span>
                       </>
                     )}
+                  </div>
                   </div>
                 </Link>
               );

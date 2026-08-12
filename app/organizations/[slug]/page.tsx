@@ -6,7 +6,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { orgsBySlug, orgNameToSlug } from "@/lib/organizations";
 import ArchiveSection from "./ArchiveSection";
-import { opportunities } from "@/lib/data";
+import { opportunities, type Opportunity } from "@/lib/data";
 import OpportunityCard from "@/components/OpportunityCard";
 
 export const dynamic = "force-dynamic";
@@ -157,9 +157,10 @@ type SupabaseOrg = {
 };
 
 type SupabaseProject = {
-  id: string; title: string; type: string; country: string; flag: string;
-  deadline: string | null; deadline_display: string | null; funding: string | null;
-  status: string; short_description: string | null;
+  id: string; title: string; type: string; type_name: string | null; country: string; flag: string;
+  location: string | null; format: string | null; funding: string | null; duration: string | null;
+  deadline: string | null; deadline_display: string | null;
+  status: string; short_description: string | null; photo_url: string | null;
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -173,6 +174,37 @@ const TYPE_LABELS: Record<string, string> = {
   training:    "Тренінг",
   custom:      "Інше",
 };
+
+// One mapping, shared by every card on this page (active list + archive),
+// so photo/badges/deadline always come from the same fields the catalog
+// itself uses — the org's own name/slug are already known here, no need
+// to look them up per-card.
+function toCardOpportunity(p: SupabaseProject, org: { name: string; slug: string | null }): Opportunity {
+  return {
+    slug: p.id,
+    type: (p.type as Opportunity["type"]) ?? "exchange",
+    typeName: p.type_name || TYPE_LABELS[p.type] || p.type,
+    org: org.name,
+    orgSlug: org.slug ?? undefined,
+    title: p.title,
+    shortDescription: p.short_description ?? "",
+    fullDescription: "",
+    deadline: p.deadline ?? "",
+    deadlineDisplay: p.deadline_display ?? "",
+    flag: p.flag || "🇺🇦",
+    location: p.location ?? "",
+    country: p.country,
+    format: (p.format as Opportunity["format"]) ?? "offline",
+    languages: [],
+    funding: (p.funding as Opportunity["funding"]) ?? "fully-funded",
+    requirements: [],
+    benefits: [],
+    tags: [],
+    applyUrl: `/opportunities/${p.id}/apply`,
+    duration: p.duration ?? "",
+    photo: p.photo_url ?? undefined,
+  };
+}
 
 function DynamicOrgPage({
   org,
@@ -336,20 +368,8 @@ function DynamicOrgPage({
               <span className="ml-2 text-base font-normal text-muted">({activeProjects.length})</span>
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-              {activeProjects.map((p) => (
-                <Link key={p.id} href={`/opportunities/${p.id}`}
-                  className="bg-white rounded-2xl border border-border p-5 hover:shadow-md hover:border-primary/30 transition-all group">
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-light text-primary">{TYPE_LABELS[p.type] ?? p.type}</span>
-                    {p.deadline && <span className="text-xs text-muted">{p.deadline}</span>}
-                  </div>
-                  <h3 className="font-bold text-foreground text-sm leading-snug mb-2 group-hover:text-primary transition-colors">{p.title}</h3>
-                  {p.short_description && <p className="text-xs text-muted leading-relaxed line-clamp-2">{p.short_description}</p>}
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
-                    <span className="text-xs text-muted">{p.flag} {p.country}</span>
-                    {p.funding && <><span className="text-border">·</span><span className="text-xs text-muted">{p.funding}</span></>}
-                  </div>
-                </Link>
+              {activeProjects.map((p, i) => (
+                <OpportunityCard key={p.id} opp={toCardOpportunity(p, org)} index={i} />
               ))}
             </div>
           </section>
@@ -411,10 +431,13 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
 
   if (!org) notFound();
 
-  // Fetch all published projects (active + archived)
+  // Fetch all published projects (active + archived) — select("*") so this
+  // page automatically picks up new org_projects columns (photo_url was
+  // added later and missed here, which is exactly why cards showed no
+  // cover photo while the catalog — already select("*") — had them).
   const { data: projects } = await admin
     .from("org_projects")
-    .select("id, title, type, country, flag, deadline, deadline_display, funding, status, short_description")
+    .select("*")
     .eq("org_id", org.id)
     .eq("status", "published")
     .order("created_at", { ascending: false });
