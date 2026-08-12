@@ -32,8 +32,25 @@ export async function GET(req: NextRequest) {
 
   if (projectId) query = query.eq("project_id", projectId);
 
-  const { data, error } = await query;
+  const { data: rawData, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Exclude applications whose project was deleted — every consumer (sidebar
+  // badge, dashboard "new applications" stat, per-project counts, the list
+  // itself) reads from this one route, so filtering here keeps them all in
+  // sync instead of each re-deriving "does this project still exist" (or
+  // not) independently. Defensive regardless of whether org_applications has
+  // a DB-level FK/cascade to org_projects.
+  const projectIds = Array.from(new Set((rawData ?? []).map((a) => a.project_id as string)));
+  let existingProjectIds = new Set<string>();
+  if (projectIds.length > 0) {
+    const { data: existingProjects } = await admin
+      .from("org_projects")
+      .select("id")
+      .in("id", projectIds);
+    existingProjectIds = new Set((existingProjects ?? []).map((p) => p.id as string));
+  }
+  const data = (rawData ?? []).filter((a) => existingProjectIds.has(a.project_id as string));
 
   // Batch-fetch avatar_urls from profiles for all applicants
   const userIds = (data ?? [])

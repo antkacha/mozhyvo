@@ -93,7 +93,7 @@ function Sidebar() {
   const { org, logout, isOwner } = useOrgSession();
   const { profile } = useProfile();
   const { projects } = useOrgProjects(org?.id);
-  const { applications } = useOrgApplications();
+  const { applications } = useOrgApplications(org?.id);
 
   if (!org) return null;
 

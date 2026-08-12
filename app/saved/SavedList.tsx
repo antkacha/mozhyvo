@@ -8,7 +8,7 @@ import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
 import OpportunityCard from "@/components/OpportunityCard";
 
 export default function SavedList() {
-  const { saved, toggle, ready } = useSaved();
+  const { saved, clearAll, ready } = useSaved();
   const { projects: orgProjects, ready: orgReady } = usePublicOrgProjects();
 
   const allOpportunities = useMemo(
@@ -75,7 +75,7 @@ export default function SavedList() {
           {savedOpportunities.length === 1 ? "можливість" : "можливостей"}
         </p>
         <button
-          onClick={() => saved.forEach((slug) => toggle(slug))}
+          onClick={() => clearAll()}
           className="text-xs text-muted hover:text-red-500 transition-colors"
         >
           Очистити все
