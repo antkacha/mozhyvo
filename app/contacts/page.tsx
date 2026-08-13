@@ -6,6 +6,7 @@ import Link from "next/link";
 const subjects = [
   "Загальне запитання",
   "Хочу додати організацію",
+  "Виставити свою можливість",
   "Повідомити про помилку",
   "Співпраця та партнерство",
   "Преса та медіа",
@@ -260,6 +261,11 @@ export default function ContactsPage() {
                   <label className="block text-sm font-medium text-foreground mb-1.5">
                     Повідомлення *
                   </label>
+                  {form.subject === "Виставити свою можливість" && (
+                    <p className="text-xs text-muted mb-1.5">
+                      Опишіть вашу можливість: назва, тип, дедлайн, посилання на деталі — і ми опублікуємо її від МОЖUВО.
+                    </p>
+                  )}
                   <textarea
                     value={form.message}
                     onChange={(e) => set("message", e.target.value)}
