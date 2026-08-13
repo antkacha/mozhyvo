@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { bootstrapOrgFromMetadata } from "@/lib/org-bootstrap";
 
 export async function GET() {
   const supabase = createClient();
@@ -35,13 +34,14 @@ export async function GET() {
     if (memberOrg) return NextResponse.json({ org: memberOrg, role: membership.role });
   }
 
-  // Defensive fallback — the real bootstrap now runs in /auth/confirm right
-  // after email verification, before the user ever reaches /dashboard (see
-  // lib/org-bootstrap.ts for why). This stays as a self-heal path for any
-  // account whose metadata says "org" but doesn't have a row yet.
-  const bootstrapped = await bootstrapOrgFromMetadata(admin, user);
-  if (bootstrapped) return NextResponse.json({ org: bootstrapped, role: "owner" });
-
+  // Deliberately no bootstrap fallback here. bootstrapOrgFromMetadata only
+  // ever runs once, from /auth/confirm right after email verification — a
+  // fallback here used to re-run it on every dashboard load, which meant it
+  // silently recreated an org an admin had just deleted: user_metadata.role
+  // stays "org" forever (nothing clears it on delete on its own), so this
+  // "self-heal" was actually a resurrection hole. If /auth/confirm's
+  // bootstrap ever fails, that's a real dead end now — the fix is fixing
+  // that path, not papering over it here.
   return NextResponse.json({ org: null, role: null });
 }
 

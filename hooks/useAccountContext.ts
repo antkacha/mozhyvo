@@ -48,7 +48,14 @@ export function useAccountContext(initialContext: ActiveContext = "personal") {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ context }),
     });
-    if (!res.ok) return;
+    if (!res.ok) {
+      // Access was revoked since this component mounted (e.g. an admin
+      // deleted the org) — the switcher's cached hasOrgAccess/org are
+      // stale. Self-correct immediately instead of leaving a dead "org"
+      // entry sitting in the dropdown until the next full page load.
+      if (res.status === 403) { setHasOrgAccess(false); setOrg(null); }
+      return;
+    }
     // Full navigation, not router.push — guarantees every hook/component
     // downstream (org-scoped data, cached client state) re-evaluates
     // against the new context instead of trusting a soft transition.
