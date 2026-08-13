@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { bootstrapOrgFromMetadata } from "@/lib/org-bootstrap";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -31,10 +33,25 @@ export async function GET(request: NextRequest) {
       // Determine destination based on user role
       const role = data.user?.user_metadata?.role as string | undefined;
       const isOrg = role === "org" || role === "coordinator";
+
+      // Org registration never inserts into `orgs` at signup time — it only
+      // stores the form fields in user_metadata. Create the real row here,
+      // before redirecting into /dashboard, because middleware gates that
+      // route on an orgs/org_members row already existing: if we redirected
+      // first and created the org lazily on the dashboard's first load (as
+      // this used to work), middleware would never let the request reach
+      // the page that was supposed to create it.
+      let orgReady = true;
+      if (isOrg && data.user) {
+        const admin = createAdminClient();
+        const org = await bootstrapOrgFromMetadata(admin, data.user);
+        orgReady = !!org;
+      }
+
       const destination =
         next !== "/"
           ? next
-          : isOrg
+          : isOrg && orgReady
           ? "/dashboard"
           : "/cabinet";
 
