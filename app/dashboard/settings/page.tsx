@@ -100,7 +100,7 @@ function GeneralTab() {
         <h2 className="text-sm font-bold text-red-600 mb-1">Небезпечна зона</h2>
         <p className="text-xs text-muted mb-3">Незворотні дії для акаунту організації</p>
         <p className="text-xs text-muted bg-red-50 border border-red-100 rounded-xl px-3 py-2 mb-4">
-          Щоб видалити акаунт організації, зверніться до підтримки: <span className="font-medium text-red-600">support@mozhyvo.ua</span>
+          Щоб видалити акаунт організації, зверніться до підтримки: <span className="font-medium text-red-600">mozhyvo@gmail.com</span>
         </p>
       </div>
     </div>

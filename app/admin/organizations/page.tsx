@@ -35,6 +35,9 @@ export default function AdminOrganizationsPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selected, setSelected] = useState<OrgRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<OrgRow | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -72,6 +75,23 @@ export default function AdminOrganizationsPage() {
     setRejectTarget(null);
     setRejectReason("");
     if (selected?.id === orgId) setSelected(null);
+  }
+
+  async function doDelete() {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    setDeleteError("");
+    const res = await fetch(`/api/admin/orgs/${deleteTarget.id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({})) as { error?: string };
+      setDeleteError(json.error ?? "Не вдалося видалити організацію");
+      setDeleteLoading(false);
+      return;
+    }
+    await load();
+    setDeleteLoading(false);
+    setDeleteTarget(null);
+    if (selected?.id === deleteTarget.id) setSelected(null);
   }
 
   return (
@@ -193,6 +213,10 @@ export default function AdminOrganizationsPage() {
                                 Верифікувати
                               </button>
                             )}
+                            <button onClick={() => { setDeleteTarget(org); setDeleteError(""); }}
+                              className="px-3 py-1.5 text-xs font-semibold border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-all">
+                              Видалити
+                            </button>
                           </>
                         )}
                       </div>
@@ -302,6 +326,37 @@ export default function AdminOrganizationsPage() {
                   Верифікувати
                 </button>
               )}
+              <button onClick={() => { setDeleteTarget(selected); setDeleteError(""); }}
+                className="flex-1 py-2 border border-red-200 text-red-600 text-sm font-semibold rounded-xl hover:bg-red-50 transition-all">
+                Видалити організацію
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !deleteLoading && setDeleteTarget(null)} />
+          <div className="relative bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-base font-bold text-foreground mb-1">Видалити «{deleteTarget.name}»?</h3>
+            <p className="text-sm text-muted leading-relaxed mb-4">
+              Ви впевнені? Це видалить організацію та всі її можливості й заявки. Дію неможливо скасувати.
+            </p>
+            {deleteError && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">{deleteError}</p>
+            )}
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setDeleteTarget(null)} disabled={deleteLoading}
+                className="px-4 py-2 border border-border rounded-xl text-sm text-muted hover:bg-muted-bg transition-all disabled:opacity-50">
+                Скасувати
+              </button>
+              <button onClick={doDelete} disabled={deleteLoading}
+                className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-all flex items-center gap-2">
+                {deleteLoading && <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+                Видалити назавжди
+              </button>
             </div>
           </div>
         </div>
