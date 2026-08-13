@@ -137,6 +137,28 @@ function MobileHeader() {
   );
 }
 
+// ─── Shared layout wrapper ─────────────────────────────────────────────────
+// Hoisted to module scope — defining this inside OrgRegisterPage's render
+// body created a new component identity on every keystroke (every setState
+// re-renders the page), so React remounted the whole subtree including
+// every <input>, dropping focus after each character.
+
+function Layout({ format, children }: { format: Format; children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      <LeftPanel format={format} />
+      <div className="flex-1 flex flex-col min-h-screen overflow-y-auto bg-[#f7f8fc]">
+        <MobileHeader />
+        <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 lg:py-16 -mt-4 lg:mt-0">
+          <div className="w-full max-w-[500px]">
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────
 
 export default function OrgRegisterPage() {
@@ -259,29 +281,11 @@ export default function OrgRegisterPage() {
     setStatus("success");
   }
 
-  // ─── Shared layout wrapper ─────────────────────────────────────────────
-
-  function Layout({ children }: { children: React.ReactNode }) {
-    return (
-      <div className="min-h-screen flex flex-col lg:flex-row">
-        <LeftPanel format={format} />
-        <div className="flex-1 flex flex-col min-h-screen overflow-y-auto bg-[#f7f8fc]">
-          <MobileHeader />
-          <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 lg:py-16 -mt-4 lg:mt-0">
-            <div className="w-full max-w-[500px]">
-              {children}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // ─── Success ──────────────────────────────────────────────────────────────
 
   if (status === "success") {
     return (
-      <Layout>
+      <Layout format={format}>
         <div className="bg-white rounded-2xl shadow-sm border border-border/60 p-8">
           {isOfficial ? (
             <>
@@ -356,7 +360,7 @@ export default function OrgRegisterPage() {
 
   if (!format) {
     return (
-      <Layout>
+      <Layout format={format}>
         <div className="bg-white rounded-2xl shadow-sm border border-border/60 p-7 lg:p-8">
           <h1 className="text-xl font-bold text-foreground mb-1">Реєстрація організації</h1>
           <p className="text-sm text-muted mb-6">Оберіть тип — від цього залежить процес верифікації</p>
@@ -446,7 +450,7 @@ export default function OrgRegisterPage() {
     : "flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-semibold text-sm hover:bg-emerald-700 transition-all disabled:opacity-60";
 
   return (
-    <Layout>
+    <Layout format={format}>
       {/* Track label + change */}
       <div className="flex items-center justify-between mb-5 px-1">
         <p className="text-sm text-muted">
