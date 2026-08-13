@@ -42,9 +42,11 @@ function LoginContent() {
       setTimeout(() => { window.location.href = next; }, 400);
       return;
     }
-    // Check real org membership — don't trust metadata which can be stale
-    const { hasDashboard } = await fetch("/api/me/org-access").then((r) => r.json() as Promise<{ hasDashboard: boolean }>);
-    setTimeout(() => { window.location.href = hasDashboard ? "/dashboard" : "/cabinet"; }, 400);
+    // Respect an existing mzv_active_context cookie (e.g. a returning org
+    // member) but fall back to /cabinet on first-ever login — never assume
+    // org context just because access exists.
+    const { activeContext } = await fetch("/api/me/context").then((r) => r.json() as Promise<{ activeContext: "personal" | "org" }>);
+    setTimeout(() => { window.location.href = activeContext === "org" ? "/dashboard" : "/cabinet"; }, 400);
   };
 
   const handleGoogle = async () => {

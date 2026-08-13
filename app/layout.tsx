@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import "./globals.css";
 import Header from "@/components/Header";
 import ConditionalFooter from "@/components/ConditionalFooter";
@@ -92,13 +93,18 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Read on the server so the header knows "personal" vs "org" before the
+  // first paint — otherwise a reload while in org context would flash the
+  // personal header for a frame while the client-side fetch catches up.
+  const initialContext = cookies().get("mzv_active_context")?.value === "org" ? "org" : "personal";
+
   return (
     <html lang="uk">
       <body className="antialiased bg-background text-foreground min-h-screen flex flex-col">
         <ToastProvider>
           <SavedProvider>
             <RecoveryGate />
-            <Header />
+            <Header initialContext={initialContext} />
             <main className="flex-1">
               <PageTransition>{children}</PageTransition>
             </main>

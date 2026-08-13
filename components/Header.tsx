@@ -9,7 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import NotificationsBell from "@/components/NotificationsBell";
 import UserAvatar from "@/components/UserAvatar";
-import { useOrgAccess } from "@/hooks/useOrgAccess";
+import AccountSwitcher from "@/components/AccountSwitcher";
+import { useAccountContext, type ActiveContext } from "@/hooks/useAccountContext";
 
 const navLinks = [
   { label: "Головна", href: "/" },
@@ -27,15 +28,16 @@ function LogoMark({ size = 32 }: { size?: number }) {
 
 export { LogoMark };
 
-export default function Header() {
+export default function Header({ initialContext = "personal" }: { initialContext?: ActiveContext }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const { saved } = useSaved();
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile } = useProfile();
   const isAdmin = profile.role === "admin";
-  const hasDashboard = useOrgAccess(user, authLoading);
-  const cabinetHref = hasDashboard ? "/dashboard" : "/cabinet";
+  const { activeContext, hasOrgAccess, org, switchContext } = useAccountContext(initialContext);
+  const firstName = user?.user_metadata?.first_name ?? user?.email?.split("@")[0] ?? "";
+  const initials = (user?.user_metadata?.first_name?.[0] ?? user?.email?.[0] ?? "?").toUpperCase();
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
@@ -103,23 +105,16 @@ export default function Header() {
             {!authLoading && user ? (
               <>
                 <NotificationsBell />
-                <Link
-                  href={cabinetHref}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all duration-150 ${
-                    isActive(cabinetHref)
-                      ? "border-primary text-primary bg-primary-light"
-                      : "border-border text-foreground hover:border-primary/50 hover:text-primary"
-                  }`}
-                >
-                  <UserAvatar
-                    url={profile.avatarUrl}
-                    initials={(user.user_metadata?.first_name?.[0] ?? user.email?.[0] ?? "?").toUpperCase()}
-                    size={20}
-                  />
-                  <span className="max-w-[100px] truncate">
-                    {user.user_metadata?.first_name ?? user.email?.split("@")[0]}
-                  </span>
-                </Link>
+                <AccountSwitcher
+                  avatarUrl={profile.avatarUrl}
+                  initials={initials}
+                  firstName={firstName}
+                  hasOrgAccess={hasOrgAccess}
+                  org={org}
+                  activeContext={activeContext}
+                  switchContext={switchContext}
+                  onSignOut={signOut}
+                />
                 {isAdmin && (
                   <Link
                     href="/admin"
@@ -206,13 +201,38 @@ export default function Header() {
             <div className="flex flex-col gap-2 pt-3 mt-1 border-t border-border">
               {!authLoading && user ? (
                 <>
-                  <Link
-                    href={cabinetHref}
-                    className="text-sm font-medium px-4 py-2.5 rounded-xl border border-border text-foreground text-center hover:border-primary hover:text-primary transition-all"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {hasDashboard ? "Панель організації" : "Мій кабінет"}
-                  </Link>
+                  {hasOrgAccess ? (
+                    <>
+                      <button
+                        onClick={() => { setMenuOpen(false); switchContext("personal"); }}
+                        className={`flex items-center gap-2.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-all ${
+                          activeContext === "personal" ? "border-primary bg-primary-light text-primary" : "border-border text-foreground hover:border-primary hover:text-primary"
+                        }`}
+                      >
+                        <UserAvatar url={profile.avatarUrl} initials={initials} size={20} />
+                        Особистий акаунт — {firstName}
+                      </button>
+                      <button
+                        onClick={() => { setMenuOpen(false); switchContext("org"); }}
+                        className={`flex items-center gap-2.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-all ${
+                          activeContext === "org" ? "border-primary bg-primary-light text-primary" : "border-border text-foreground hover:border-primary hover:text-primary"
+                        }`}
+                      >
+                        <span className="w-5 h-5 rounded-md bg-primary-light flex items-center justify-center text-[9px] font-black text-primary flex-shrink-0">
+                          {(org?.name ?? "?").slice(0, 2).toUpperCase()}
+                        </span>
+                        {org?.name}
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      href="/cabinet"
+                      className="text-sm font-medium px-4 py-2.5 rounded-xl border border-border text-foreground text-center hover:border-primary hover:text-primary transition-all"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Мій кабінет
+                    </Link>
+                  )}
                   {isAdmin && (
                     <Link
                       href="/admin"

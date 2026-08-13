@@ -70,6 +70,14 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/cabinet", request.url));
       }
     }
+    // Reaching here means access is confirmed — keep the account-switcher
+    // cookie in sync so a direct link/bookmark into /dashboard doesn't
+    // leave the header showing "Особистий акаунт" while you're in the org
+    // dashboard. This is a display hint only — it grants nothing; the
+    // owner/member check above is what actually gates the route.
+    response.cookies.set("mzv_active_context", "org", { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
+  } else if (user && pathname.startsWith("/cabinet")) {
+    response.cookies.set("mzv_active_context", "personal", { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
   }
 
   return response;
