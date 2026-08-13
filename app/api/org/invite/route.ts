@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const invitedUser = users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
   if (!invitedUser) {
     return NextResponse.json({
-      error: "Цей користувач ще не зареєстрований на Моживо. Попросіть їх спочатку створити акаунт на сайті.",
+      error: "Цей користувач ще не зареєстрований на МОЖUВО. Попросіть їх спочатку створити акаунт на сайті.",
     }, { status: 404 });
   }
 
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: EMAIL_FROM,
         to: email,
-        subject: `Вас додано до команди ${org.name} на Моживо`,
+        subject: `Вас додано до команди ${org.name} на МОЖUВО`,
         html: wrapEmailTemplate(
           emailButton("Перейти до дешборду →", `${SITE_URL}/dashboard`) +
           emailDivider() +
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
           </p>`,
           {
             heading: "Вас запросили<br/>до команди",
-            subtitle: `${org.name} додала вас як ${roleLabel} на платформі Моживо.`,
+            subtitle: `${org.name} додала вас як ${roleLabel} на платформі МОЖUВО.`,
             preview: `Вас запросили до команди ${org.name}`,
           },
         ),

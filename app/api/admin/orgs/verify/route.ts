@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: EMAIL_FROM,
         to:   org.contact_email,
-        subject: `✅ «${org.name}» верифіковано на Моживо`,
+        subject: `✅ «${org.name}» верифіковано на МОЖUВО`,
         html: wrapEmailTemplate(
           emailInfoBox(`
             <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#1e3a8a;">Що тепер доступно:</p>
@@ -63,8 +63,8 @@ export async function POST(req: NextRequest) {
           `<p style="font-size:13px;color:#9CA3AF;margin:0;">Маєте питання? <a href="mailto:hello@mozhyvo.com.ua" style="color:#3B4FE8;">hello@mozhyvo.com.ua</a></p>`,
           {
             heading: "Організацію верифіковано!",
-            subtitle: `Вітаємо! ${org.name} пройшла перевірку на Моживо. Тепер ви можете публікувати програми для молоді.`,
-            preview: `«${org.name}» верифіковано на Моживо`,
+            subtitle: `Вітаємо! ${org.name} пройшла перевірку на МОЖUВО. Тепер ви можете публікувати програми для молоді.`,
+            preview: `«${org.name}» верифіковано на МОЖUВО`,
           },
         ),
       });
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: EMAIL_FROM,
         to:   org.contact_email,
-        subject: `Щодо верифікації «${org.name}» на Моживо`,
+        subject: `Щодо верифікації «${org.name}» на МОЖUВО`,
         html: wrapEmailTemplate(
           emailInfoBox(`
             <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#92400E;">Причина відмови:</p>

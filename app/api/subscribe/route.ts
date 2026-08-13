@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from:    EMAIL_FROM,
         to:      email,
-        subject: "Ти підписався на Моживо 🎉",
+        subject: "Ти підписався на МОЖUВО 🎉",
         html: wrapEmailTemplate(
           emailButton("Переглянути можливості →", `${SITE_URL}/opportunities`) +
           emailDivider() +
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
           {
             heading: firstName ? `Дякуємо, ${firstName}!` : "Дякуємо за підписку!",
             subtitle: "Тепер ти будеш першим дізнаватись про нові гранти, стипендії та обміни для молоді України.",
-            preview: "Ти підписався на розсилку Моживо",
+            preview: "Ти підписався на розсилку МОЖUВО",
           },
         ),
       });

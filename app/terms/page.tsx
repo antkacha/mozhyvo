@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Умови використання — Моживо",
-  description: "Умови використання платформи Моживо",
+  title: "Умови використання — МОЖUВО",
+  description: "Умови використання платформи МОЖUВО",
 };
 
 export default function TermsPage() {

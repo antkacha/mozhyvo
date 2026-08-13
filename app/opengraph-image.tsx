@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Моживо — Всі можливості в одному місці";
+export const alt = "МОЖUВО — Всі можливості в одному місці";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -37,7 +37,7 @@ export default function Image() {
           >
             М
           </div>
-          <span style={{ color: "white", fontSize: 28, fontWeight: 800, letterSpacing: "-0.5px" }}>Моживо</span>
+          <span style={{ color: "white", fontSize: 28, fontWeight: 800, letterSpacing: "-0.5px" }}>МОЖUВО</span>
           <div
             style={{
               marginLeft: 16,

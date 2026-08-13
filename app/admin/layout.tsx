@@ -24,7 +24,7 @@ const NAV = [
   },
 ];
 
-const MOZHYVO_NAV = { href: "/dashboard", label: "Кабінет Моживо" };
+const MOZHYVO_NAV = { href: "/dashboard", label: "Кабінет МОЖUВО" };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();

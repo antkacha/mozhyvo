@@ -93,7 +93,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       url,
       title:       opp.title,
       description: opp.shortDescription,
-      siteName:    "Моживо",
+      siteName:    "МОЖUВО",
       locale:      "uk_UA",
       images: [
         {

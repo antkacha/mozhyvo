@@ -614,7 +614,7 @@ function EditProjectContent() {
                   : "border-border hover:border-primary/40"
               }`}
             >
-              <p className="text-sm font-semibold text-foreground">Форма на Моживо</p>
+              <p className="text-sm font-semibold text-foreground">Форма на МОЖUВО</p>
               <p className="text-xs text-muted mt-0.5">Кастомні питання</p>
             </button>
             <button

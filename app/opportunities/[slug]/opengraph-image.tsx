@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { opportunities } from "@/lib/data";
 
-export const alt = "Моживо — можливість";
+export const alt = "МОЖUВО — можливість";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -31,7 +31,7 @@ export default function Image({ params }: { params: { slug: string } }) {
   if (!opp) {
     return new ImageResponse(
       <div style={{ background: "#3B4FE8", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: "white", fontSize: 48, fontWeight: 900 }}>Моживо</p>
+        <p style={{ color: "white", fontSize: 48, fontWeight: 900 }}>МОЖUВО</p>
       </div>,
       { ...size }
     );

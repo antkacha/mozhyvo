@@ -501,7 +501,7 @@ export default function RegisterPage() {
                   </p>
                   <div className="flex flex-col gap-2 text-left bg-[#f7f8fc] rounded-2xl p-4">
                     {[
-                      { icon: "✉️", text: "Відкрийте лист від Моживо у вашій пошті" },
+                      { icon: "✉️", text: "Відкрийте лист від МОЖUВО у вашій пошті" },
                       { icon: "🔗", text: "Натисніть кнопку «Підтвердити email»" },
                       { icon: "🎉", text: "Готово — ви потрапите до кабінету" },
                     ].map(({ icon, text }, i) => (

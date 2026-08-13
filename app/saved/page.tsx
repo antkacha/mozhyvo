@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import SavedList from "./SavedList";
 
 export const metadata: Metadata = {
-  title: "Збережені — Моживо",
-  description: "Твої збережені можливості на Моживо.",
+  title: "Збережені — МОЖUВО",
+  description: "Твої збережені можливості на МОЖUВО.",
 };
 
 export default function SavedPage() {

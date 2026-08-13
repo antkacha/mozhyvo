@@ -65,7 +65,7 @@ export async function generateMetadata({
   const opp = staticOpp ?? (await fetchOrgProject(params.slug))?.opp ?? null;
   if (!opp) return {};
   return {
-    title: `Подати заявку — ${opp.title} | Моживо`,
+    title: `Подати заявку — ${opp.title} | МОЖUВО`,
     description: `Заповни заявку на участь у програмі ${opp.title} від ${opp.org}.`,
   };
 }

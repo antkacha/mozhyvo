@@ -1,6 +1,6 @@
 const LOGO_URL = "https://lqtikyzevpjbtueajpsh.supabase.co/storage/v1/object/public/assets/mozhyvo-logo-white.png";
 
-export const EMAIL_FROM = "Моживо <hello@mozhyvo.com.ua>";
+export const EMAIL_FROM = "МОЖUВО <hello@mozhyvo.com.ua>";
 export const SITE_URL   = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mozhyvo.com.ua";
 
 export function wrapEmailTemplate(
@@ -23,7 +23,7 @@ ${preview ? `<div style="display:none;max-height:0;overflow:hidden;">${preview}&
 <table width="100%" cellpadding="0" cellspacing="0">
 
 <tr><td style="background:#3B4FE8;padding:36px 44px 40px;">
-  <img src="${LOGO_URL}" alt="Моживо" width="180" style="display:block;width:180px;height:auto;margin-bottom:32px;"/>
+  <img src="${LOGO_URL}" alt="МОЖUВО" width="180" style="display:block;width:180px;height:auto;margin-bottom:32px;"/>
   <h1 style="margin:0 0 12px;font-size:28px;font-weight:900;color:#ffffff;line-height:1.25;">${heading}</h1>
   ${subtitle ? `<p style="margin:0;font-size:15px;color:rgba(255,255,255,0.85);line-height:1.7;">${subtitle}</p>` : ""}
 </td></tr>
@@ -36,7 +36,7 @@ ${preview ? `<div style="display:none;max-height:0;overflow:hidden;">${preview}&
 </td></tr>
 
 <tr><td style="padding:24px 0 8px;text-align:center;">
-  <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px;">Моживо — платформа можливостей для молоді України</p>
+  <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px;">МОЖUВО — платформа можливостей для молоді України</p>
   <p style="font-size:12px;color:#9CA3AF;margin:0;">
     <a href="${SITE_URL}" style="color:#9CA3AF;text-decoration:underline;">mozhyvo.com.ua</a>
     &nbsp;·&nbsp;

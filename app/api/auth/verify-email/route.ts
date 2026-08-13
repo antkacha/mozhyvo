@@ -26,7 +26,7 @@ function userEmailHtml(confirmUrl: string, firstName: string): string {
       subtitle: firstName
         ? `Привіт, ${firstName}! Один клік — і ви на платформі. Тисячі можливостей для молоді України вже чекають.`
         : "Один клік — і ви на платформі. Тисячі можливостей для молоді України вже чекають.",
-      preview: "Підтвердіть вашу пошту на Моживо",
+      preview: "Підтвердіть вашу пошту на МОЖUВО",
     },
   );
 }
@@ -47,8 +47,8 @@ function orgEmailHtml(confirmUrl: string, orgName: string, isInformal: boolean):
       ];
 
   const subtitle = isInformal
-    ? `Ви зареєстрували ${orgName} на Моживо. Після підтвердження ми розглянемо заявку протягом 5 робочих днів.`
-    : `Ви зареєстрували ${orgName} на Моживо. Після підтвердження розпочнеться верифікація — 1–3 робочих дні.`;
+    ? `Ви зареєстрували ${orgName} на МОЖUВО. Після підтвердження ми розглянемо заявку протягом 5 робочих днів.`
+    : `Ви зареєстрували ${orgName} на МОЖUВО. Після підтвердження розпочнеться верифікація — 1–3 робочих дні.`;
 
   return wrapEmailTemplate(
     emailButton("Підтвердити email →", confirmUrl, "Посилання дійсне 24 години") +
@@ -66,7 +66,7 @@ function orgEmailHtml(confirmUrl: string, orgName: string, isInformal: boolean):
     {
       heading: "Підтвердіть пошту<br/>організації",
       subtitle,
-      preview: `Підтвердіть пошту — ${orgName} на Моживо`,
+      preview: `Підтвердіть пошту — ${orgName} на МОЖUВО`,
     },
   );
 }
@@ -109,8 +109,8 @@ export async function POST(req: NextRequest) {
 
     const subject =
       role === "org"
-        ? `Підтвердіть email — ${orgName ?? "ваша організація"} на Моживо`
-        : "Підтвердіть вашу пошту на Моживо";
+        ? `Підтвердіть email — ${orgName ?? "ваша організація"} на МОЖUВО`
+        : "Підтвердіть вашу пошту на МОЖUВО";
 
     const html =
       role === "org"

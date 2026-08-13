@@ -68,7 +68,7 @@ function LeftPanel({ format }: { format: Format }) {
         <Link href="/" className="inline-block">
           <Image
             src="/logo.png"
-            alt="Моживо"
+            alt="МОЖUВО"
             width={120}
             height={40}
             className="h-9 w-auto brightness-0 invert"
@@ -130,7 +130,7 @@ function MobileHeader() {
         }}
       />
       <Link href="/" className="relative z-10 inline-block">
-        <Image src="/logo.png" alt="Моживо" width={100} height={32} className="h-8 w-auto brightness-0 invert" />
+        <Image src="/logo.png" alt="МОЖUВО" width={100} height={32} className="h-8 w-auto brightness-0 invert" />
       </Link>
       <p className="relative z-10 text-white/55 text-sm mt-1">Реєстрація організації</p>
     </div>
@@ -638,7 +638,7 @@ export default function OrgRegisterPage() {
                   value={reviewLetter}
                   onChange={(e) => setReviewLetter(e.target.value)}
                   rows={8}
-                  placeholder={"Розкажіть:\n– Хто ви і чим займаєтесь?\n– Яка ваша місія або мета?\n– З якою аудиторією працюєте?\n– Які активності плануєте розміщувати?\n– Чому хочете бути на Моживо?"}
+                  placeholder={"Розкажіть:\n– Хто ви і чим займаєтесь?\n– Яка ваша місія або мета?\n– З якою аудиторією працюєте?\n– Які активності плануєте розміщувати?\n– Чому хочете бути на МОЖUВО?"}
                   className={`${inp} resize-none leading-relaxed`}
                 />
                 <p className="text-xs text-muted mt-1">{reviewLetter.length} символів · мінімум 100</p>

@@ -21,7 +21,7 @@ const navLinks = [
 
 function LogoMark({ size = 32 }: { size?: number }) {
   return (
-    <Image src="/logo-icon.png" alt="Моживо" width={size} height={size} className="flex-shrink-0" style={{ width: size, height: size }} />
+    <Image src="/logo-icon.png" alt="МОЖUВО" width={size} height={size} className="flex-shrink-0" style={{ width: size, height: size }} />
   );
 }
 
@@ -49,7 +49,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center group">
             <div className="group-hover:scale-95 transition-transform duration-150">
-              <Image src="/logo.png" alt="Моживо" width={120} height={40} className="h-8 w-auto" />
+              <Image src="/logo.png" alt="МОЖUВО" width={120} height={40} className="h-8 w-auto" />
             </div>
           </Link>
 

@@ -64,7 +64,7 @@ export default function Footer() {
           {/* Brand — spans 2 cols on lg */}
           <div className="lg:col-span-2 flex flex-col gap-5">
             <Link href="/" className="group w-fit">
-              <Image src="/logo.png" alt="Моживо" width={120} height={40} className="h-8 w-auto brightness-0 invert group-hover:opacity-80 transition-opacity" />
+              <Image src="/logo.png" alt="МОЖUВО" width={120} height={40} className="h-8 w-auto brightness-0 invert group-hover:opacity-80 transition-opacity" />
             </Link>
 
             <p className="text-sm text-white/55 leading-relaxed max-w-sm">
@@ -124,7 +124,7 @@ export default function Footer() {
         {/* ── Bottom bar ────────────────────────────────────────── */}
         <div className="pt-6 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-white/35">
-            © 2026 Моживо. Зроблено в Україні 🇺🇦
+            © 2026 МОЖUВО. Зроблено в Україні 🇺🇦
           </p>
           <div className="flex items-center gap-5">
             <Link href="/privacy" className="text-xs text-white/35 hover:text-white/70 transition-colors">

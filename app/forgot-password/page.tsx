@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
           style={{ background: "radial-gradient(circle, rgba(255,214,0,0.13) 0%, transparent 60%)" }} />
         <div className="relative z-10">
           <Link href="/" className="inline-flex items-center gap-2 group">
-            <span className="text-2xl font-black text-white group-hover:text-accent transition-colors">Моживо</span>
+            <span className="text-2xl font-black text-white group-hover:text-accent transition-colors">МОЖUВО</span>
           </Link>
         </div>
         <div className="relative z-10">
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
           <div aria-hidden className="absolute inset-0 pointer-events-none"
             style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
           <Link href="/" className="relative z-10 inline-flex items-center gap-1.5">
-            <span className="text-xl font-black text-white">Моживо</span>
+            <span className="text-xl font-black text-white">МОЖUВО</span>
           </Link>
           <p className="relative z-10 text-white/55 text-sm mt-1">Відновлення паролю</p>
         </div>

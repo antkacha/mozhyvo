@@ -85,7 +85,7 @@ function dailyDigestHtml(p: DailyDigestPayload): string {
     {
       heading: "Щоденний дайджест",
       subtitle: `${p.orgName} · ${date}`,
-      preview: `Дайджест Моживо — ${p.totalNew} нових заявок`,
+      preview: `Дайджест МОЖUВО — ${p.totalNew} нових заявок`,
     },
   );
 }
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
       html = newApplicationHtml(payload);
     } else {
       to = payload.digestEmail;
-      subject = `Щоденний дайджест Моживо — ${payload.totalNew} нових заявок`;
+      subject = `Щоденний дайджест МОЖUВО — ${payload.totalNew} нових заявок`;
       html = dailyDigestHtml(payload);
     }
 

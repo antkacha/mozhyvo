@@ -63,7 +63,7 @@ export default function CabinetLayout({ children }: { children: React.ReactNode 
             <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
               <span className="text-white font-black text-sm">М</span>
             </div>
-            <span className="font-black text-foreground text-lg tracking-tight">Моживо</span>
+            <span className="font-black text-foreground text-lg tracking-tight">МОЖUВО</span>
           </Link>
         </div>
 
@@ -134,7 +134,7 @@ export default function CabinetLayout({ children }: { children: React.ReactNode 
             <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-white font-black text-xs">М</span>
             </div>
-            <span className="font-black text-foreground">Моживо</span>
+            <span className="font-black text-foreground">МОЖUВО</span>
           </Link>
           <div className="flex items-center gap-1">
             <button onClick={signOut} className="p-2 text-muted hover:text-foreground">
