@@ -329,6 +329,9 @@ function EditProjectContent() {
       formQuestions,
       externalApplyUrl: form.externalApplyUrl ?? "",
       importantNote: form.importantNote?.trim() ?? "",
+      hasFee: !!form.hasFee,
+      feeAmount: form.hasFee ? (form.feeAmount ?? "").trim() : "",
+      feeWho: form.hasFee ? (form.feeWho ?? "selected") : "selected",
     }); } catch (e) {
       setSaving(false);
       setSaveError(e instanceof Error ? e.message : "Помилка збереження. Спробуй ще раз.");
@@ -597,6 +600,39 @@ function EditProjectContent() {
             className={`${input} resize-none`}
           />
           <p className="text-xs text-muted text-right">{(form.importantNote ?? "").length}/500</p>
+        </section>
+
+        {/* Членський внесок */}
+        <section className={section}>
+          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={!!form.hasFee}
+              onChange={(e) => setForm((f) => f ? { ...f, hasFee: e.target.checked } : f)}
+              className="w-4 h-4 rounded border-border text-primary focus:ring-primary/30"
+            />
+            <span className="text-sm font-medium text-foreground">Ця можливість передбачає членський внесок</span>
+          </label>
+          {form.hasFee && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={label}>Сума</label>
+                <input
+                  value={form.feeAmount ?? ""}
+                  onChange={(e) => set("feeAmount", e.target.value)}
+                  placeholder="Наприклад: 50€"
+                  className={input}
+                />
+              </div>
+              <div>
+                <label className={label}>Для кого</label>
+                <select value={form.feeWho ?? "selected"} onChange={(e) => set("feeWho", e.target.value)} className={input}>
+                  <option value="selected">Тільки для відібраних учасників</option>
+                  <option value="all">Для всіх учасників</option>
+                </select>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Форма заявки */}

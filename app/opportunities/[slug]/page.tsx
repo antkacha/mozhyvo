@@ -69,6 +69,9 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
       infoPackUrl:      (data.info_pack_url as string) || undefined,
       photo:            (data.photo_url as string) || undefined,
       importantNote:    (data.important_note as string) || undefined,
+      hasFee:           (data.has_fee as boolean) ?? false,
+      feeAmount:        (data.fee_amount as string) || undefined,
+      feeWho:           (data.fee_who as Opportunity["feeWho"]) ?? "selected",
       projectId:        data.id as string,
       orgVerified:      org.status === "verified",
     };

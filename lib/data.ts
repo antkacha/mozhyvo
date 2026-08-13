@@ -40,6 +40,9 @@ export interface Opportunity {
   photo?: string;
   infoPackUrl?: string;
   importantNote?: string;
+  hasFee?: boolean;
+  feeAmount?: string;
+  feeWho?: "selected" | "all";
   projectId?: string;
   orgVerified?: boolean;
 }

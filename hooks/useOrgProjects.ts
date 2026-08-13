@@ -52,6 +52,9 @@ export interface OrgProject {
   infoPackUrl?: string;
   photoUrl?: string;
   importantNote?: string;
+  hasFee?: boolean;
+  feeAmount?: string;
+  feeWho?: "selected" | "all";
   views: number;
   saves: number;
   createdAt: string;
@@ -93,6 +96,9 @@ function fromRow(row: Record<string, unknown>): OrgProject {
     infoPackUrl:      (row.info_pack_url as string) || undefined,
     photoUrl:         (row.photo_url as string) || undefined,
     importantNote:    (row.important_note as string) || undefined,
+    hasFee:           (row.has_fee as boolean) ?? false,
+    feeAmount:        (row.fee_amount as string) || undefined,
+    feeWho:           (row.fee_who as OrgProject["feeWho"]) ?? "selected",
     views:            (row.views as number) ?? 0,
     saves:            (row.saves as number) ?? 0,
     createdAt:        (row.created_at as string) ?? "",
@@ -130,6 +136,9 @@ function toRow(data: Partial<OrgProject>): Record<string, unknown> {
   if (data.infoPackUrl)      row.info_pack_url      = data.infoPackUrl;
   if (data.photoUrl          !== undefined) row.photo_url        = data.photoUrl;
   if (data.importantNote     !== undefined) row.important_note   = data.importantNote;
+  if (data.hasFee            !== undefined) row.has_fee          = data.hasFee;
+  if (data.feeAmount         !== undefined) row.fee_amount       = data.feeAmount;
+  if (data.feeWho            !== undefined) row.fee_who          = data.feeWho;
   return row;
 }
 

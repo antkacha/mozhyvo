@@ -172,6 +172,8 @@ type FormData = {
   externalApplyUrl: string;
   infoPackUrl: string;
   importantNote: string;
+  feeAmount: string;
+  feeWho: "selected" | "all";
 };
 
 const INITIAL: FormData = {
@@ -183,6 +185,7 @@ const INITIAL: FormData = {
   ageMin: "", ageMax: "", languages: [], tags: "",
   requirements: "", benefits: "",
   externalApplyUrl: "", infoPackUrl: "", importantNote: "",
+  feeAmount: "", feeWho: "selected",
 };
 
 const STEPS = ["Основна", "Місце і час", "Учасники", "Опис", "Заявка"];
@@ -290,6 +293,7 @@ type NewProjectDraft = {
   // Files/blobs can't be JSON-serialized into localStorage — only remember
   // that a cover was pending so we can prompt the user to re-select it.
   hadPendingCover: boolean;
+  hasFee: boolean;
 };
 
 function NewProjectContent() {
@@ -304,6 +308,7 @@ function NewProjectContent() {
   const [durationMode, setDurationMode] = useState<"dates" | "text">("dates");
   const [deadlineMode, setDeadlineMode] = useState<"date" | "rolling" | "asap">("date");
   const [templateChosen, setTemplateChosen] = useState(false);
+  const [hasFee, setHasFee] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -330,11 +335,11 @@ function NewProjectContent() {
     draftTimer.current = setTimeout(() => {
       saveDraft(NEW_DRAFT_KEY, {
         form, step, formQuestions, applyMode, durationMode, deadlineMode, templateChosen,
-        hadPendingCover: !!pendingCover,
+        hadPendingCover: !!pendingCover, hasFee,
       });
     }, 500);
     return () => { if (draftTimer.current) clearTimeout(draftTimer.current); };
-  }, [form, step, formQuestions, applyMode, durationMode, deadlineMode, templateChosen, pendingCover]);
+  }, [form, step, formQuestions, applyMode, durationMode, deadlineMode, templateChosen, pendingCover, hasFee]);
 
   function restoreDraft() {
     const d = loadDraft<NewProjectDraft>(NEW_DRAFT_KEY);
@@ -347,6 +352,7 @@ function NewProjectContent() {
     setDeadlineMode(d.deadlineMode);
     setTemplateChosen(d.templateChosen);
     setRestoredCoverNotice(!!d.hadPendingCover);
+    setHasFee(!!d.hasFee);
     setHasDraft(false);
   }
 
@@ -476,6 +482,9 @@ function NewProjectContent() {
         externalApplyUrl: applyMode === "external" ? form.externalApplyUrl.trim() : "",
         infoPackUrl: form.infoPackUrl.trim() || undefined,
         importantNote: form.importantNote.trim() || undefined,
+        hasFee,
+        feeAmount: hasFee ? form.feeAmount.trim() || undefined : undefined,
+        feeWho: hasFee ? form.feeWho : undefined,
       });
 
       // Cover can only be uploaded now that the project (and its id) exists —
@@ -958,6 +967,38 @@ function NewProjectContent() {
               className={`${input} resize-none`}
             />
             <p className={hint + " text-right"}>{form.importantNote.length}/500</p>
+          </div>
+
+          <div className="pt-2 border-t border-border">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={hasFee}
+                onChange={(e) => setHasFee(e.target.checked)}
+                className="w-4 h-4 rounded border-border text-primary focus:ring-primary/30"
+              />
+              <span className="text-sm font-medium text-foreground">Ця можливість передбачає членський внесок</span>
+            </label>
+            {hasFee && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+                <div>
+                  <label className={label}>Сума</label>
+                  <input
+                    value={form.feeAmount}
+                    onChange={(e) => set("feeAmount", e.target.value)}
+                    placeholder="Наприклад: 50€"
+                    className={input}
+                  />
+                </div>
+                <div>
+                  <label className={label}>Для кого</label>
+                  <select value={form.feeWho} onChange={(e) => set("feeWho", e.target.value)} className={input}>
+                    <option value="selected">Тільки для відібраних учасників</option>
+                    <option value="all">Для всіх учасників</option>
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
