@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import GlobeIllustration from "@/components/GlobeIllustration";
 
 const quickFilters = [
   { emoji: "🎓", label: "Стипендії",    slug: "scholarships", color: "bg-primary-light text-primary hover:bg-primary hover:text-white" },
@@ -53,49 +54,9 @@ export default function OpportunitiesHero() {
             </div>
           </div>
 
-          {/* Right: orbital accent */}
-          <div className="hidden lg:flex items-center justify-center h-[300px]">
-            <svg viewBox="0 0 480 300" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="orb" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#5B6FFF"/>
-                  <stop offset="100%" stopColor="#3B4FE8"/>
-                </linearGradient>
-              </defs>
-
-              {/* Outer decorative rings */}
-              <circle cx="270" cy="150" r="142" stroke="#3B4FE8" strokeOpacity=".06" strokeWidth="1"/>
-              <circle cx="270" cy="150" r="113" stroke="#3B4FE8" strokeOpacity=".12" strokeWidth="1"/>
-              <circle cx="270" cy="150" r="86"  stroke="#3B4FE8" strokeOpacity=".22" strokeWidth="1.5"/>
-
-              {/* Soft glow behind main circle */}
-              <circle cx="270" cy="150" r="70" fill="#3B4FE8" fillOpacity=".1"/>
-
-              {/* Main bold circle */}
-              <circle cx="270" cy="150" r="57" fill="url(#orb)"/>
-              {/* Inner shimmer */}
-              <circle cx="270" cy="150" r="42" fill="white" fillOpacity=".1"/>
-
-              {/* Arrow icon → */}
-              <path d="M255 150 L281 150" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-              <path d="M274 142 L283 150 L274 158" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-
-              {/* Satellite dots on ring 113 */}
-              <circle cx="270" cy="37"  r="7"   fill="#3B4FE8" fillOpacity=".55"/>
-              <circle cx="383" cy="150" r="6"   fill="#3B4FE8" fillOpacity=".5"/>
-              <circle cx="270" cy="263" r="5.5" fill="#3B4FE8" fillOpacity=".45"/>
-              <circle cx="157" cy="150" r="5"   fill="#3B4FE8" fillOpacity=".4"/>
-              <circle cx="352" cy="67"  r="4.5" fill="#3B4FE8" fillOpacity=".38"/>
-              <circle cx="188" cy="67"  r="4"   fill="#3B4FE8" fillOpacity=".32"/>
-
-              {/* Small accent dots */}
-              <circle cx="100" cy="75"  r="3.5" fill="#3B4FE8" fillOpacity=".2"/>
-              <circle cx="432" cy="98"  r="3"   fill="#3B4FE8" fillOpacity=".18"/>
-              <circle cx="420" cy="215" r="3.5" fill="#3B4FE8" fillOpacity=".18"/>
-              <circle cx="108" cy="232" r="3"   fill="#3B4FE8" fillOpacity=".15"/>
-              <circle cx="46"  cy="150" r="2.5" fill="#3B4FE8" fillOpacity=".15"/>
-              <circle cx="460" cy="150" r="2.5" fill="#3B4FE8" fillOpacity=".12"/>
-            </svg>
+          {/* Right: line-art globe + paper airplane */}
+          <div className="hidden md:flex items-center justify-center h-[300px]">
+            <GlobeIllustration className="w-full h-full max-w-[420px]" />
           </div>
 
         </div>
