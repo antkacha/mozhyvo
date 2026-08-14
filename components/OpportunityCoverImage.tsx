@@ -106,6 +106,7 @@ export default function OpportunityCoverImage({
             fill
             sizes={sizes}
             priority={priority}
+            quality={85}
             className={imgClassName}
             onLoad={() => setLoaded(true)}
             onError={() => setFailed(true)}

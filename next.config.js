@@ -8,6 +8,10 @@ const nextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
+    // AVIF first — better quality per byte than WebP; browsers that don't
+    // support it (checked via Accept header) fall back to WebP, which
+    // stays as the second entry rather than being dropped.
+    formats: ["image/avif", "image/webp"],
   },
   async headers() {
     return [

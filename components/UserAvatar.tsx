@@ -42,6 +42,7 @@ export default function UserAvatar({ url, initials, size = 40, rounded = "full",
         width={size}
         height={size}
         sizes={`${size}px`}
+        quality={85}
         className={`object-cover flex-shrink-0 ${shape} ${className}`}
         style={{ width: size, height: size }}
         onError={() => setFailed(true)}
