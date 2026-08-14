@@ -34,7 +34,13 @@ export default function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; 
       className="card-animate bg-white rounded-2xl border border-border hover:border-primary/30 hover:shadow-xl hover:shadow-primary/[0.06] hover:-translate-y-1 transition-all duration-200 flex flex-col overflow-hidden group"
       style={{ animationDelay: `${index * 40}ms` }}
     >
-      <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} />
+      <OpportunityCoverImage
+        photo={opp.photo}
+        title={opp.title}
+        type={opp.type}
+        sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+        priority={index === 0}
+      />
 
       <div className="p-5 flex flex-col gap-4 flex-1">
 

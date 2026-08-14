@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
 import { typeColors, typeNames, fundingLabels } from "@/lib/data";
@@ -24,7 +25,13 @@ function SmallCard({
       className={`slide-in-right bg-white rounded-2xl border border-border border-t-4 shadow-sm flex flex-col flex-1 overflow-hidden ${accentColor}`}
       style={{ transitionDelay: delay }}
     >
-      <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} className="!aspect-auto h-24" />
+      <OpportunityCoverImage
+        photo={opp.photo}
+        title={opp.title}
+        type={opp.type}
+        className="!aspect-auto h-24"
+        sizes="(max-width: 1023px) 100vw, 40vw"
+      />
       <div className="flex flex-col p-6 gap-3 flex-1">
         <div className="flex items-center justify-between gap-2">
           <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${typeColors[opp.type] ?? "bg-muted-bg text-muted"}`}>
@@ -147,7 +154,14 @@ export default function FeaturedSection() {
           <div ref={leftRef} className={`slide-in-left ${rest.length > 0 ? "lg:col-span-3" : ""}`}>
             <div className="relative h-full min-h-[320px] rounded-2xl p-6 flex flex-col gap-4 overflow-hidden">
               {main.photo && (
-                <img src={main.photo} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <Image
+                  src={main.photo}
+                  alt=""
+                  fill
+                  sizes="(max-width: 1023px) 100vw, 60vw"
+                  priority
+                  className="object-cover"
+                />
               )}
               <div
                 className="absolute inset-0"

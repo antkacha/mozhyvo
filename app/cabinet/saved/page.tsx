@@ -71,7 +71,7 @@ export default function CabinetSavedPage() {
                 {expired.map((opp) => (
                   <div key={opp.slug} className="bg-white rounded-2xl border border-border p-4 flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 grayscale">
-                      <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} className="h-12" />
+                      <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} className="h-12" sizes="48px" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs text-muted mb-0.5">{opp.org}</p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { typeEmoji, typeGradient, type OpportunityType } from "@/lib/data";
 
 interface Props {
@@ -8,9 +9,16 @@ interface Props {
   title: string;
   type: OpportunityType;
   className?: string;
+  // Real rendered width per breakpoint — without this next/image assumes
+  // 100vw and serves a far bigger file than the card actually needs.
+  sizes?: string;
+  // Only the LCP candidate (first visible card) should skip lazy loading.
+  priority?: boolean;
 }
 
-export default function OpportunityCoverImage({ photo, title, type, className = "" }: Props) {
+export default function OpportunityCoverImage({
+  photo, title, type, className = "", sizes = "100vw", priority = false,
+}: Props) {
   const [failed, setFailed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -29,15 +37,36 @@ export default function OpportunityCoverImage({ photo, title, type, className = 
     }
   }, [photo]);
 
+  // Cover-photo upload previews are blob:/data: URLs (canvas-resized files
+  // not yet on Supabase Storage) — next/image's optimizer can't fetch
+  // those, only real http(s) URLs matching next.config.js's remotePatterns.
+  const isLocalPreview = photo?.startsWith("blob:") || photo?.startsWith("data:");
+
   if (photo && !failed) {
     return (
-      <img
-        ref={imgRef}
-        src={photo}
-        alt={title}
-        className={`w-full aspect-video object-cover ${className}`}
-        onError={() => setFailed(true)}
-      />
+      <div className={`relative w-full aspect-video ${className}`}>
+        {isLocalPreview ? (
+          // eslint-disable-next-line @next/next/no-img-element -- local blob/data preview, not optimizable
+          <img
+            ref={imgRef}
+            src={photo}
+            alt={title}
+            className="absolute inset-0 w-full h-full object-cover"
+            onError={() => setFailed(true)}
+          />
+        ) : (
+          <Image
+            ref={imgRef}
+            src={photo}
+            alt={title}
+            fill
+            sizes={sizes}
+            priority={priority}
+            className="object-cover"
+            onError={() => setFailed(true)}
+          />
+        )}
+      </div>
     );
   }
 

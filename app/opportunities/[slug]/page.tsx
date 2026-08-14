@@ -168,7 +168,14 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
               fixed 4:3 box on mobile where there's no sibling to match. */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 mb-8">
             <div className="lg:col-span-3 rounded-2xl overflow-hidden shadow-lg aspect-[4/3] lg:aspect-auto lg:min-h-[380px] lg:max-h-[480px]">
-              <OpportunityCoverImage photo={opp.photo} title={opp.title} type={opp.type} className="h-full" />
+              <OpportunityCoverImage
+                photo={opp.photo}
+                title={opp.title}
+                type={opp.type}
+                className="h-full"
+                sizes="(max-width: 1023px) 100vw, 60vw"
+                priority
+              />
             </div>
             <div className="lg:col-span-2">
               <OpportunityApplyCard opp={opp} />

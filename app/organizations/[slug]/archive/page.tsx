@@ -209,7 +209,12 @@ export default async function OrgArchivePage({
                   className="bg-white rounded-2xl border border-border/70 overflow-hidden hover:shadow-md hover:border-border transition-all group"
                 >
                   <div className="grayscale">
-                    <OpportunityCoverImage photo={p.photo_url ?? undefined} title={p.title} type={(p.type as OpportunityType) ?? "grant"} />
+                    <OpportunityCoverImage
+                      photo={p.photo_url ?? undefined}
+                      title={p.title}
+                      type={(p.type as OpportunityType) ?? "grant"}
+                      sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+                    />
                   </div>
                   <div className="p-5">
                   <div className="flex items-start justify-between gap-3 mb-3">

@@ -38,7 +38,7 @@ export default function CoverPhotoUpload({ previewUrl, type, uploading, error, o
   return (
     <div className="flex flex-col gap-3">
       <div className="relative rounded-2xl overflow-hidden border border-border">
-        <OpportunityCoverImage photo={previewUrl} title="Обкладинка" type={type} />
+        <OpportunityCoverImage photo={previewUrl} title="Обкладинка" type={type} sizes="(max-width: 767px) 100vw, 500px" />
         {uploading && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
             <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
