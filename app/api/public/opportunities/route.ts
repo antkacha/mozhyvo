@@ -13,9 +13,15 @@ const fetchProjectsFromDB = unstable_cache(
   async () => {
     const admin = createAdminClient();
 
+    // Catalog/list views only — narrowed to what usePublicOrgProjects's
+    // mapper actually reads (verified by grepping every consumer of that
+    // hook: OpportunityCard, FeaturedSection, OpportunitiesCatalog, the
+    // saved lists). full_description/requirements/benefits/funding_details/
+    // external_apply_url/form_questions etc. are detail-page-only fields,
+    // fetched separately there via a direct Supabase query, not this route.
     const { data: projects, error: projError } = await admin
       .from("org_projects")
-      .select("*")
+      .select("id, org_id, type, type_name, title, short_description, deadline, deadline_display, flag, location, country, format, languages, age_min, age_max, funding, tags, duration, photo_url")
       .eq("status", "published")
       .order("created_at", { ascending: false });
 

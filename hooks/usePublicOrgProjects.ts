@@ -33,7 +33,12 @@ export function usePublicOrgProjects() {
             orgSlug:          org?.slug || org?.id,
             title:            (row.title as string) ?? "",
             shortDescription: (row.short_description as string) ?? "",
-            fullDescription:  (row.full_description as string) ?? "",
+            // Detail-only fields this endpoint doesn't select (see route.ts) —
+            // no catalog/list consumer reads them, kept only because
+            // Opportunity requires the properties to exist.
+            fullDescription:  "",
+            requirements:     [],
+            benefits:         [],
             deadline:         (row.deadline as string) ?? "",
             deadlineDisplay:  (row.deadline_display as string) ?? "",
             flag:             (row.flag as string) ?? "🇺🇦",
@@ -44,11 +49,8 @@ export function usePublicOrgProjects() {
             ageMin:           row.age_min as number | undefined,
             ageMax:           row.age_max as number | undefined,
             funding:          (row.funding as Opportunity["funding"]) ?? "fully-funded",
-            fundingDetails:   (row.funding_details as string) ?? "",
-            requirements:     (row.requirements as string[]) ?? [],
-            benefits:         (row.benefits as string[]) ?? [],
             tags:             (row.tags as string[]) ?? [],
-            applyUrl:         (row.external_apply_url as string) || `/opportunities/${row.id}/apply`,
+            applyUrl:         `/opportunities/${row.id}/apply`,
             duration:         (row.duration as string) ?? "",
             photo:            (row.photo_url as string) || undefined,
           };
