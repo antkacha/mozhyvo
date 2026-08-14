@@ -12,7 +12,13 @@ interface Props {
   // Real rendered width per breakpoint — without this next/image assumes
   // 100vw and serves a far bigger file than the card actually needs.
   sizes?: string;
-  // Only the LCP candidate (first visible card) should skip lazy loading.
+  // The LCP candidate on a given page (detail-page hero, home hero, first
+  // catalog card): loads eager + fetchpriority=high, and — unlike the rest
+  // of the catalog, which stays lazy with a placeholder-then-fade so
+  // scrolling into a still-loading card doesn't show blank space — renders
+  // with NO gradient placeholder and NO fade-in. Any transition there would
+  // itself be the "мерцання" this is meant to kill; priority images should
+  // just be in place, not animate into place.
   priority?: boolean;
 }
 
@@ -20,14 +26,14 @@ export default function OpportunityCoverImage({
   photo, title, type, className = "", sizes = "100vw", priority = false,
 }: Props) {
   const [failed, setFailed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(priority);
   const imgRef = useRef<HTMLImageElement>(null);
   const gradient = typeGradient[type] ?? "linear-gradient(135deg,#3B4FE8,#7C3AED)";
 
   useEffect(() => {
     setFailed(false);
-    setLoaded(false);
-  }, [photo]);
+    setLoaded(priority);
+  }, [photo, priority]);
 
   useEffect(() => {
     // The <img> is server-rendered, so the browser can start (and finish,
@@ -47,27 +53,31 @@ export default function OpportunityCoverImage({
   const isLocalPreview = photo?.startsWith("blob:") || photo?.startsWith("data:");
 
   if (photo && !failed) {
+    const imgClassName = priority ? "object-cover" : `object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`;
+
     return (
       <div className={`relative w-full aspect-video overflow-hidden ${className}`}>
-        {/* Category-gradient placeholder — always underneath, visible until
-            the photo finishes loading/transcoding instead of blank space.
-            Skips a blurDataURL pipeline (would need generating+storing one
-            per photo) for a cheap on-brand stand-in that's already used as
-            the no-photo fallback below. */}
-        <div
-          aria-hidden
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ background: gradient }}
-        >
-          <span className="text-5xl opacity-90">{typeEmoji[type] ?? "✦"}</span>
-        </div>
+        {/* Placeholder underlay — only for lazy (non-priority) images, where
+            the card can scroll into view mid-fetch. Priority images skip
+            this: preload + fetchpriority=high already gets them in place
+            immediately, and adding a placeholder here would just reintroduce
+            a visible swap. */}
+        {!priority && (
+          <div
+            aria-hidden
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ background: gradient }}
+          >
+            <span className="text-5xl opacity-90">{typeEmoji[type] ?? "✦"}</span>
+          </div>
+        )}
         {isLocalPreview ? (
           // eslint-disable-next-line @next/next/no-img-element -- local blob/data preview, not optimizable
           <img
             ref={imgRef}
             src={photo}
             alt={title}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+            className={`absolute inset-0 w-full h-full ${imgClassName}`}
             onLoad={() => setLoaded(true)}
             onError={() => setFailed(true)}
           />
@@ -79,7 +89,7 @@ export default function OpportunityCoverImage({
             fill
             sizes={sizes}
             priority={priority}
-            className={`object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+            className={imgClassName}
             onLoad={() => setLoaded(true)}
             onError={() => setFailed(true)}
           />
