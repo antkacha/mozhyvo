@@ -2,8 +2,8 @@ import { createClient } from "@/lib/supabase/client";
 
 export const COVER_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export const COVER_MAX_BYTES = 4 * 1024 * 1024;
-export const COVER_WIDTH = 1200;
-export const COVER_HEIGHT = 675; // 16:9
+export const COVER_WIDTH = 1920;
+export const COVER_HEIGHT = 1080; // 16:9
 export const COVER_BUCKET = "opportunities";
 
 /**
