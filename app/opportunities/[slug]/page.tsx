@@ -7,6 +7,7 @@ import { orgNameToSlug } from "@/lib/organizations";
 import OpportunityClient from "@/components/OpportunityClient";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 import OpportunityApplyCard from "@/components/OpportunityApplyCard";
+import BackToOpportunities from "@/components/BackToOpportunities";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ViewTracker from "./ViewTracker";
 
@@ -155,13 +156,7 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
       {/* Hero */}
       <section className="bg-primary-light border-b border-primary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <Link href="/opportunities"
-            className="inline-flex items-center gap-1.5 text-sm text-primary/70 hover:text-primary transition-colors mb-7 font-medium">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Назад до можливостей
-          </Link>
+          <BackToOpportunities />
 
           {/* Photo (left, compact) + apply card (right) — same height as the
               card on desktop via grid stretch (default items-stretch), a

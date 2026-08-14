@@ -106,71 +106,156 @@ function UrgentRow({ items }: { items: typeof opportunities }) {
   );
 }
 
+// Narrow a comma-separated URL value down to the members of `valid` —
+// keeps a hand-edited/stale URL from injecting garbage into filter state.
+function parseMultiParam<T extends string>(raw: string | null, valid: readonly T[]): T[] {
+  if (!raw) return [];
+  return raw.split(",").filter((v): v is T => (valid as readonly string[]).includes(v));
+}
+
 // ── Main catalog component ───────────────────────────────────────────
 export default function OpportunitiesCatalog() {
   const router = useRouter();
   const params = useSearchParams();
   const [loading, setLoading] = useState(true);
   const { projects: orgProjects } = usePublicOrgProjects();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // ── URL is the single source of truth for every piece of list state
+  // below. Nothing here is useState — it's all re-derived from
+  // useSearchParams() on every render, so a fresh mount (e.g. after
+  // being torn down by navigating to a detail page and back) always
+  // reflects exactly what the URL says, with no separate copy that can
+  // drift out of sync or reset to a default.
+
+  const qParam = params.get("q") ?? "";
+
+  const categoryParam = params.get("category");
+  const typesParam = params.get("types");
+  const types = useMemo<OpportunityType[]>(() => {
+    if (typesParam) return parseMultiParam(typesParam, ALL_TYPES);
+    if (categoryParam && categorySlugToType[categoryParam]) return [categorySlugToType[categoryParam]];
+    return [];
+  }, [typesParam, categoryParam]);
+
+  const formats = useMemo(() => parseMultiParam(params.get("format"), ALL_FORMATS), [params]);
+  const fundings = useMemo(() => parseMultiParam(params.get("funding"), ALL_FUNDINGS), [params]);
+  const countries = useMemo(() => (params.get("country") ?? "").split(",").filter(Boolean), [params]);
+  const languages = useMemo(() => (params.get("language") ?? "").split(",").filter(Boolean), [params]);
+
+  const rawSort = params.get("sort");
+  const sort: SortValue = SORT_OPTIONS.some((o) => o.value === rawSort) ? (rawSort as SortValue) : "newest";
+
+  const page = Math.max(1, parseInt(params.get("page") ?? "1", 10) || 1);
+
+  // Remember the current list URL so BackToOpportunities can return to it
+  // exactly, instead of guessing from document.referrer (which doesn't
+  // update across a soft navigation and was wrong more often than not).
+  //
+  // Trigger choice: written on every mount/params change while this
+  // component is on screen (option "a"), not only at the moment of
+  // navigating into a detail. A precise "write only when the user is
+  // actually leaving for a detail page" (option "b") would need to hook
+  // OpportunityCard's click — off-limits — and there's no reliable signal
+  // from inside this component alone to distinguish "unmounting because
+  // navigating to a detail" from "unmounting because navigating anywhere
+  // else" (effect cleanup fires the same way for both). Practically this
+  // is a non-issue: the marker is already sitting in storage well before
+  // any click happens, since it's kept current continuously while mounted.
+  //
+  // Residual staleness accepted: if the user leaves /opportunities for an
+  // unrelated page (e.g. the homepage) without closing the tab, then later
+  // reaches some opportunity's detail page through a different path (a
+  // pasted link, a link from another page), "Назад" there would offer the
+  // stale old list state instead of a bare /opportunities. Narrow window —
+  // any fresh visit to /opportunities immediately overwrites it — and the
+  // common path (browse list, click a card) is unaffected since the
+  // marker is always current at the moment a card is actually clicked.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const qs = params.toString();
+      sessionStorage.setItem("mzv_last_list_url", `/opportunities${qs ? `?${qs}` : ""}`);
+    } catch {
+      // Private mode / storage disabled — BackToOpportunities falls back
+      // to a bare /opportunities when it can't read this back either way.
+    }
+  }, [params]);
+
+  // Search input keeps a local buffer purely for typing responsiveness —
+  // debounced ~300ms before it becomes the q param. The URL (qParam)
+  // remains what's actually filtered on; this is re-synced FROM the URL
+  // below so external changes (clear-filters, back/forward, a pasted
+  // link) never leave the input showing something stale.
+  const [rawSearch, setRawSearch] = useState(qParam);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Initialise from URL
-  const initCat    = params.get("category");
-  const initTypes  = (initCat && categorySlugToType[initCat]) ? [categorySlugToType[initCat]] : [] as OpportunityType[];
-
-  const [rawSearch, setRawSearch] = useState(params.get("q") ?? "");
-  const [search,    setSearch]    = useState(params.get("q") ?? "");
-  const [types,     setTypes]     = useState<OpportunityType[]>(initTypes);
-  const [formats,   setFormats]   = useState<FormatType[]>([]);
-  const [fundings,  setFundings]  = useState<FundingType[]>([]);
-  const [countries, setCountries] = useState<string[]>(params.get("country") ? [params.get("country")!] : []);
-  const [languages, setLanguages] = useState<string[]>([]);
-  const [sort,      setSort]      = useState<SortValue>((params.get("sort") as SortValue) ?? "newest");
-  const [page,      setPage]      = useState(parseInt(params.get("page") ?? "1") || 1);
-  const [gridKey,   setGridKey]   = useState(0);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  useEffect(() => {
+    setRawSearch(qParam);
+  }, [qParam]);
 
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 300);
     return () => clearTimeout(t);
   }, []);
 
-  // 300ms debounce on search
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => { setSearch(rawSearch); setPage(1); }, 300);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [rawSearch]);
-
-  // Sync filters → URL (shallow replace)
-  const syncUrl = useCallback(() => {
-    const p = new URLSearchParams();
-    if (search) p.set("q", search);
-    if (types.length === 1) {
-      const slug = Object.entries(categorySlugToType).find(([, v]) => v === types[0])?.[0];
-      if (slug) p.set("category", slug);
+  // Writes `patch` on top of the CURRENT url params — every other key is
+  // preserved untouched. null/"" deletes a key (keeps the URL clean of
+  // default values, matching the old behavior of only ever setting a
+  // param when it's non-default). replace, not push: filter/page changes
+  // are not separate history stops — see verification (f).
+  const updateParams = useCallback((patch: Record<string, string | null>) => {
+    const next = new URLSearchParams(params.toString());
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === null || value === "") next.delete(key);
+      else next.set(key, value);
     }
-    if (sort !== "newest") p.set("sort", sort);
-    if (page > 1) p.set("page", String(page));
-    if (countries.length === 1) p.set("country", countries[0]);
-    const qs = p.toString();
+    const qs = next.toString();
     router.replace(qs ? `/opportunities?${qs}` : "/opportunities", { scroll: false });
-  }, [search, types, sort, page, countries, router]);
+  }, [params, router]);
 
-  useEffect(() => { syncUrl(); }, [syncUrl]);
+  function updateSearch(value: string) {
+    setRawSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      updateParams({ q: value.trim() || null, page: null });
+    }, 300);
+  }
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
-  const resetPage = useCallback(() => { setPage(1); setGridKey((k) => k + 1); }, []);
-
-  function toggle<T>(arr: T[], setArr: (v: T[]) => void, val: T) {
-    setArr(arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val]);
-    resetPage();
+  function toggleType(value: OpportunityType) {
+    const next = types.includes(value) ? types.filter((t) => t !== value) : [...types, value];
+    if (next.length === 0) { updateParams({ category: null, types: null, page: null }); return; }
+    if (next.length === 1) {
+      const slug = Object.entries(categorySlugToType).find(([, v]) => v === next[0])?.[0];
+      if (slug) { updateParams({ category: slug, types: null, page: null }); return; }
+    }
+    updateParams({ category: null, types: next.join(","), page: null });
+  }
+  function toggleFormat(value: FormatType) {
+    const next = formats.includes(value) ? formats.filter((f) => f !== value) : [...formats, value];
+    updateParams({ format: next.length > 0 ? next.join(",") : null, page: null });
+  }
+  function toggleFunding(value: FundingType) {
+    const next = fundings.includes(value) ? fundings.filter((f) => f !== value) : [...fundings, value];
+    updateParams({ funding: next.length > 0 ? next.join(",") : null, page: null });
+  }
+  function toggleCountry(value: string) {
+    const next = countries.includes(value) ? countries.filter((c) => c !== value) : [...countries, value];
+    updateParams({ country: next.length > 0 ? next.join(",") : null, page: null });
+  }
+  function toggleLanguage(value: string) {
+    const next = languages.includes(value) ? languages.filter((l) => l !== value) : [...languages, value];
+    updateParams({ language: next.length > 0 ? next.join(",") : null, page: null });
   }
 
   function clearAll() {
-    setRawSearch(""); setSearch("");
-    setTypes([]); setFormats([]); setFundings([]);
-    setCountries([]); setLanguages([]);
-    setSort("newest"); setPage(1); setGridKey((k) => k + 1);
+    router.replace("/opportunities", { scroll: false });
+  }
+
+  function goToPage(p: number) {
+    updateParams({ page: p > 1 ? String(p) : null });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   // Merge static + Supabase org projects
@@ -199,8 +284,8 @@ export default function OpportunitiesCatalog() {
       if (languages.length > 0 && !languages.some((l) =>
         o.languages.some((ol) => ol.toLowerCase().startsWith(l.toLowerCase()))
       )) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
+      if (qParam.trim()) {
+        const q = qParam.toLowerCase();
         return (
           o.title.toLowerCase().includes(q) ||
           o.org.toLowerCase().includes(q) ||
@@ -226,7 +311,7 @@ export default function OpportunitiesCatalog() {
       result = [...result].sort((a) => (a.featured ? -1 : 1));
     }
     return result;
-  }, [allOpportunities, types, formats, fundings, countries, languages, search, sort]);
+  }, [allOpportunities, types, formats, fundings, countries, languages, qParam, sort, today]);
 
   const urgent = useMemo(() =>
     allOpportunities.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d !== null && d >= 0 && d <= 7; }).slice(0, 8),
@@ -235,12 +320,23 @@ export default function OpportunitiesCatalog() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
+  // Card entrance animation replays on filter/sort/search changes, same as
+  // the old gridKey counter — but NOT on plain pagination, since the old
+  // counter was only ever bumped from resetPage() (called by toggle/sort,
+  // never by the page buttons). Deriving it from params-minus-page
+  // reproduces that exactly without a separate piece of state.
+  const gridKey = useMemo(() => {
+    const p = new URLSearchParams(params.toString());
+    p.delete("page");
+    return p.toString();
+  }, [params]);
+
   const activeChips: { label: string; remove: () => void }[] = [
-    ...types.map((t)     => ({ label: typeNames[t],     remove: () => toggle(types, setTypes, t) })),
-    ...formats.map((f)   => ({ label: formatLabels[f],  remove: () => toggle(formats, setFormats, f) })),
-    ...fundings.map((f)  => ({ label: fundingLabels[f], remove: () => toggle(fundings, setFundings, f) })),
-    ...countries.map((c) => ({ label: c,                remove: () => toggle(countries, setCountries, c) })),
-    ...languages.map((l) => ({ label: `Мова: ${l}`,     remove: () => toggle(languages, setLanguages, l) })),
+    ...types.map((t)     => ({ label: typeNames[t],     remove: () => toggleType(t) })),
+    ...formats.map((f)   => ({ label: formatLabels[f],  remove: () => toggleFormat(f) })),
+    ...fundings.map((f)  => ({ label: fundingLabels[f], remove: () => toggleFunding(f) })),
+    ...countries.map((c) => ({ label: c,                remove: () => toggleCountry(c) })),
+    ...languages.map((l) => ({ label: `Мова: ${l}`,     remove: () => toggleLanguage(l) })),
   ];
   const activeCount = activeChips.length;
 
@@ -252,7 +348,7 @@ export default function OpportunitiesCatalog() {
             <CheckRow key={t} label={typeNames[t]}
               count={allOpportunities.filter((o) => o.type === t).length}
               checked={types.includes(t)}
-              onChange={() => toggle(types, setTypes, t)} />
+              onChange={() => toggleType(t)} />
           ))}
         </Section>
         <Section title="Формат">
@@ -260,14 +356,14 @@ export default function OpportunitiesCatalog() {
             <CheckRow key={f} label={formatLabels[f]}
               count={filtered.filter((o) => o.format === f).length}
               checked={formats.includes(f)}
-              onChange={() => toggle(formats, setFormats, f)} />
+              onChange={() => toggleFormat(f)} />
           ))}
         </Section>
         <Section title="Фінансування">
           {ALL_FUNDINGS.map((f) => (
             <CheckRow key={f} label={fundingLabels[f]}
               checked={fundings.includes(f)}
-              onChange={() => toggle(fundings, setFundings, f)} />
+              onChange={() => toggleFunding(f)} />
           ))}
         </Section>
         <Section title="Країна">
@@ -276,7 +372,7 @@ export default function OpportunitiesCatalog() {
               <CheckRow key={c} label={c}
                 count={filtered.filter((o) => o.country === c).length}
                 checked={countries.includes(c)}
-                onChange={() => toggle(countries, setCountries, c)} />
+                onChange={() => toggleCountry(c)} />
             ))}
           </div>
         </Section>
@@ -285,7 +381,7 @@ export default function OpportunitiesCatalog() {
             {allLanguages.map((l) => (
               <button
                 key={l}
-                onClick={() => toggle(languages, setLanguages, l)}
+                onClick={() => toggleLanguage(l)}
                 className={`text-xs font-semibold px-2.5 py-1 rounded-xl border transition-all ${
                   languages.includes(l)
                     ? "bg-primary text-white border-primary"
@@ -313,18 +409,18 @@ export default function OpportunitiesCatalog() {
           </svg>
           <input
             type="text" value={rawSearch}
-            onChange={(e) => setRawSearch(e.target.value)}
+            onChange={(e) => updateSearch(e.target.value)}
             placeholder="Пошук за назвою, організацією, тегами..."
             className="w-full pl-10 pr-10 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white"
           />
           {rawSearch && (
-            <button onClick={() => { setRawSearch(""); setSearch(""); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
+            <button onClick={() => updateSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           )}
         </div>
         <select
-          value={sort} onChange={(e) => { setSort(e.target.value as SortValue); resetPage(); }}
+          value={sort} onChange={(e) => updateParams({ sort: e.target.value === "newest" ? null : e.target.value, page: null })}
           className="text-sm border border-border rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground flex-shrink-0"
         >
           {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -388,7 +484,7 @@ export default function OpportunitiesCatalog() {
 
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-10 flex-wrap">
-                  <button onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  <button onClick={() => goToPage(Math.max(1, page - 1))}
                     disabled={page === 1}
                     className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted hover:border-primary hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
                   >← Назад</button>
@@ -396,11 +492,11 @@ export default function OpportunitiesCatalog() {
                     Math.max(0, page - 3), Math.min(totalPages, page + 2)
                   ).map((p) => (
                     <button key={p}
-                      onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      onClick={() => goToPage(p)}
                       className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${p === page ? "bg-primary text-white shadow-md shadow-primary/25" : "border border-border text-muted hover:border-primary hover:text-primary"}`}
                     >{p}</button>
                   ))}
-                  <button onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  <button onClick={() => goToPage(Math.min(totalPages, page + 1))}
                     disabled={page === totalPages}
                     className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted hover:border-primary hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
                   >Далі →</button>
