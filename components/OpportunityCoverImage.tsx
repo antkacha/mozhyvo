@@ -4,6 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { typeEmoji, typeGradient, type OpportunityType } from "@/lib/data";
 
+// Must match next.config.js's images.remotePatterns hostname — that's the
+// only host next/image is actually allowed to fetch/optimize.
+const SUPABASE_STORAGE_HOST = "lqtikyzevpjbtueajpsh.supabase.co";
+
+function isSupabaseStorageUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname === SUPABASE_STORAGE_HOST;
+  } catch {
+    return false; // blob:, data:, or anything unparseable as an absolute URL
+  }
+}
+
 interface Props {
   photo?: string;
   title: string;
@@ -47,10 +59,15 @@ export default function OpportunityCoverImage({
     else setLoaded(true);
   }, [photo]);
 
-  // Cover-photo upload previews are blob:/data: URLs (canvas-resized files
-  // not yet on Supabase Storage) — next/image's optimizer can't fetch
-  // those, only real http(s) URLs matching next.config.js's remotePatterns.
-  const isLocalPreview = photo?.startsWith("blob:") || photo?.startsWith("data:");
+  // next/image can only optimize URLs matching next.config.js's
+  // remotePatterns (our Supabase Storage host) — anything else throws a
+  // hard "Invalid src prop... hostname is not configured" error at render
+  // time, not a catchable onError. That covers more than blob:/data: local
+  // previews: CoverPhotoUpload's "За посиланням" mode sets photo to a real
+  // http(s) URL too, but an EXTERNAL one, before it's been fetched down to
+  // our Storage by the server — same problem, needs the same plain <img>
+  // fallback. Only skip next/image once the URL is actually ours.
+  const isOptimizable = photo ? isSupabaseStorageUrl(photo) : false;
 
   if (photo && !failed) {
     const imgClassName = priority ? "object-cover" : `object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`;
@@ -71,8 +88,8 @@ export default function OpportunityCoverImage({
             <span className="text-5xl opacity-90">{typeEmoji[type] ?? "✦"}</span>
           </div>
         )}
-        {isLocalPreview ? (
-          // eslint-disable-next-line @next/next/no-img-element -- local blob/data preview, not optimizable
+        {!isOptimizable ? (
+          // eslint-disable-next-line @next/next/no-img-element -- not on our Storage yet, not optimizable
           <img
             ref={imgRef}
             src={photo}
