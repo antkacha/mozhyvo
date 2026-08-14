@@ -1,28 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
-import { typeColors, typeNames, fundingLabels } from "@/lib/data";
+import { typeColors, typeNames } from "@/lib/data";
+import { getDaysUntilDeadline } from "@/lib/recommendations";
 import type { Opportunity } from "@/lib/data";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 
-function SmallCard({
+function OpportunityGridCard({
   opp,
   refProp,
   delay,
   accentColor,
 }: {
   opp: Opportunity;
-  refProp: React.RefObject<HTMLDivElement>;
+  refProp: (el: HTMLDivElement | null) => void;
   delay: string;
   accentColor: string;
 }) {
   return (
     <div
       ref={refProp}
-      className={`slide-in-right bg-white rounded-2xl border border-border border-t-4 shadow-sm flex flex-col flex-1 overflow-hidden ${accentColor}`}
+      className={`slide-in-right bg-white rounded-2xl border border-border border-t-4 shadow-sm flex flex-col h-full overflow-hidden ${accentColor}`}
       style={{ transitionDelay: delay }}
     >
       <OpportunityCoverImage
@@ -30,7 +30,7 @@ function SmallCard({
         title={opp.title}
         type={opp.type}
         className="!aspect-auto h-24"
-        sizes="(max-width: 1023px) 100vw, 40vw"
+        sizes="(max-width: 767px) 100vw, 50vw"
       />
       <div className="flex flex-col p-6 gap-3 flex-1">
         <div className="flex items-center justify-between gap-2">
@@ -68,12 +68,9 @@ const ACCENT_COLORS = [
 
 export default function FeaturedSection() {
   const { projects, ready } = usePublicOrgProjects();
-  const leftRef = useRef<HTMLDivElement>(null);
-  const rightTopRef = useRef<HTMLDivElement>(null);
-  const rightBottomRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    const els = [leftRef.current, rightTopRef.current, rightBottomRef.current];
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -85,7 +82,7 @@ export default function FeaturedSection() {
       },
       { threshold: 0.15 }
     );
-    els.forEach((el) => { if (el) observer.observe(el); });
+    cardRefs.current.forEach((el) => { if (el) observer.observe(el); });
     return () => observer.disconnect();
   }, [projects]);
 
@@ -94,20 +91,21 @@ export default function FeaturedSection() {
       <section className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
           <div className="h-8 bg-muted-bg rounded w-64 mb-10 animate-pulse" />
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            <div className="lg:col-span-3 h-80 bg-muted-bg rounded-2xl animate-pulse" />
-            <div className="lg:col-span-2 flex flex-col gap-6">
-              <div className="flex-1 h-36 bg-muted-bg rounded-2xl animate-pulse" />
-              <div className="flex-1 h-36 bg-muted-bg rounded-2xl animate-pulse" />
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {Array.from({ length: 4 }, (_, i) => (
+              <div key={i} className="h-72 bg-muted-bg rounded-2xl animate-pulse" />
+            ))}
           </div>
         </div>
       </section>
     );
   }
 
-  // Take up to 3 most recent published projects
-  const featured = projects.slice(0, 3);
+  // Top 4 opportunities by nearest deadline — items with no deadline
+  // (rolling/ASAP) sort last instead of being excluded.
+  const featured = [...projects]
+    .sort((a, b) => (getDaysUntilDeadline(a.deadline) ?? Infinity) - (getDaysUntilDeadline(b.deadline) ?? Infinity))
+    .slice(0, 4);
 
   if (featured.length === 0) {
     return (
@@ -132,9 +130,6 @@ export default function FeaturedSection() {
     );
   }
 
-  const main = featured[0];
-  const rest = featured.slice(1);
-
   return (
     <section className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
@@ -148,95 +143,16 @@ export default function FeaturedSection() {
           </Link>
         </div>
 
-        <div className={`grid grid-cols-1 gap-6 ${rest.length > 0 ? "lg:grid-cols-5" : ""}`}>
-
-          {/* Large left card */}
-          <div ref={leftRef} className={`slide-in-left ${rest.length > 0 ? "lg:col-span-3" : ""}`}>
-            <div className="relative h-full min-h-[320px] rounded-2xl p-6 flex flex-col gap-4 overflow-hidden">
-              {main.photo && (
-                <Image
-                  src={main.photo}
-                  alt=""
-                  fill
-                  sizes="(max-width: 1023px) 100vw, 60vw"
-                  priority
-                  className="object-cover"
-                />
-              )}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: main.photo
-                    ? "linear-gradient(135deg, rgba(59,79,232,0.90) 0%, rgba(99,102,241,0.90) 100%)"
-                    : "linear-gradient(135deg, #3B4FE8 0%, #6366F1 100%)",
-                }}
-              />
-              <div className="absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-white/10 pointer-events-none" />
-
-              <div className="relative flex flex-col gap-4 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white text-primary">
-                    {main.typeName || typeNames[main.type] || main.type}
-                  </span>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-accent text-foreground">
-                    {main.deadlineDisplay || "—"}
-                  </span>
-                </div>
-
-                <div>
-                  <p className="text-sm text-white/75 mb-1">{main.org}</p>
-                  <p className="text-xl font-bold text-white leading-snug">{main.title}</p>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {main.funding && (
-                    <span className="px-3 py-1 rounded-full bg-white/20 text-sm text-white">
-                      💰 {fundingLabels[main.funding]}
-                    </span>
-                  )}
-                  {main.duration && (
-                    <span className="px-3 py-1 rounded-full bg-white/20 text-sm text-white">
-                      📅 {main.duration}
-                    </span>
-                  )}
-                  {(main.ageMin || main.ageMax) && (
-                    <span className="px-3 py-1 rounded-full bg-white/20 text-sm text-white">
-                      🎓 {main.ageMin && main.ageMax ? `${main.ageMin}–${main.ageMax} р.` : main.ageMax ? `до ${main.ageMax} р.` : `від ${main.ageMin} р.`}
-                    </span>
-                  )}
-                </div>
-
-                {main.shortDescription && (
-                  <p className="text-sm text-white/80 leading-relaxed line-clamp-2">{main.shortDescription}</p>
-                )}
-
-                <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/15">
-                  <span className="text-sm text-white/70">{main.flag} {main.country}</span>
-                  <Link
-                    href={`/opportunities/${main.slug}`}
-                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white text-primary font-semibold text-sm hover:bg-primary-light transition-all"
-                  >
-                    Детальніше →
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right column */}
-          {rest.length > 0 && (
-            <div className="lg:col-span-2 flex flex-col gap-6">
-              {rest.map((opp, i) => (
-                <SmallCard
-                  key={opp.slug}
-                  opp={opp}
-                  refProp={i === 0 ? rightTopRef : rightBottomRef}
-                  delay={`${(i + 1) * 150}ms`}
-                  accentColor={ACCENT_COLORS[i % ACCENT_COLORS.length]}
-                />
-              ))}
-            </div>
-          )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {featured.map((opp, i) => (
+            <OpportunityGridCard
+              key={opp.slug}
+              opp={opp}
+              refProp={(el) => { cardRefs.current[i] = el; }}
+              delay={`${i * 100}ms`}
+              accentColor={ACCENT_COLORS[i % ACCENT_COLORS.length]}
+            />
+          ))}
         </div>
 
         <div className="mt-8 text-center sm:hidden">
