@@ -1,7 +1,7 @@
 const LOGO_URL = "https://lqtikyzevpjbtueajpsh.supabase.co/storage/v1/object/public/assets/mozhyvo-logo-white.png";
 
 export const EMAIL_FROM = "МОЖUВО <hello@mozhyvo.com.ua>";
-export const SITE_URL   = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mozhyvo.com.ua";
+export const SITE_URL   = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.mozhyvo.com.ua";
 
 export function wrapEmailTemplate(
   content: string,

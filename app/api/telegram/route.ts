@@ -47,37 +47,37 @@ export async function POST(req: NextRequest) {
   } else if (text === "/opportunities" || text === "/hot") {
     await sendMessage(
       chatId,
-      `🔥 <b>Гарячі можливості</b>\n\nПереглянь актуальні програми на сайті:\n👉 <a href="https://mozhyvo.ua/opportunities">mozhyvo.ua/opportunities</a>\n\nАбо обери категорію:\n• 🎓 /scholarships — стипендії\n• 💼 /internships — стажування\n• ✈️ /exchanges — обміни\n• 💰 /grants — гранти`,
+      `🔥 <b>Гарячі можливості</b>\n\nПереглянь актуальні програми на сайті:\n👉 <a href="https://www.mozhyvo.com.ua/opportunities">mozhyvo.com.ua/opportunities</a>\n\nАбо обери категорію:\n• 🎓 /scholarships — стипендії\n• 💼 /internships — стажування\n• ✈️ /exchanges — обміни\n• 💰 /grants — гранти`,
     );
   } else if (text === "/scholarships") {
     await sendMessage(
       chatId,
-      `🎓 <b>Стипендії</b>\n\nВсі стипендійні програми:\n👉 <a href="https://mozhyvo.ua/opportunities?category=scholarships">mozhyvo.ua/opportunities?category=scholarships</a>\n\n<b>Популярні:</b>\n• Erasmus+ (ЄС) — до €1000/міс\n• DAAD (Германія) — стипендія на навчання\n• Fulbright (США) — магістратура та PhD`,
+      `🎓 <b>Стипендії</b>\n\nВсі стипендійні програми:\n👉 <a href="https://www.mozhyvo.com.ua/opportunities?category=scholarships">mozhyvo.com.ua/opportunities?category=scholarships</a>\n\n<b>Популярні:</b>\n• Erasmus+ (ЄС) — до €1000/міс\n• DAAD (Германія) — стипендія на навчання\n• Fulbright (США) — магістратура та PhD`,
     );
   } else if (text === "/internships") {
     await sendMessage(
       chatId,
-      `💼 <b>Стажування</b>\n\nВсі стажування:\n👉 <a href="https://mozhyvo.ua/opportunities?category=internships">mozhyvo.ua/opportunities?category=internships</a>`,
+      `💼 <b>Стажування</b>\n\nВсі стажування:\n👉 <a href="https://www.mozhyvo.com.ua/opportunities?category=internships">mozhyvo.com.ua/opportunities?category=internships</a>`,
     );
   } else if (text === "/deadlines") {
     await sendMessage(
       chatId,
-      `⏰ <b>Найближчі дедлайни</b>\n\nПрограми зі спливаючим дедлайном:\n👉 <a href="https://mozhyvo.ua/opportunities?sort=deadline">mozhyvo.ua/opportunities?sort=deadline</a>\n\nПорада: зареєструйся на сайті та збережи програми, щоб отримувати нагадування!`,
+      `⏰ <b>Найближчі дедлайни</b>\n\nПрограми зі спливаючим дедлайном:\n👉 <a href="https://www.mozhyvo.com.ua/opportunities?sort=deadline">mozhyvo.com.ua/opportunities?sort=deadline</a>\n\nПорада: зареєструйся на сайті та збережи програми, щоб отримувати нагадування!`,
     );
   } else if (text === "/subscribe") {
     await sendMessage(
       chatId,
-      `🔔 <b>Щотижнева розсилка</b>\n\nПідпишись на email-розсилку з новими можливостями:\n👉 <a href="https://mozhyvo.ua/#newsletter">mozhyvo.ua/#newsletter</a>\n\nАбо зареєструйся на сайті і налаштуй сповіщення в особистому кабінеті.`,
+      `🔔 <b>Щотижнева розсилка</b>\n\nПідпишись на email-розсилку з новими можливостями:\n👉 <a href="https://www.mozhyvo.com.ua/#newsletter">mozhyvo.com.ua/#newsletter</a>\n\nАбо зареєструйся на сайті і налаштуй сповіщення в особистому кабінеті.`,
     );
   } else if (text === "/help") {
     await sendMessage(
       chatId,
-      `❓ <b>Допомога</b>\n\nМОЖUВО — платформа можливостей для молоді України.\n\n<b>Команди бота:</b>\n/opportunities — гарячі можливості\n/deadlines — найближчі дедлайни\n/scholarships — стипендії\n/internships — стажування\n/subscribe — розсилка\n\n<b>Зворотний зв'язок:</b> mozhyvo@gmail.com\n<b>Сайт:</b> <a href="https://mozhyvo.ua">mozhyvo.ua</a>`,
+      `❓ <b>Допомога</b>\n\nМОЖUВО — платформа можливостей для молоді України.\n\n<b>Команди бота:</b>\n/opportunities — гарячі можливості\n/deadlines — найближчі дедлайни\n/scholarships — стипендії\n/internships — стажування\n/subscribe — розсилка\n\n<b>Зворотний зв'язок:</b> mozhyvo@gmail.com\n<b>Сайт:</b> <a href="https://www.mozhyvo.com.ua">mozhyvo.com.ua</a>`,
     );
   } else {
     await sendMessage(
       chatId,
-      `🤔 Не розумію цю команду.\n\nНапиши /help щоб побачити доступні команди, або відвідай сайт:\n👉 <a href="https://mozhyvo.ua">mozhyvo.ua</a>`,
+      `🤔 Не розумію цю команду.\n\nНапиши /help щоб побачити доступні команди, або відвідай сайт:\n👉 <a href="https://www.mozhyvo.com.ua">mozhyvo.com.ua</a>`,
     );
   }
 

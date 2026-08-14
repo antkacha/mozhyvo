@@ -5,7 +5,7 @@ import HomeRecommendations from "@/components/HomeRecommendations";
 import NewsletterSubscribe from "@/components/NewsletterSubscribe";
 
 export const metadata: Metadata = {
-  alternates: { canonical: "https://mozhyvo.ua" },
+  alternates: { canonical: "https://www.mozhyvo.com.ua" },
 };
 
 const features = [

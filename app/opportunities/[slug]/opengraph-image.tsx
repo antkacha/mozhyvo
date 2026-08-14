@@ -153,7 +153,7 @@ export default function Image({ params }: { params: { slug: string } }) {
               >
                 М
               </div>
-              <span style={{ color: "#374151", fontSize: 20, fontWeight: 800 }}>mozhyvo.ua</span>
+              <span style={{ color: "#374151", fontSize: 20, fontWeight: 800 }}>mozhyvo.com.ua</span>
             </div>
           </div>
         </div>

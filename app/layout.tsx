@@ -7,7 +7,7 @@ import RecoveryGate from "@/components/RecoveryGate";
 import { SavedProvider } from "@/contexts/SavedContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 
-const BASE_URL = "https://mozhyvo.ua";
+const BASE_URL = "https://www.mozhyvo.com.ua";
 const TITLE = "МОЖUВО — Всі можливості в одному місці";
 const DESCRIPTION =
   "Гранти, стажування, обміни, волонтерство та стипендії для молоді України. Знайди свою можливість на МОЖUВО — безкоштовно.";

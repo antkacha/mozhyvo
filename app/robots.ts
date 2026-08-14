@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/cabinet/", "/admin/", "/dashboard/", "/api/", "/auth/"],
       },
     ],
-    sitemap: "https://mozhyvo.ua/sitemap.xml",
-    host: "https://mozhyvo.ua",
+    sitemap: "https://www.mozhyvo.com.ua/sitemap.xml",
+    host: "https://www.mozhyvo.com.ua",
   };
 }

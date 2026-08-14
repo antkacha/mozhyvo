@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     return {
       title: staticOrg.name,
       description: staticOrg.description.slice(0, 160),
-      alternates: { canonical: `https://mozhyvo.ua/organizations/${staticOrg.slug}` },
+      alternates: { canonical: `https://www.mozhyvo.com.ua/organizations/${staticOrg.slug}` },
     };
   }
   // Supabase org
@@ -79,7 +79,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title: data.name,
     description: (data.description ?? "").slice(0, 160),
-    alternates: { canonical: `https://mozhyvo.ua/organizations/${params.slug}` },
+    alternates: { canonical: `https://www.mozhyvo.com.ua/organizations/${params.slug}` },
   };
 }
 

@@ -12,12 +12,12 @@ export const metadata: Metadata = {
     "гранти молодь Україна", "стипендії для студентів", "Erasmus+ Україна",
     "програми обміну студентів", "стажування за кордоном", "волонтерство Україна",
   ],
-  alternates: { canonical: "https://mozhyvo.ua/opportunities" },
+  alternates: { canonical: "https://www.mozhyvo.com.ua/opportunities" },
   openGraph: {
     title: "Можливості для молоді України",
     description: "Гранти, стипендії та обміни в одному місці",
-    url: "https://mozhyvo.ua/opportunities",
-    images: [{ url: "https://mozhyvo.ua/opengraph-image", width: 1200, height: 630 }],
+    url: "https://www.mozhyvo.com.ua/opportunities",
+    images: [{ url: "https://www.mozhyvo.com.ua/opengraph-image", width: 1200, height: 630 }],
   },
 };
 

@@ -80,7 +80,7 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
   }
 }
 
-const BASE = "https://mozhyvo.ua";
+const BASE = "https://www.mozhyvo.com.ua";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { opportunities } from "@/lib/data";
 
-const BASE = "https://mozhyvo.ua";
+const BASE = "https://www.mozhyvo.com.ua";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [

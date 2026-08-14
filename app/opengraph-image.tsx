@@ -86,7 +86,7 @@ export default function Image() {
             </div>
           ))}
           <div style={{ marginLeft: "auto", color: "rgba(255,255,255,0.5)", fontSize: 16 }}>
-            mozhyvo.ua
+            mozhyvo.com.ua
           </div>
         </div>
       </div>
