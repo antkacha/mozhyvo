@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { Opportunity, typeColors, typeEmoji, formatLabels } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
@@ -23,7 +24,7 @@ function isExpiringSoon(deadline: string): boolean {
   return days !== null && days <= 14 && days > 0;
 }
 
-export default function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; index?: number }) {
+function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; index?: number }) {
   const expiring = isExpiringSoon(opp.deadline);
   const { isSaved, toggle, ready } = useSaved();
   const saved = isSaved(opp.slug);
@@ -147,3 +148,10 @@ export default function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; 
     </div>
   );
 }
+
+// opp comes from the memoized `filtered`/`paginated` arrays in
+// OpportunitiesCatalog, so its reference is stable across re-renders that
+// don't actually change the filtered/sorted/paginated result — this memo
+// is what turns that stability into skipped re-renders instead of every
+// visible card re-executing on every keystroke.
+export default memo(OpportunityCard);

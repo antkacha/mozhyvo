@@ -8,6 +8,7 @@ import {
   fundingLabels,
   formatLabels,
   categorySlugToType,
+  type Opportunity,
   type OpportunityType,
   type FundingType,
   type FormatType,
@@ -111,6 +112,87 @@ function UrgentRow({ items }: { items: typeof opportunities }) {
 function parseMultiParam<T extends string>(raw: string | null, valid: readonly T[]): T[] {
   if (!raw) return [];
   return raw.split(",").filter((v): v is T => (valid as readonly string[]).includes(v));
+}
+
+// ── Filter sidebar/drawer content ────────────────────────────────────
+// Hoisted to module scope — defining this inside OpportunitiesCatalog's
+// render body created a new component identity on every render (every
+// keystroke, filter click, drawer toggle), so React unmounted/remounted
+// the whole filter subtree each time: Section's own open/closed state
+// reset, every checkbox lost DOM identity. Same bug class as the
+// /org/register Layout fix earlier — everything it used from the parent
+// scope is now an explicit prop instead of a closure.
+function FilterPanel({
+  allOpportunities, filtered, types, formats, fundings, countries, languages,
+  allCountries, allLanguages, toggleType, toggleFormat, toggleFunding, toggleCountry, toggleLanguage,
+}: {
+  allOpportunities: Opportunity[];
+  filtered: Opportunity[];
+  types: OpportunityType[];
+  formats: FormatType[];
+  fundings: FundingType[];
+  countries: string[];
+  languages: string[];
+  allCountries: string[];
+  allLanguages: string[];
+  toggleType: (t: OpportunityType) => void;
+  toggleFormat: (f: FormatType) => void;
+  toggleFunding: (f: FundingType) => void;
+  toggleCountry: (c: string) => void;
+  toggleLanguage: (l: string) => void;
+}) {
+  return (
+    <div>
+      <Section title="Тип">
+        {ALL_TYPES.map((t) => (
+          <CheckRow key={t} label={typeNames[t]}
+            count={allOpportunities.filter((o) => o.type === t).length}
+            checked={types.includes(t)}
+            onChange={() => toggleType(t)} />
+        ))}
+      </Section>
+      <Section title="Формат">
+        {ALL_FORMATS.map((f) => (
+          <CheckRow key={f} label={formatLabels[f]}
+            count={filtered.filter((o) => o.format === f).length}
+            checked={formats.includes(f)}
+            onChange={() => toggleFormat(f)} />
+        ))}
+      </Section>
+      <Section title="Фінансування">
+        {ALL_FUNDINGS.map((f) => (
+          <CheckRow key={f} label={fundingLabels[f]}
+            checked={fundings.includes(f)}
+            onChange={() => toggleFunding(f)} />
+        ))}
+      </Section>
+      <Section title="Країна">
+        <div className="max-h-44 overflow-y-auto flex flex-col gap-1.5 pr-1">
+          {allCountries.map((c) => (
+            <CheckRow key={c} label={c}
+              count={filtered.filter((o) => o.country === c).length}
+              checked={countries.includes(c)}
+              onChange={() => toggleCountry(c)} />
+          ))}
+        </div>
+      </Section>
+      <Section title="Мова">
+        <div className="flex flex-wrap gap-1.5">
+          {allLanguages.map((l) => (
+            <button
+              key={l}
+              onClick={() => toggleLanguage(l)}
+              className={`text-xs font-semibold px-2.5 py-1 rounded-xl border transition-all ${
+                languages.includes(l)
+                  ? "bg-primary text-white border-primary"
+                  : "border-border text-muted hover:border-primary/30 hover:text-foreground"
+              }`}
+            >{l}</button>
+          ))}
+        </div>
+      </Section>
+    </div>
+  );
 }
 
 // ── Main catalog component ───────────────────────────────────────────
@@ -318,7 +400,15 @@ export default function OpportunitiesCatalog() {
   [allOpportunities]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  // .slice() already preserves the same opp object references from the
+  // memoized `filtered` above, so this isn't strictly required for
+  // React.memo on OpportunityCard to work — memoized anyway so the array
+  // itself doesn't churn on every render and nothing here depends on that
+  // being an implementation detail of slice().
+  const paginated = useMemo(
+    () => filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE),
+    [filtered, page]
+  );
 
   // Card entrance animation replays on filter/sort/search changes, same as
   // the old gridKey counter — but NOT on plain pagination, since the old
@@ -340,60 +430,13 @@ export default function OpportunitiesCatalog() {
   ];
   const activeCount = activeChips.length;
 
-  function FilterPanel() {
-    return (
-      <div>
-        <Section title="Тип">
-          {ALL_TYPES.map((t) => (
-            <CheckRow key={t} label={typeNames[t]}
-              count={allOpportunities.filter((o) => o.type === t).length}
-              checked={types.includes(t)}
-              onChange={() => toggleType(t)} />
-          ))}
-        </Section>
-        <Section title="Формат">
-          {ALL_FORMATS.map((f) => (
-            <CheckRow key={f} label={formatLabels[f]}
-              count={filtered.filter((o) => o.format === f).length}
-              checked={formats.includes(f)}
-              onChange={() => toggleFormat(f)} />
-          ))}
-        </Section>
-        <Section title="Фінансування">
-          {ALL_FUNDINGS.map((f) => (
-            <CheckRow key={f} label={fundingLabels[f]}
-              checked={fundings.includes(f)}
-              onChange={() => toggleFunding(f)} />
-          ))}
-        </Section>
-        <Section title="Країна">
-          <div className="max-h-44 overflow-y-auto flex flex-col gap-1.5 pr-1">
-            {allCountries.map((c) => (
-              <CheckRow key={c} label={c}
-                count={filtered.filter((o) => o.country === c).length}
-                checked={countries.includes(c)}
-                onChange={() => toggleCountry(c)} />
-            ))}
-          </div>
-        </Section>
-        <Section title="Мова">
-          <div className="flex flex-wrap gap-1.5">
-            {allLanguages.map((l) => (
-              <button
-                key={l}
-                onClick={() => toggleLanguage(l)}
-                className={`text-xs font-semibold px-2.5 py-1 rounded-xl border transition-all ${
-                  languages.includes(l)
-                    ? "bg-primary text-white border-primary"
-                    : "border-border text-muted hover:border-primary/30 hover:text-foreground"
-                }`}
-              >{l}</button>
-            ))}
-          </div>
-        </Section>
-      </div>
-    );
-  }
+  // Shared between the desktop sidebar and mobile drawer FilterPanel
+  // instances so the two call sites can't drift out of sync.
+  const filterPanelProps = {
+    allOpportunities, filtered, types, formats, fundings, countries, languages,
+    allCountries, allLanguages, toggleType, toggleFormat, toggleFunding, toggleCountry, toggleLanguage,
+  };
+
 
   if (loading) return <SkeletonGrid />;
 
@@ -458,7 +501,7 @@ export default function OpportunitiesCatalog() {
               <p className="font-semibold text-sm text-foreground">Фільтри</p>
               {activeCount > 0 && <button onClick={clearAll} className="text-xs text-primary hover:underline">Очистити</button>}
             </div>
-            <FilterPanel />
+            <FilterPanel {...filterPanelProps} />
           </div>
         </aside>
 
@@ -521,7 +564,7 @@ export default function OpportunitiesCatalog() {
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4"><FilterPanel /></div>
+            <div className="flex-1 overflow-y-auto p-4"><FilterPanel {...filterPanelProps} /></div>
             <div className="p-4 border-t border-border">
               <button onClick={() => setMobileOpen(false)}
                 className="w-full py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-all"
