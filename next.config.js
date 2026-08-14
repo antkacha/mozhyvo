@@ -8,10 +8,13 @@ const nextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
-    // AVIF first — better quality per byte than WebP; browsers that don't
-    // support it (checked via Accept header) fall back to WebP, which
-    // stays as the second entry rather than being dropped.
-    formats: ["image/avif", "image/webp"],
+    // WebP only — AVIF was measured at ~700ms server-side cold-encode time
+    // (vs ~111ms for WebP on the same image) on the first request for any
+    // given url+width+quality combination, which showed up as the
+    // detail-page hero (a priority image with no placeholder, by design)
+    // popping in visibly after a real delay. quality={85} on the Image
+    // components is unaffected — that's a separate setting and stays.
+    formats: ["image/webp"],
   },
   async headers() {
     return [
