@@ -299,7 +299,7 @@ type NewProjectDraft = {
 function NewProjectContent() {
   const router = useRouter();
   const { org } = useOrgSession();
-  const { create, update } = useOrgProjects(org?.id);
+  const { create } = useOrgProjects(org?.id);
 
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(INITIAL);
@@ -311,7 +311,10 @@ function NewProjectContent() {
   const [hasFee, setHasFee] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [saving, setSaving] = useState(false);
+  const [savingStatus, setSavingStatus] = useState<OrgProject["status"] | null>(null);
+  const [savingCoverStage, setSavingCoverStage] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [coverWarning, setCoverWarning] = useState<string | null>(null);
 
   // Cover photo — deferred: the project doesn't exist yet, so the actual
   // upload/import happens after create() returns an id (see handleSubmit).
@@ -421,6 +424,11 @@ function NewProjectContent() {
       if (!form.country.trim()) e.country = "Обов'язкове поле";
       if (deadlineMode === "date" && !form.deadline) e.deadline = "Обов'язкове поле";
     }
+    if (s === 4 && applyMode === "external") {
+      const url = form.externalApplyUrl.trim();
+      if (!url) e.externalApplyUrl = "Вкажи посилання на форму";
+      else if (!/^https?:\/\/.+/.test(url)) e.externalApplyUrl = "Вкажи повне посилання (https://...)";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -454,6 +462,8 @@ function NewProjectContent() {
         : "";
 
     setSubmitError(null);
+    setCoverWarning(null);
+    setSavingStatus(status);
     try {
       const project = await create({
         orgId: org.id,
@@ -487,30 +497,60 @@ function NewProjectContent() {
         feeWho: hasFee ? form.feeWho : undefined,
       });
 
-      // Cover can only be uploaded now that the project (and its id) exists —
-      // best-effort: the project is already saved either way, so a cover
-      // failure here shouldn't block navigation. It can be added from Edit.
+      // Cover can only be uploaded now that the project (and its id) exists.
+      // The project itself is already saved at this point either way, so a
+      // cover failure here is non-fatal to creation — but it must not be
+      // silently swallowed: the user needs to know it didn't save.
+      let coverFailed = false;
       if (pendingCover) {
+        setSavingCoverStage(true);
         try {
           if (pendingCover.kind === "file") {
             const photoUrl = await uploadCoverPhoto(project.id, pendingCover.blob);
-            await update(project.id, { photoUrl });
+            const res = await fetch(`/api/org/projects/${project.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ photo_url: photoUrl }),
+            });
+            if (!res.ok) {
+              const json = await res.json().catch(() => null) as { error?: string } | null;
+              throw new Error(json?.error ?? "Не вдалося зберегти обкладинку");
+            }
           } else {
-            await fetch(`/api/org/projects/${project.id}/cover`, {
+            const res = await fetch(`/api/org/projects/${project.id}/cover`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ url: pendingCover.url }),
             });
+            if (!res.ok) {
+              const json = await res.json().catch(() => null) as { error?: string } | null;
+              throw new Error(json?.error ?? "Не вдалося імпортувати зображення за посиланням");
+            }
           }
-        } catch {
-          // Non-fatal — project is saved, cover can be (re)added from Edit.
+        } catch (e) {
+          // Non-fatal to creation — the project IS saved — but surface it:
+          // the whole point is that the user must know the cover didn't
+          // save, instead of finding out later on the catalog/detail page.
+          console.error("Cover photo failed to save after project creation:", e);
+          coverFailed = true;
+          setCoverWarning(
+            "Можливість створено, але обкладинку не вдалося завантажити. Ви можете додати її через редагування."
+          );
+        } finally {
+          setSavingCoverStage(false);
         }
       }
 
       clearDraft(NEW_DRAFT_KEY);
+      if (coverFailed) {
+        // Give the user a moment to actually read the notice before the
+        // redirect carries it away.
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+      }
       router.push("/dashboard/projects");
     } catch (e) {
       setSaving(false);
+      setSavingStatus(null);
       setSubmitError(e instanceof Error ? e.message : "Не вдалось зберегти проект. Спробуй ще раз.");
     }
   }
@@ -1071,9 +1111,11 @@ function NewProjectContent() {
                 value={form.externalApplyUrl}
                 onChange={(e) => set("externalApplyUrl", e.target.value)}
                 placeholder="https://forms.google.com/..."
-                className={input}
+                className={`${input} ${errors.externalApplyUrl ? err : ""}`}
               />
-              <p className={hint}>Учасники будуть перенаправлятись на цей URL при натисканні «Подати заявку»</p>
+              {errors.externalApplyUrl
+                ? <p className={`${hint} text-red-500`}>{errors.externalApplyUrl}</p>
+                : <p className={hint}>Учасники будуть перенаправлятись на цей URL при натисканні «Подати заявку»</p>}
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -1101,6 +1143,13 @@ function NewProjectContent() {
         </div>
       )}
 
+      {/* Cover-upload warning — project was created, only the cover failed */}
+      {coverWarning && (
+        <div className="mt-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-sm text-amber-800 font-medium">
+          {coverWarning}
+        </div>
+      )}
+
       {/* Navigation */}
       <div className="flex items-center justify-between gap-3 mt-6 pb-8">
         <button
@@ -1119,16 +1168,26 @@ function NewProjectContent() {
               <button
                 onClick={() => handleSubmit("draft")}
                 disabled={saving}
-                className="px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-muted-bg transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-muted-bg transition-all disabled:opacity-50"
               >
-                Зберегти як чернетку
+                {saving && savingStatus === "draft" && (
+                  <span className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin flex-shrink-0" />
+                )}
+                {saving && savingStatus === "draft"
+                  ? (savingCoverStage ? "Завантаження обкладинки..." : "Зберігається...")
+                  : "Зберегти як чернетку"}
               </button>
               <button
                 onClick={() => handleSubmit("published")}
                 disabled={saving}
-                className="px-5 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 disabled:opacity-50"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 disabled:opacity-50"
               >
-                Опублікувати
+                {saving && savingStatus === "published" && (
+                  <span className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin flex-shrink-0" />
+                )}
+                {saving && savingStatus === "published"
+                  ? (savingCoverStage ? "Завантаження обкладинки..." : "Публікується...")
+                  : "Опублікувати"}
               </button>
             </>
           ) : (
