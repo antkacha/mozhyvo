@@ -220,46 +220,51 @@ function AnalyticsContent() {
             <p className="text-sm text-muted">Немає проєктів з заявками</p>
           </div>
         ) : (
-          <table className="w-full">
-            <thead className="bg-muted-bg">
-              <tr>
-                {["Проєкт", "Переглядів", "Заявок", "На розгляді", "Відібрано", "Конверсія"].map((h) => (
-                  <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold text-muted uppercase tracking-wider first:font-semibold">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {projectStats.map((p, i) => (
-                <tr key={p.id} className={`border-t border-border ${i % 2 === 1 ? "bg-muted-bg/30" : ""} hover:bg-primary-light/40 transition-colors`}>
-                  <td className="px-5 py-3.5">
-                    <a href={`/dashboard/projects/${p.id}`} className="text-sm font-semibold text-foreground hover:text-primary transition-colors line-clamp-1">
-                      {p.title}
-                    </a>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className="text-sm text-muted">{p.views}</span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className="text-sm font-bold text-foreground">{p.total}</span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className="text-xs font-semibold bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full">{p.reviewing}</span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className="text-xs font-semibold bg-green-50 text-green-700 px-2.5 py-1 rounded-full">{p.selected}</span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-2">
-                      <div className="h-1.5 w-20 bg-muted-bg rounded-full overflow-hidden">
-                        <div className="h-full bg-green-400 rounded-full" style={{ width: `${p.convRate}%` }} />
-                      </div>
-                      <span className="text-xs font-bold text-foreground">{p.convRate}%</span>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted-bg">
+                <tr>
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold text-muted uppercase tracking-wider">Проєкт</th>
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold text-muted uppercase tracking-wider hidden md:table-cell">Переглядів</th>
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold text-muted uppercase tracking-wider">Заявок</th>
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold text-muted uppercase tracking-wider hidden md:table-cell">На розгляді</th>
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold text-muted uppercase tracking-wider hidden md:table-cell">Відібрано</th>
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold text-muted uppercase tracking-wider">Конверсія</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {projectStats.map((p, i) => (
+                  <tr key={p.id} className={`border-t border-border ${i % 2 === 1 ? "bg-muted-bg/30" : ""} hover:bg-primary-light/40 transition-colors`}>
+                    <td className="px-5 py-3.5">
+                      <a href={`/dashboard/projects/${p.id}`} className="text-sm font-semibold text-foreground hover:text-primary transition-colors line-clamp-1">
+                        {p.title}
+                      </a>
+                    </td>
+                    <td className="px-5 py-3.5 hidden md:table-cell">
+                      <span className="text-sm text-muted">{p.views}</span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className="text-sm font-bold text-foreground">{p.total}</span>
+                    </td>
+                    <td className="px-5 py-3.5 hidden md:table-cell">
+                      <span className="text-xs font-semibold bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full">{p.reviewing}</span>
+                    </td>
+                    <td className="px-5 py-3.5 hidden md:table-cell">
+                      <span className="text-xs font-semibold bg-green-50 text-green-700 px-2.5 py-1 rounded-full">{p.selected}</span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 w-20 bg-muted-bg rounded-full overflow-hidden">
+                          <div className="h-full bg-green-400 rounded-full" style={{ width: `${p.convRate}%` }} />
+                        </div>
+                        <span className="text-xs font-bold text-foreground">{p.convRate}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

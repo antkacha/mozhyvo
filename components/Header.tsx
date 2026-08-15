@@ -201,6 +201,10 @@ export default function Header({ initialContext = "personal" }: { initialContext
             <div className="flex flex-col gap-2 pt-3 mt-1 border-t border-border">
               {!authLoading && user ? (
                 <>
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-sm font-medium text-foreground">Сповіщення</span>
+                    <NotificationsBell />
+                  </div>
                   {hasOrgAccess ? (
                     <>
                       <button

@@ -634,10 +634,18 @@ export default function ApplyForm({ opp, formQuestions: initialFormQuestions = [
                   {q.type === "radio" && (
                     <div className="flex flex-col gap-2 mt-1">
                       {(q.options ?? []).map((o) => (
-                        <label key={o} className="flex items-center gap-3 cursor-pointer group">
+                        <label key={o} className="flex items-center gap-3 cursor-pointer group min-h-[44px]">
+                          <input
+                            type="radio"
+                            name={q.id}
+                            value={o}
+                            checked={val === o}
+                            onChange={() => setAnswer(q.id, o)}
+                            className="sr-only"
+                          />
                           <div
-                            onClick={() => setAnswer(q.id, o)}
-                            className={`w-4 h-4 rounded-full border-2 flex-shrink-0 transition-all cursor-pointer ${
+                            aria-hidden
+                            className={`w-4 h-4 rounded-full border-2 flex-shrink-0 transition-all ${
                               val === o ? "border-primary bg-primary" : "border-border group-hover:border-primary/50"
                             }`}
                           >
