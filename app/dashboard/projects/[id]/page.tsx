@@ -224,7 +224,19 @@ function EditProjectContent() {
     try {
       const blob = await resizeToCover(file);
       const photoUrl = await uploadCoverPhoto(project.id, blob);
-      await update(project.id, { photoUrl });
+      // Inline PATCH instead of the update() hook helper — that helper
+      // swallows a failed save (no throw, no return value), which would
+      // let setForm below show the new photo locally even though it never
+      // actually persisted. Same fix as the create-page flow (91cc5a9).
+      const res = await fetch(`/api/org/projects/${project.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photo_url: photoUrl }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => null) as { error?: string } | null;
+        throw new Error(json?.error ?? "Не вдалося зберегти обкладинку");
+      }
       setForm((p) => p ? { ...p, photoUrl } : p);
     } catch (e) {
       setCoverError(e instanceof Error ? e.message : "Помилка завантаження");
@@ -243,8 +255,15 @@ function EditProjectContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
       });
-      const json = await res.json() as { photoUrl?: string; error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Не вдалось завантажити зображення");
+      // Check res.ok BEFORE parsing — a killed/timed-out function can return
+      // a non-JSON body (platform error page), and res.json() would throw a
+      // raw SyntaxError instead of a legible message if parsed unconditionally.
+      const json = await res.json().catch(() => null) as { photoUrl?: string; error?: string } | null;
+      if (!res.ok || !json?.photoUrl) {
+        throw new Error(
+          json?.error ?? "Не вдалося завантажити обкладинку. Спробуйте завантажити файл замість посилання."
+        );
+      }
       await update(project.id, { photoUrl: json.photoUrl });
       setForm((p) => p ? { ...p, photoUrl: json.photoUrl } : p);
     } catch (e) {

@@ -8,8 +8,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { COVER_ALLOWED_TYPES, COVER_MAX_BYTES, COVER_WIDTH, COVER_HEIGHT, COVER_BUCKET } from "@/lib/cover-photo";
 
 export const runtime = "nodejs";
+// Vercel Hobby's hard function limit is 10s — this route must always
+// finish (success or a clean caught error) inside that ceiling, so a
+// killed function never reaches the client instead of our own JSON error.
+// TOTAL_FETCH_BUDGET_MS below bounds the external-fetch phase to leave
+// the remaining ~2s for sharp + Storage upload + the DB write.
+export const maxDuration = 9;
 
-const FETCH_TIMEOUT_MS = 8000;
+// Whole-redirect-chain budget (headers + body read), NOT per hop — a
+// previous version re-armed this timer on every redirect, so a URL with
+// even 2 slow hops could take up to MAX_REDIRECTS × 8s, blowing well past
+// the platform's own limit before our try/catch ever got a chance to
+// return a clean error.
+const TOTAL_FETCH_BUDGET_MS = 7000;
 const MAX_REDIRECTS = 4;
 
 async function getCallerOrgId(userId: string): Promise<string | null> {
@@ -50,21 +61,28 @@ async function assertPublicHost(hostname: string): Promise<void> {
 /** Downloads a remote image with SSRF guards, a byte cap, and manual redirect re-validation. */
 async function fetchRemoteImage(startUrl: string): Promise<Buffer> {
   let currentUrl = startUrl;
+  const deadline = Date.now() + TOTAL_FETCH_BUDGET_MS;
+  const TIMEOUT_MESSAGE = "Не вдалося завантажити зображення (таймаут або мережева помилка)";
 
   for (let hop = 0; hop < MAX_REDIRECTS; hop++) {
+    if (Date.now() >= deadline) throw new Error(TIMEOUT_MESSAGE);
+
     const parsed = new URL(currentUrl);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
       throw new Error("Дозволені лише http/https посилання");
     }
     await assertPublicHost(parsed.hostname);
 
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) throw new Error(TIMEOUT_MESSAGE);
+
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    const timeout = setTimeout(() => controller.abort(), remainingMs);
     let res: Response;
     try {
       res = await fetch(parsed.toString(), { signal: controller.signal, redirect: "manual" });
     } catch {
-      throw new Error("Не вдалося завантажити зображення (таймаут або мережева помилка)");
+      throw new Error(TIMEOUT_MESSAGE);
     } finally {
       clearTimeout(timeout);
     }
@@ -93,6 +111,10 @@ async function fetchRemoteImage(startUrl: string): Promise<Buffer> {
     const chunks: Uint8Array[] = [];
     let total = 0;
     for (;;) {
+      if (Date.now() >= deadline) {
+        await reader.cancel();
+        throw new Error(TIMEOUT_MESSAGE);
+      }
       const { done, value } = await reader.read();
       if (done) break;
       total += value.byteLength;
