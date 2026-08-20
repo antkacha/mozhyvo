@@ -234,7 +234,7 @@ export default function Home() {
                 <span className="text-4xl">🎓</span>
                 <span className="text-white/40 group-hover:text-white text-xl transition-colors duration-200">→</span>
               </div>
-              <p className="text-3xl font-black leading-tight mb-2">Стипендії</p>
+              <p className="text-xl md:text-3xl font-black leading-tight mb-2 break-words">Стипендії</p>
               <p className="text-white/65 text-sm leading-relaxed">Навчання за кордоном та в Україні</p>
             </Link>
 
@@ -244,7 +244,7 @@ export default function Home() {
                 <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
               </div>
               <div>
-                <p className="text-xl font-black text-gray-900 leading-tight mb-1">Стажування</p>
+                <p className="text-lg md:text-xl font-black text-gray-900 leading-tight mb-1 break-words">Стажування</p>
                 <p className="text-xs text-gray-500 leading-snug">Досвід у топових компаніях</p>
               </div>
             </Link>
@@ -255,7 +255,7 @@ export default function Home() {
                 <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
               </div>
               <div>
-                <p className="text-xl font-black text-gray-900 leading-tight mb-1">Обміни</p>
+                <p className="text-lg md:text-xl font-black text-gray-900 leading-tight mb-1 break-words">Обміни</p>
                 <p className="text-xs text-gray-500 leading-snug">Програми обміну в Європі та світі</p>
               </div>
             </Link>
@@ -266,7 +266,7 @@ export default function Home() {
                 <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
               </div>
               <div>
-                <p className="text-xl font-black text-gray-900 leading-tight mb-1">Волонтерство</p>
+                <p className="text-lg md:text-xl font-black text-gray-900 leading-tight mb-1 break-words">Волонтерство</p>
                 <p className="text-xs text-gray-500 leading-snug">Допомагай і розвивайся</p>
               </div>
             </Link>
@@ -277,7 +277,7 @@ export default function Home() {
                 <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
               </div>
               <div>
-                <p className="text-xl font-black text-gray-900 leading-tight mb-1">Конкурси</p>
+                <p className="text-lg md:text-xl font-black text-gray-900 leading-tight mb-1 break-words">Конкурси</p>
                 <p className="text-xs text-gray-500 leading-snug">Змагання та нагороди</p>
               </div>
             </Link>
@@ -287,7 +287,7 @@ export default function Home() {
                 <span className="text-4xl">🚀</span>
                 <span className="text-white/40 group-hover:text-white text-xl transition-colors duration-200">→</span>
               </div>
-              <p className="text-3xl font-black leading-tight mb-2">Гранти</p>
+              <p className="text-xl md:text-3xl font-black leading-tight mb-2 break-words">Гранти</p>
               <p className="text-white/65 text-sm leading-relaxed">Фінансування ідей та проєктів</p>
             </Link>
           </div>
