@@ -990,6 +990,18 @@ function NewProjectContent() {
           </div>
 
           <div>
+            <label className={label}>Що отримають учасники</label>
+            <p className={hint + " mb-1.5"}>Кожна перевага — з нового рядка. Конкретні бенефіти: що покривається, які сертифікати, який досвід.</p>
+            <textarea
+              value={form.benefits}
+              onChange={(e) => set("benefits", e.target.value)}
+              rows={4}
+              placeholder={"Повне фінансування (переліт, проживання, харчування)\nСертифікат учасника\nМіжнародний нетворкінг"}
+              className={`${input} resize-none font-mono text-xs`}
+            />
+          </div>
+
+          <div>
             <div className="flex items-center gap-2 mb-1">
               <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
@@ -1039,18 +1051,6 @@ function NewProjectContent() {
                 </div>
               </div>
             )}
-          </div>
-
-          <div>
-            <label className={label}>Що отримають учасники</label>
-            <p className={hint + " mb-1.5"}>Кожна перевага — з нового рядка. Конкретні бенефіти: що покривається, які сертифікати, який досвід.</p>
-            <textarea
-              value={form.benefits}
-              onChange={(e) => set("benefits", e.target.value)}
-              rows={4}
-              placeholder={"Повне фінансування (переліт, проживання, харчування)\nСертифікат учасника\nМіжнародний нетворкінг"}
-              className={`${input} resize-none font-mono text-xs`}
-            />
           </div>
 
           <div className="pt-2 border-t border-border">
