@@ -3,14 +3,15 @@
 import { useState, useEffect } from "react";
 import type { Opportunity } from "@/lib/data";
 
-export function usePublicOrgProjects() {
+export function usePublicOrgProjects(options?: { includeExpired?: boolean }) {
+  const includeExpired = options?.includeExpired ?? false;
   const [projects, setProjects] = useState<Opportunity[]>([]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/public/opportunities");
+        const res = await fetch(includeExpired ? "/api/public/opportunities?includeExpired=1" : "/api/public/opportunities");
         if (!res.ok) { setReady(true); return; }
         const { projects: data } = await res.json() as { projects: Record<string, unknown>[] };
         if (!data) { setReady(true); return; }
@@ -62,7 +63,7 @@ export function usePublicOrgProjects() {
       }
     }
     load();
-  }, []);
+  }, [includeExpired]);
 
   return { projects, ready };
 }

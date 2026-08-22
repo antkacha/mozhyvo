@@ -11,7 +11,11 @@ import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 
 export default function CabinetSavedPage() {
   const { saved, toggle, ready } = useSaved();
-  const { projects: orgProjects } = usePublicOrgProjects();
+  // includeExpired: without this, an expired-but-saved project never
+  // arrives here at all, so it silently falls out of both the "active"
+  // and "expired" splits below even though the header badge (saved.length)
+  // still counts it — the exact desync this page's split UI exists to show.
+  const { projects: orgProjects } = usePublicOrgProjects({ includeExpired: true });
 
   const allOpportunities = useMemo(
     () => [...opportunities, ...orgProjects],

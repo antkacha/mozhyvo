@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -47,7 +47,13 @@ const fetchProjectsFromDB = unstable_cache(
   { tags: ["projects"], revalidate: 60 },
 );
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // includeExpired=1 is used by the saved-items pages only: someone's own
+  // saved list must still show a project after its deadline passes (muted,
+  // not hidden) — the default catalog/homepage/search callers never pass
+  // this, so their behavior is unchanged.
+  const includeExpired = new URL(req.url).searchParams.get("includeExpired") === "1";
+
   // today is evaluated fresh on every request — deadline filter stays accurate
   // even when rows are served from cache.
   const today = new Date().toISOString().split("T")[0];
@@ -67,8 +73,10 @@ export async function GET() {
     .filter((row) => {
       const org = orgsMap.get(row.org_id as string);
       if (org?.status === "rejected" || org?.status === "blocked") return false;
-      const deadline = (row.deadline as string) ?? "";
-      if (deadline && /^\d{4}-\d{2}-\d{2}$/.test(deadline) && deadline < today) return false;
+      if (!includeExpired) {
+        const deadline = (row.deadline as string) ?? "";
+        if (deadline && /^\d{4}-\d{2}-\d{2}$/.test(deadline) && deadline < today) return false;
+      }
       return true;
     })
     .map((row) => ({ ...row, orgs: orgsMap.get(row.org_id as string) ?? null }));
