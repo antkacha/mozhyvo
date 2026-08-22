@@ -49,6 +49,22 @@ export default function OpportunityClient({ opp, related }: Props) {
                   </div>
                 </div>
               </section>
+              {/* Requirements */}
+              <section>
+                <h2 className="text-xl font-bold text-foreground mb-5">Вимоги до учасників</h2>
+                <ul className="flex flex-col gap-3">
+                  {opp.requirements.map((req, i) => (
+                    <li key={i} className="flex items-start gap-4">
+                      <span className="mt-0.5 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 text-xs font-black shadow-sm shadow-primary/25">{i + 1}</span>
+                      <span className="text-gray-600 leading-relaxed pt-0.5">{req}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+
+            {/* Що включає / Мова програми */}
+            <div className="flex flex-col gap-8 pt-12 border-t border-border">
               {/* Benefits */}
               {opp.benefits.length > 0 && (
                 <section>
@@ -63,21 +79,6 @@ export default function OpportunityClient({ opp, related }: Props) {
                   </div>
                 </section>
               )}
-            </div>
-
-            {/* Вимоги до кандидатів */}
-            <div className="flex flex-col gap-8 pt-12 border-t border-border">
-              <section>
-                <h2 className="text-xl font-bold text-foreground mb-5">Вимоги до учасників</h2>
-                <ul className="flex flex-col gap-3">
-                  {opp.requirements.map((req, i) => (
-                    <li key={i} className="flex items-start gap-4">
-                      <span className="mt-0.5 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 text-xs font-black shadow-sm shadow-primary/25">{i + 1}</span>
-                      <span className="text-gray-600 leading-relaxed pt-0.5">{req}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
               {/* Languages */}
               {opp.languages.length > 0 && (
                 <section>

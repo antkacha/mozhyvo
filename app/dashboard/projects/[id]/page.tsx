@@ -347,6 +347,7 @@ function EditProjectContent() {
       autoClose: form.autoClose,
       formQuestions,
       externalApplyUrl: form.externalApplyUrl ?? "",
+      infoPackUrl: form.infoPackUrl?.trim() ?? "",
       importantNote: form.importantNote?.trim() ?? "",
       hasFee: !!form.hasFee,
       feeAmount: form.hasFee ? (form.feeAmount ?? "").trim() : "",
@@ -652,6 +653,25 @@ function EditProjectContent() {
               </div>
             </div>
           )}
+        </section>
+
+        {/* Інфопак */}
+        <section className={section}>
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-primary/60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Інфопак / деталі програми (необов&apos;язково)</h2>
+          </div>
+          <p className="text-xs text-muted -mt-1">
+            Посилання на PDF, Google Doc або сторінку з повною інформацією про програму. Відображатиметься як кнопка «Переглянути інфопак» на сторінці проекту.
+          </p>
+          <input
+            value={form.infoPackUrl ?? ""}
+            onChange={(e) => set("infoPackUrl", e.target.value)}
+            placeholder="https://drive.google.com/... або https://..."
+            className={input}
+          />
         </section>
 
         {/* Форма заявки */}
