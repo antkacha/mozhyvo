@@ -123,8 +123,8 @@ function parseMultiParam<T extends string>(raw: string | null, valid: readonly T
 // /org/register Layout fix earlier — everything it used from the parent
 // scope is now an explicit prop instead of a closure.
 function FilterPanel({
-  allOpportunities, filtered, types, formats, fundings, countries, languages,
-  allCountries, allLanguages, toggleType, toggleFormat, toggleFunding, toggleCountry, toggleLanguage,
+  allOpportunities, filtered, types, formats, fundings, countries, languages, ageU18,
+  allCountries, allLanguages, toggleType, toggleFormat, toggleFunding, toggleCountry, toggleLanguage, toggleAgeU18,
 }: {
   allOpportunities: Opportunity[];
   filtered: Opportunity[];
@@ -133,6 +133,7 @@ function FilterPanel({
   fundings: FundingType[];
   countries: string[];
   languages: string[];
+  ageU18: boolean;
   allCountries: string[];
   allLanguages: string[];
   toggleType: (t: OpportunityType) => void;
@@ -140,6 +141,7 @@ function FilterPanel({
   toggleFunding: (f: FundingType) => void;
   toggleCountry: (c: string) => void;
   toggleLanguage: (l: string) => void;
+  toggleAgeU18: () => void;
 }) {
   return (
     <div>
@@ -191,6 +193,13 @@ function FilterPanel({
           ))}
         </div>
       </Section>
+      <Section title="Вік">
+        <CheckRow
+          label="Доступні для <18"
+          checked={ageU18}
+          onChange={toggleAgeU18}
+        />
+      </Section>
     </div>
   );
 }
@@ -224,6 +233,7 @@ export default function OpportunitiesCatalog() {
   const fundings = useMemo(() => parseMultiParam(params.get("funding"), ALL_FUNDINGS), [params]);
   const countries = useMemo(() => (params.get("country") ?? "").split(",").filter(Boolean), [params]);
   const languages = useMemo(() => (params.get("language") ?? "").split(",").filter(Boolean), [params]);
+  const ageU18 = params.get("age") === "u18";
 
   const rawSort = params.get("sort");
   const sort: SortValue = SORT_OPTIONS.some((o) => o.value === rawSort) ? (rawSort as SortValue) : "newest";
@@ -330,6 +340,9 @@ export default function OpportunitiesCatalog() {
     const next = languages.includes(value) ? languages.filter((l) => l !== value) : [...languages, value];
     updateParams({ language: next.length > 0 ? next.join(",") : null, page: null });
   }
+  function toggleAgeU18() {
+    updateParams({ age: ageU18 ? null : "u18", page: null });
+  }
 
   function clearAll() {
     router.replace("/opportunities", { scroll: false });
@@ -366,6 +379,12 @@ export default function OpportunitiesCatalog() {
       if (languages.length > 0 && !languages.some((l) =>
         o.languages.some((ol) => ol.toLowerCase().startsWith(l.toLowerCase()))
       )) return false;
+      // Strict match: age_min must be explicitly set and below 18. An
+      // opportunity with no age_min is NOT assumed open to minors — child
+      // safety requirement, not a preference. Loose null check (!= null)
+      // so an explicit age_min of 0 still matches; a truthy check would
+      // wrongly exclude it.
+      if (ageU18 && !(o.ageMin != null && o.ageMin < 18)) return false;
       if (qParam.trim()) {
         const q = qParam.toLowerCase();
         return (
@@ -393,7 +412,7 @@ export default function OpportunitiesCatalog() {
       result = [...result].sort((a) => (a.featured ? -1 : 1));
     }
     return result;
-  }, [allOpportunities, types, formats, fundings, countries, languages, qParam, sort, today]);
+  }, [allOpportunities, types, formats, fundings, countries, languages, ageU18, qParam, sort, today]);
 
   const urgent = useMemo(() =>
     allOpportunities.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d !== null && d >= 0 && d <= 7; }).slice(0, 8),
@@ -427,14 +446,15 @@ export default function OpportunitiesCatalog() {
     ...fundings.map((f)  => ({ label: fundingLabels[f], remove: () => toggleFunding(f) })),
     ...countries.map((c) => ({ label: c,                remove: () => toggleCountry(c) })),
     ...languages.map((l) => ({ label: `Мова: ${l}`,     remove: () => toggleLanguage(l) })),
+    ...(ageU18 ? [{ label: "Доступні для <18", remove: toggleAgeU18 }] : []),
   ];
   const activeCount = activeChips.length;
 
   // Shared between the desktop sidebar and mobile drawer FilterPanel
   // instances so the two call sites can't drift out of sync.
   const filterPanelProps = {
-    allOpportunities, filtered, types, formats, fundings, countries, languages,
-    allCountries, allLanguages, toggleType, toggleFormat, toggleFunding, toggleCountry, toggleLanguage,
+    allOpportunities, filtered, types, formats, fundings, countries, languages, ageU18,
+    allCountries, allLanguages, toggleType, toggleFormat, toggleFunding, toggleCountry, toggleLanguage, toggleAgeU18,
   };
 
 
