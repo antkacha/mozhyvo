@@ -39,22 +39,12 @@ export const metadata: Metadata = {
     siteName: "МОЖUВО",
     title: TITLE,
     description: DESCRIPTION,
-    images: [
-      {
-        url: `${BASE_URL}/opengraph-image`,
-        width: 1200,
-        height: 630,
-        alt: "МОЖUВО — Всі можливості в одному місці",
-        type: "image/png",
-      },
-    ],
   },
 
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: [`${BASE_URL}/opengraph-image`],
     creator: "@mozhyvo",
     site: "@mozhyvo",
   },
