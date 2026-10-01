@@ -5,7 +5,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { orgsBySlug } from "@/lib/organizations";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
-import type { OpportunityType } from "@/lib/data";
+import { normalizeType, typeNames } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,6 +14,7 @@ type Project = {
   id: string;
   title: string;
   type: string;
+  type_name: string | null;
   country: string;
   flag: string;
   deadline: string | null;
@@ -21,17 +22,6 @@ type Project = {
   funding: string | null;
   short_description: string | null;
   photo_url: string | null;
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  exchange:    "Обмін",
-  grant:       "Грант",
-  internship:  "Стажування",
-  volunteer:   "Волонтерство",
-  conference:  "Конференція",
-  competition: "Конкурс",
-  hackathon:   "Хакатон",
-  training:    "Тренінг",
 };
 
 const FUNDING_LABELS: Record<string, string> = {
@@ -69,7 +59,7 @@ export default async function OrgArchivePage({
 
   const { data: allProjects } = await admin
     .from("org_projects")
-    .select("id, title, type, country, flag, deadline, deadline_display, funding, short_description, photo_url")
+    .select("id, title, type, type_name, country, flag, deadline, deadline_display, funding, short_description, photo_url")
     .eq("org_id", org.id)
     .eq("status", "published")
     .order("deadline", { ascending: false });
@@ -78,11 +68,12 @@ export default async function OrgArchivePage({
     (p) => p.deadline && /^\d{4}-\d{2}-\d{2}$/.test(p.deadline) && p.deadline < today,
   );
 
+  const typeOf = (p: Project) => normalizeType(p.type, p.type_name);
   const filtered = typeFilter
-    ? archived.filter((p) => p.type === typeFilter)
+    ? archived.filter((p) => typeOf(p) === typeFilter)
     : archived;
 
-  const types = Array.from(new Set(archived.map((p) => p.type))).filter(Boolean);
+  const types = Array.from(new Set(archived.map(typeOf)));
 
   const orgName = org.name as string;
   const brandColor = (org.brand_color as string) ?? "#3B4FE8";
@@ -162,7 +153,7 @@ export default async function OrgArchivePage({
                     : "bg-muted-bg text-muted hover:bg-foreground/10"
                 }`}
               >
-                {TYPE_LABELS[t] ?? t}
+                {typeNames[t]}
               </Link>
             ))}
           </div>
@@ -212,14 +203,14 @@ export default async function OrgArchivePage({
                     <OpportunityCoverImage
                       photo={p.photo_url ?? undefined}
                       title={p.title}
-                      type={(p.type as OpportunityType) ?? "grant"}
+                      type={typeOf(p)}
                       sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 320px"
                     />
                   </div>
                   <div className="p-5">
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-muted-bg text-muted">
-                      {TYPE_LABELS[p.type] ?? p.type}
+                      {p.type_name || typeNames[typeOf(p)]}
                     </span>
                     {deadlineFormatted && (
                       <span className="text-[11px] text-muted/60 flex items-center gap-1 flex-shrink-0">

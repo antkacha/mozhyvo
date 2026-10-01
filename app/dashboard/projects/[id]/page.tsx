@@ -8,18 +8,7 @@ import FormBuilder from "@/components/FormBuilder";
 import CoverPhotoUpload from "@/components/CoverPhotoUpload";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/draft-storage";
 import { resizeToCover, validateCoverFile, uploadCoverPhoto, deleteCoverPhoto } from "@/lib/cover-photo";
-import type { OpportunityType } from "@/lib/data";
-
-const TYPE_OPTIONS = [
-  { value: "exchange", label: "Обмін" },
-  { value: "grant", label: "Грант" },
-  { value: "internship", label: "Стажування" },
-  { value: "volunteer", label: "Волонтерство" },
-  { value: "conference", label: "Конференція / Школа" },
-  { value: "competition", label: "Конкурс" },
-  { value: "hackathon", label: "Хакатон" },
-  { value: "training", label: "Тренінг" },
-];
+import { OPPORTUNITY_TYPES, normalizeType, typeNames, type OpportunityType } from "@/lib/data";
 
 const COUNTRIES: { emoji: string; name: string }[] = [
   { emoji: "🌍", name: "Онлайн / міжнародний" },
@@ -168,12 +157,20 @@ function EditProjectContent() {
   const [hasDraft, setHasDraft] = useState(() => !!loadDraft(editDraftKey));
   const draftTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialized = useRef(false);
+  // The project's own free-text label when it's an "Інше" project, so
+  // switching the type away and back doesn't wipe it.
+  const otherLabel = useRef("");
 
   useEffect(() => {
     if (project && !form) {
       initialized.current = false; // mark as initialization so save effect skips first render
+      // Legacy rows ("custom", "volunteer", grant+"Стипендія") open on their
+      // canonical option; saving then writes the canonical value.
+      const type = normalizeType(project.type, project.typeName);
+      if (type === "other") otherLabel.current = project.typeName;
       setForm({
         ...project,
+        type,
         requirementsText: project.requirements.join("\n"),
         benefitsText: project.benefits.join("\n"),
         languagesText: project.languages.join(", "),
@@ -204,7 +201,7 @@ function EditProjectContent() {
     const d = loadDraft<EditDraft>(editDraftKey);
     if (!d) return;
     initialized.current = true; // prevent next render from skipping save
-    setForm(d.form);
+    setForm({ ...d.form, type: normalizeType(d.form.type, d.form.typeName) });
     setFormQuestions(d.formQuestions);
     setApplyMode(d.applyMode);
     setHasDraft(false);
@@ -301,7 +298,7 @@ function EditProjectContent() {
       if (!p) return p;
       const n = { ...p, [field]: value };
       if (field === "type") {
-        n.typeName = TYPE_OPTIONS.find((o) => o.value === value)?.label ?? String(value);
+        n.typeName = value === "other" ? otherLabel.current : (typeNames[value as OpportunityType] ?? String(value));
       }
       return n;
     });
@@ -449,7 +446,7 @@ function EditProjectContent() {
           <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Обкладинка</h2>
           <CoverPhotoUpload
             previewUrl={form.photoUrl}
-            type={(form.type as OpportunityType) ?? "grant"}
+            type={normalizeType(form.type, form.typeName)}
             uploading={coverUploading}
             error={coverError}
             onFile={handleCoverFile}
@@ -469,8 +466,16 @@ function EditProjectContent() {
             <div>
               <label className={label}>Тип</label>
               <select value={form.type} onChange={(e) => set("type", e.target.value)} className={input}>
-                {TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                {OPPORTUNITY_TYPES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
+              {form.type === "other" && (
+                <input
+                  value={form.typeName}
+                  onChange={(e) => { otherLabel.current = e.target.value; set("typeName", e.target.value); }}
+                  placeholder="Наприклад: Менторська програма, Літня школа..."
+                  className={`${input} mt-2`}
+                />
+              )}
             </div>
             <div>
               <label className={label}>Формат</label>

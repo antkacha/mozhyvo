@@ -24,6 +24,8 @@ const TYPE_INTEREST_MAP: Record<string, string[]> = {
   grant:         ["грант", "проект", "підприємництво"],
   conference:    ["конференція", "школа", "навчання"],
   hackathon:     ["хакатон", "програмування", "технології", "it"],
+  training:      ["тренінг", "школа", "навчання"],
+  research:      ["дослідження", "наука", "навчання"],
 };
 
 // deadline is either a real ISO date or "" for rolling/ASAP/no-deadline

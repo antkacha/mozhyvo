@@ -2,13 +2,13 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { Opportunity, typeColors, typeEmoji, formatLabels } from "@/lib/data";
+import { Opportunity, OpportunityType, typeColors, typeEmoji, formatLabels } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
 import { useSaved } from "@/hooks/useSaved";
 import { getDaysUntilDeadline } from "@/lib/recommendations";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 
-const typeAvatarBg: Record<string, string> = {
+const typeAvatarBg: Record<OpportunityType, string> = {
   scholarship: "bg-primary-light",
   internship: "bg-blue-50",
   exchange: "bg-green-50",
@@ -17,6 +17,9 @@ const typeAvatarBg: Record<string, string> = {
   grant: "bg-yellow-50",
   conference: "bg-pink-50",
   hackathon: "bg-red-50",
+  training: "bg-indigo-50",
+  research: "bg-cyan-50",
+  other: "bg-slate-50",
 };
 
 function isExpiringSoon(deadline: string): boolean {

@@ -229,7 +229,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link href="/opportunities?category=scholarships" className="col-span-1 md:col-span-2 group bg-primary rounded-3xl p-7 text-white hover:bg-primary-dark transition-all duration-200">
+            <Link href="/opportunities?category=scholarship" className="col-span-1 md:col-span-2 group bg-primary rounded-3xl p-7 text-white hover:bg-primary-dark transition-all duration-200">
               <div className="flex items-start justify-between mb-6">
                 <span className="text-4xl">🎓</span>
                 <span className="text-white/40 group-hover:text-white text-xl transition-colors duration-200">→</span>
@@ -238,7 +238,7 @@ export default function Home() {
               <p className="text-white/65 text-sm leading-relaxed">Навчання за кордоном та в Україні</p>
             </Link>
 
-            <Link href="/opportunities?category=internships" className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between">
+            <Link href="/opportunities?category=internship" className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between">
               <div className="flex items-start justify-between mb-4">
                 <span className="text-3xl">💼</span>
                 <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
@@ -249,7 +249,7 @@ export default function Home() {
               </div>
             </Link>
 
-            <Link href="/opportunities?category=exchanges" className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between">
+            <Link href="/opportunities?category=exchange" className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between">
               <div className="flex items-start justify-between mb-4">
                 <span className="text-3xl">🌍</span>
                 <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
@@ -271,7 +271,7 @@ export default function Home() {
               </div>
             </Link>
 
-            <Link href="/opportunities?category=competitions" className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between">
+            <Link href="/opportunities?category=competition" className="col-span-1 group bg-white rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-gray-100 flex flex-col justify-between">
               <div className="flex items-start justify-between mb-4">
                 <span className="text-3xl">🏆</span>
                 <span className="text-gray-300 group-hover:text-primary text-lg transition-colors duration-200">→</span>
@@ -282,7 +282,7 @@ export default function Home() {
               </div>
             </Link>
 
-            <Link href="/opportunities?category=grants" className="col-span-1 md:col-span-2 group bg-primary rounded-3xl p-7 text-white hover:bg-primary-dark transition-all duration-200">
+            <Link href="/opportunities?category=grant" className="col-span-1 md:col-span-2 group bg-primary rounded-3xl p-7 text-white hover:bg-primary-dark transition-all duration-200">
               <div className="flex items-start justify-between mb-6">
                 <span className="text-4xl">🚀</span>
                 <span className="text-white/40 group-hover:text-white text-xl transition-colors duration-200">→</span>

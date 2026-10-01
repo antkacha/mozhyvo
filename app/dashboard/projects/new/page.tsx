@@ -8,21 +8,9 @@ import FormBuilder from "@/components/FormBuilder";
 import CoverPhotoUpload from "@/components/CoverPhotoUpload";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/draft-storage";
 import { resizeToCover, validateCoverFile, uploadCoverPhoto } from "@/lib/cover-photo";
-import type { OpportunityType } from "@/lib/data";
+import { OPPORTUNITY_TYPES, normalizeType, typeNames, type OpportunityType } from "@/lib/data";
 
 type PendingCover = { kind: "file"; blob: Blob } | { kind: "url"; url: string };
-
-const TYPE_OPTIONS = [
-  { value: "exchange", label: "Обмін", desc: "Молодіжний чи академічний обмін" },
-  { value: "grant", label: "Грант", desc: "Фінансова підтримка проектів" },
-  { value: "internship", label: "Стажування", desc: "Практика в організації" },
-  { value: "volunteer", label: "Волонтерство", desc: "Волонтерські програми" },
-  { value: "conference", label: "Конференція / Школа", desc: "Навчальні та наукові заходи" },
-  { value: "competition", label: "Конкурс", desc: "Змагання та відбори" },
-  { value: "hackathon", label: "Хакатон", desc: "Інтенсивні проектні заходи" },
-  { value: "training", label: "Тренінг", desc: "Навчання та воркшопи" },
-  { value: "custom", label: "Інший", desc: "Вкажіть свій тип" },
-];
 
 const COUNTRIES: { emoji: string; name: string }[] = [
   { emoji: "🌍", name: "Онлайн / міжнародний" },
@@ -211,7 +199,7 @@ const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormD
     emoji: "🎓",
     label: "Стипендія",
     fill: {
-      type: "grant", typeName: "Стипендія",
+      type: "scholarship", typeName: "Стипендія",
       title: "Стипендіальна програма",
       shortDescription: "Щорічна стипендія для студентів та молодих дослідників.",
       format: "offline", funding: "fully-funded",
@@ -226,7 +214,7 @@ const TEMPLATES: { id: string; emoji: string; label: string; fill: Partial<FormD
     emoji: "🤝",
     label: "Волонтерство",
     fill: {
-      type: "volunteer", typeName: "Волонтерство",
+      type: "volunteering", typeName: "Волонтерство",
       title: "Волонтерська програма",
       shortDescription: "Міжнародна волонтерська програма для молодих людей.",
       format: "offline", funding: "fully-funded",
@@ -347,7 +335,8 @@ function NewProjectContent() {
   function restoreDraft() {
     const d = loadDraft<NewProjectDraft>(NEW_DRAFT_KEY);
     if (!d) return;
-    setForm(d.form);
+    // Drafts saved before the canonical type list may hold "custom"/"volunteer".
+    setForm({ ...d.form, type: normalizeType(d.form.type, d.form.typeName) });
     setStep(d.step);
     setFormQuestions(d.formQuestions);
     setApplyMode(d.applyMode);
@@ -398,7 +387,7 @@ function NewProjectContent() {
     setForm((p) => {
       const n = { ...p, [field]: value };
       if (field === "type") {
-        n.typeName = value === "custom" ? "" : (TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value);
+        n.typeName = value === "other" ? "" : (typeNames[value as OpportunityType] ?? value);
       }
       return n;
     });
@@ -686,7 +675,7 @@ function NewProjectContent() {
             )}
             <CoverPhotoUpload
               previewUrl={coverPreviewUrl}
-              type={form.type as OpportunityType}
+              type={normalizeType(form.type, form.typeName)}
               uploading={coverUploading}
               error={coverError}
               onFile={handleCoverFile}
@@ -709,7 +698,7 @@ function NewProjectContent() {
           <div>
             <label className={label}>Тип можливості</label>
             <div className="grid grid-cols-2 gap-2">
-              {TYPE_OPTIONS.map((o) => (
+              {OPPORTUNITY_TYPES.map((o) => (
                 <button
                   key={o.value}
                   onClick={() => set("type", o.value)}
@@ -724,7 +713,7 @@ function NewProjectContent() {
                 </button>
               ))}
             </div>
-            {form.type === "custom" && (
+            {form.type === "other" && (
               <input
                 value={form.typeName}
                 onChange={(e) => set("typeName", e.target.value)}

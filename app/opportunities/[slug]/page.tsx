@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import type { Metadata } from "next";
-import { opportunities, typeColors, type Opportunity } from "@/lib/data";
+import { opportunities, typeColors, normalizeType, type Opportunity } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
 import OpportunityClient from "@/components/OpportunityClient";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
@@ -44,7 +44,7 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
     const org = data.orgs as { id: string; name: string; status?: string; slug?: string };
     return {
       slug:             data.id as string,
-      type:             (data.type as Opportunity["type"]) ?? "exchange",
+      type:             normalizeType(data.type as string, data.type_name as string),
       typeName:         (data.type_name as string) ?? "",
       org:              org.name ?? "",
       orgSlug:          org.slug || org.id,

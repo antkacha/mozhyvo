@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { opportunities } from "@/lib/data";
+import { opportunities, type OpportunityType } from "@/lib/data";
 
 export const alt = "МОЖUВО — можливість";
 export const size = { width: 1200, height: 630 };
@@ -9,7 +9,7 @@ export function generateStaticParams() {
   return opportunities.map((o) => ({ slug: o.slug }));
 }
 
-const TYPE_COLORS: Record<string, string> = {
+const TYPE_COLORS: Record<OpportunityType, string> = {
   scholarship:  "#3B4FE8",
   internship:   "#2563EB",
   exchange:     "#16A34A",
@@ -18,6 +18,9 @@ const TYPE_COLORS: Record<string, string> = {
   grant:        "#CA8A04",
   conference:   "#DB2777",
   hackathon:    "#DC2626",
+  training:     "#4F46E5",
+  research:     "#0891B2",
+  other:        "#3B4FE8",
 };
 
 const FUNDING_LABEL: Record<string, string> = {

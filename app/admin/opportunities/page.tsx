@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { typeColors } from "@/lib/data";
-import type { OpportunityType } from "@/lib/data";
+import { typeColors, normalizeType } from "@/lib/data";
 
 interface OrgProject {
   id: string;
@@ -107,7 +106,7 @@ export default function AdminOpportunitiesPage() {
                 className="bg-white rounded-2xl border border-border p-4 flex items-center gap-4 hover:shadow-sm transition-all">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${typeColors[item.type as OpportunityType] ?? "bg-muted-bg text-muted"}`}>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${typeColors[normalizeType(item.type, item.type_name)]}`}>
                       {item.type_name || item.type}
                     </span>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>

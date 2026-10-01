@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
-import type { OpportunityType } from "@/lib/data";
+import { normalizeType, typeNames } from "@/lib/data";
 
 export type ArchiveProject = {
   id: string;
   title: string;
   type: string;
+  type_name?: string | null;
   country: string;
   flag: string;
   deadline: string | null;
@@ -16,17 +17,6 @@ export type ArchiveProject = {
   funding: string | null;
   short_description: string | null;
   photo_url: string | null;
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  exchange:    "Обмін",
-  grant:       "Грант",
-  internship:  "Стажування",
-  volunteer:   "Волонтерство",
-  conference:  "Конференція",
-  competition: "Конкурс",
-  hackathon:   "Хакатон",
-  training:    "Тренінг",
 };
 
 const PREVIEW = 6;
@@ -42,9 +32,10 @@ export default function ArchiveSection({
 
   if (projects.length === 0) return null;
 
-  const types = Array.from(new Set(projects.map((p) => p.type))).filter(Boolean);
+  const typeOf = (p: ArchiveProject) => normalizeType(p.type, p.type_name);
+  const types = Array.from(new Set(projects.map(typeOf)));
   const filtered =
-    activeType === "all" ? projects : projects.filter((p) => p.type === activeType);
+    activeType === "all" ? projects : projects.filter((p) => typeOf(p) === activeType);
   const shown = filtered.slice(0, PREVIEW);
   const hasMore = projects.length > PREVIEW;
 
@@ -81,7 +72,7 @@ export default function ArchiveSection({
                   : "bg-muted-bg text-muted hover:bg-foreground/5"
               }`}
             >
-              {TYPE_LABELS[t] ?? t}
+              {typeNames[t]}
             </button>
           ))}
         </div>
@@ -103,14 +94,14 @@ export default function ArchiveSection({
                   <OpportunityCoverImage
                     photo={p.photo_url ?? undefined}
                     title={p.title}
-                    type={(p.type as OpportunityType) ?? "grant"}
+                    type={typeOf(p)}
                     sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 320px"
                   />
                 </div>
                 <div className="p-5">
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-muted-bg text-muted">
-                    {TYPE_LABELS[p.type] ?? p.type}
+                    {p.type_name || typeNames[typeOf(p)]}
                   </span>
                   <span className="text-[11px] text-muted/60 flex items-center gap-1 flex-shrink-0">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

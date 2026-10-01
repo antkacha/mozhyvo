@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { opportunities } from "@/lib/data";
+import { opportunities, normalizeType } from "@/lib/data";
 import ApplyForm from "@/components/ApplyForm";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -23,7 +23,7 @@ async function fetchOrgProject(id: string): Promise<{ opp: Opportunity; formQues
     const org = data.orgs as { id: string; name: string; status?: string; slug?: string };
     const opp: Opportunity = {
       slug:             data.id as string,
-      type:             (data.type as Opportunity["type"]) ?? "exchange",
+      type:             normalizeType(data.type as string, data.type_name as string),
       typeName:         (data.type_name as string) ?? "",
       org:              org.name ?? "",
       orgSlug:          org.slug || org.id,

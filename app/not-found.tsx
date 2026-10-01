@@ -11,9 +11,9 @@ const POPULAR = opportunities.filter((o) => o.featured).slice(0, 3);
 
 const QUICK_LINKS = [
   { href: "/opportunities",                       label: "Всі можливості", emoji: "🔍" },
-  { href: "/opportunities?category=scholarships", label: "Стипендії",      emoji: "🎓" },
-  { href: "/opportunities?category=internships",  label: "Стажування",     emoji: "💼" },
-  { href: "/opportunities?category=exchanges",    label: "Обміни",         emoji: "✈️" },
+  { href: "/opportunities?category=scholarship", label: "Стипендії",      emoji: "🎓" },
+  { href: "/opportunities?category=internship",  label: "Стажування",     emoji: "💼" },
+  { href: "/opportunities?category=exchange",    label: "Обміни",         emoji: "✈️" },
 ];
 
 export default function NotFound() {

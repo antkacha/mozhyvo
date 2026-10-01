@@ -6,7 +6,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { orgsBySlug, orgNameToSlug } from "@/lib/organizations";
 import ArchiveSection from "./ArchiveSection";
-import { opportunities, type Opportunity } from "@/lib/data";
+import { opportunities, normalizeType, typeNames, type Opportunity } from "@/lib/data";
 import OpportunityCard from "@/components/OpportunityCard";
 
 export const dynamic = "force-dynamic";
@@ -163,27 +163,16 @@ type SupabaseProject = {
   status: string; short_description: string | null; photo_url: string | null;
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  exchange:    "Обмін",
-  grant:       "Грант",
-  internship:  "Стажування",
-  volunteer:   "Волонтерство",
-  conference:  "Конференція",
-  competition: "Конкурс",
-  hackathon:   "Хакатон",
-  training:    "Тренінг",
-  custom:      "Інше",
-};
-
 // One mapping, shared by every card on this page (active list + archive),
 // so photo/badges/deadline always come from the same fields the catalog
 // itself uses — the org's own name/slug are already known here, no need
 // to look them up per-card.
 function toCardOpportunity(p: SupabaseProject, org: { name: string; slug: string | null }): Opportunity {
+  const type = normalizeType(p.type, p.type_name);
   return {
     slug: p.id,
-    type: (p.type as Opportunity["type"]) ?? "exchange",
-    typeName: p.type_name || TYPE_LABELS[p.type] || p.type,
+    type,
+    typeName: p.type_name || typeNames[type],
     org: org.name,
     orgSlug: org.slug ?? undefined,
     title: p.title,

@@ -52,12 +52,12 @@ export async function POST(req: NextRequest) {
   } else if (text === "/scholarships") {
     await sendMessage(
       chatId,
-      `🎓 <b>Стипендії</b>\n\nВсі стипендійні програми:\n👉 <a href="https://www.mozhyvo.com.ua/opportunities?category=scholarships">mozhyvo.com.ua/opportunities?category=scholarships</a>\n\n<b>Популярні:</b>\n• Erasmus+ (ЄС) — до €1000/міс\n• DAAD (Германія) — стипендія на навчання\n• Fulbright (США) — магістратура та PhD`,
+      `🎓 <b>Стипендії</b>\n\nВсі стипендійні програми:\n👉 <a href="https://www.mozhyvo.com.ua/opportunities?category=scholarship">mozhyvo.com.ua/opportunities?category=scholarship</a>\n\n<b>Популярні:</b>\n• Erasmus+ (ЄС) — до €1000/міс\n• DAAD (Германія) — стипендія на навчання\n• Fulbright (США) — магістратура та PhD`,
     );
   } else if (text === "/internships") {
     await sendMessage(
       chatId,
-      `💼 <b>Стажування</b>\n\nВсі стажування:\n👉 <a href="https://www.mozhyvo.com.ua/opportunities?category=internships">mozhyvo.com.ua/opportunities?category=internships</a>`,
+      `💼 <b>Стажування</b>\n\nВсі стажування:\n👉 <a href="https://www.mozhyvo.com.ua/opportunities?category=internship">mozhyvo.com.ua/opportunities?category=internship</a>`,
     );
   } else if (text === "/deadlines") {
     await sendMessage(

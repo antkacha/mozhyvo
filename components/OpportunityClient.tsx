@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { Opportunity } from "@/lib/data";
+import type { Opportunity, OpportunityType } from "@/lib/data";
 import { fundingLabels, formatLabels } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
 import OpportunityCard from "@/components/OpportunityCard";
@@ -14,11 +14,13 @@ interface Props {
 export default function OpportunityClient({ opp, related }: Props) {
   const orgSlug = opp.orgSlug ?? orgNameToSlug[opp.org];
 
-  const borderColor: Record<string, string> = {
+  const borderColor: Record<OpportunityType, string> = {
     scholarship: "border-l-primary", internship: "border-l-blue-500",
     exchange: "border-l-green-500", volunteering: "border-l-teal-500",
     competition: "border-l-orange-500", grant: "border-l-yellow-400",
     conference: "border-l-pink-500", hackathon: "border-l-red-500",
+    training: "border-l-indigo-500", research: "border-l-cyan-500",
+    other: "border-l-slate-400",
   };
 
   return (

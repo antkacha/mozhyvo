@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Opportunity } from "@/lib/data";
+import { normalizeType, type Opportunity } from "@/lib/data";
 
 export function usePublicOrgProjects(options?: { includeExpired?: boolean }) {
   const includeExpired = options?.includeExpired ?? false;
@@ -16,19 +16,11 @@ export function usePublicOrgProjects(options?: { includeExpired?: boolean }) {
         const { projects: data } = await res.json() as { projects: Record<string, unknown>[] };
         if (!data) { setReady(true); return; }
 
-        // Normalize type values saved by the org form to lib/data.ts OpportunityType
-        const TYPE_NORM: Record<string, Opportunity["type"]> = {
-          volunteer:  "volunteering",
-          training:   "conference",
-          custom:     "grant",
-        };
-
         const mapped: Opportunity[] = data.map((row) => {
           const org = row.orgs as { id: string; name: string; slug?: string };
-          const rawType = (row.type as string) ?? "exchange";
           return {
             slug:             row.id as string,
-            type:             TYPE_NORM[rawType] ?? (rawType as Opportunity["type"]),
+            type:             normalizeType(row.type as string, row.type_name as string),
             typeName:         (row.type_name as string) ?? "",
             org:              org?.name ?? "",
             orgSlug:          org?.slug || org?.id,

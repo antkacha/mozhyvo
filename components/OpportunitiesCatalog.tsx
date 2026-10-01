@@ -7,7 +7,8 @@ import {
   typeNames,
   fundingLabels,
   formatLabels,
-  categorySlugToType,
+  ALL_OPPORTUNITY_TYPES,
+  typeFromCategoryParam,
   type Opportunity,
   type OpportunityType,
   type FundingType,
@@ -26,7 +27,7 @@ const SORT_OPTIONS = [
 ] as const;
 type SortValue = typeof SORT_OPTIONS[number]["value"];
 
-const ALL_TYPES    = Object.keys(typeNames) as OpportunityType[];
+const ALL_TYPES    = ALL_OPPORTUNITY_TYPES;
 const ALL_FORMATS  = ["online", "offline", "hybrid"] as FormatType[];
 const ALL_FUNDINGS = ["fully-funded", "partially-funded", "self-funded"] as FundingType[];
 
@@ -225,8 +226,8 @@ export default function OpportunitiesCatalog() {
   const typesParam = params.get("types");
   const types = useMemo<OpportunityType[]>(() => {
     if (typesParam) return parseMultiParam(typesParam, ALL_TYPES);
-    if (categoryParam && categorySlugToType[categoryParam]) return [categorySlugToType[categoryParam]];
-    return [];
+    const fromCategory = typeFromCategoryParam(categoryParam);
+    return fromCategory ? [fromCategory] : [];
   }, [typesParam, categoryParam]);
 
   const formats = useMemo(() => parseMultiParam(params.get("format"), ALL_FORMATS), [params]);
@@ -318,10 +319,7 @@ export default function OpportunitiesCatalog() {
   function toggleType(value: OpportunityType) {
     const next = types.includes(value) ? types.filter((t) => t !== value) : [...types, value];
     if (next.length === 0) { updateParams({ category: null, types: null, page: null }); return; }
-    if (next.length === 1) {
-      const slug = Object.entries(categorySlugToType).find(([, v]) => v === next[0])?.[0];
-      if (slug) { updateParams({ category: slug, types: null, page: null }); return; }
-    }
+    if (next.length === 1) { updateParams({ category: next[0], types: null, page: null }); return; }
     updateParams({ category: null, types: next.join(","), page: null });
   }
   function toggleFormat(value: FormatType) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeType, typeNames } from "@/lib/data";
 
 export async function GET() {
   const supabase = createClient();
@@ -57,8 +58,8 @@ export async function GET() {
   for (const row of orgAppsRes.data ?? []) {
     const proj = (row as unknown as { org_projects: { type: string; type_name: string } }).org_projects;
     if (!proj) continue;
-    const key = proj.type || "other";
-    if (!typeMap[key]) typeMap[key] = { type: key, typeName: proj.type_name || key, count: 0 };
+    const key = normalizeType(proj.type, proj.type_name);
+    if (!typeMap[key]) typeMap[key] = { type: key, typeName: typeNames[key], count: 0 };
     typeMap[key].count++;
   }
   const appsByType = Object.values(typeMap).sort((a, b) => b.count - a.count);
