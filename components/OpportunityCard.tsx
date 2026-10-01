@@ -39,7 +39,7 @@ function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; index?: number 
         photo={opp.photo}
         title={opp.title}
         type={opp.type}
-        sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+        sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 320px"
         priority={index === 0}
       />
 

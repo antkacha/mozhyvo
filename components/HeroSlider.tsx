@@ -41,7 +41,7 @@ export default function HeroSlider() {
             alt={slide.caption}
             fill
             className="object-cover"
-            sizes="(max-width: 768px) 0px, 50vw"
+            sizes="(max-width: 768px) 0px, 360px"
             priority={i === 0}
           />
         </div>

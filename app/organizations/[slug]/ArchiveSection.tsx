@@ -104,7 +104,7 @@ export default function ArchiveSection({
                     photo={p.photo_url ?? undefined}
                     title={p.title}
                     type={(p.type as OpportunityType) ?? "grant"}
-                    sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+                    sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 320px"
                   />
                 </div>
                 <div className="p-5">

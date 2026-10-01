@@ -168,7 +168,7 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
                 title={opp.title}
                 type={opp.type}
                 className="h-full"
-                sizes="(max-width: 1023px) 100vw, 60vw"
+                sizes="(max-width: 1023px) 100vw, (max-width: 1279px) 60vw, 720px"
                 priority
               />
             </div>

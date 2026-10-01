@@ -30,7 +30,7 @@ function OpportunityGridCard({
         title={opp.title}
         type={opp.type}
         className="!aspect-auto h-24"
-        sizes="(max-width: 767px) 100vw, 50vw"
+        sizes="(max-width: 639px) 100vw, (max-width: 1279px) 50vw, 600px"
       />
       <div className="flex flex-col p-6 gap-3 flex-1">
         <div className="flex items-center justify-between gap-2">
