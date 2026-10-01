@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // Bypass Vercel's optimizer site-wide: on the free tier its transformation
+    // quota ran out and every new variant 402'd, leaving gradient placeholders
+    // instead of photos. Every <Image> now renders <img src> straight at the
+    // source (Supabase Storage / public/), so no quota is consumed. Uploads
+    // are already resized + compressed (covers ≤1920x1080 JPEG), so the cost
+    // is somewhat larger transfer, not quality. Everything below only applies
+    // if this is turned back off.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
