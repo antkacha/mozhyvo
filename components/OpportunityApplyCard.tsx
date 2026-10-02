@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { Opportunity } from "@/lib/data";
 import { useSaved } from "@/hooks/useSaved";
 import { getDaysUntilDeadline } from "@/lib/recommendations";
-import { getApplyMethod, buildMailto } from "@/lib/apply-method";
+import { getApplyMethod } from "@/lib/apply-method";
 
 function DeadlineCountdown({ deadline }: { deadline: string }) {
   const days = getDaysUntilDeadline(deadline);
@@ -74,8 +74,9 @@ function CopyRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-// Shown under the mailto button: many people use webmail, where mailto:
-// opens nothing useful, so the address/subject must be copyable by hand.
+// The email apply method's only call to action: no mailto: button, since
+// it depends on each visitor's mail-client setup (webmail users get
+// nothing useful) — the address/subject are copied by hand instead.
 function EmailApplyDetails({ email, subject, instructions }: { email: string; subject?: string; instructions?: string }) {
   return (
     <div className="rounded-xl bg-muted-bg/60 border border-border px-4 py-3 flex flex-col gap-3">
@@ -171,15 +172,10 @@ export default function OpportunityApplyCard({ opp }: { opp: Opportunity }) {
           </div>
         ) : method === "email" ? (
           opp.applyEmail ? (
-            <>
-              <a
-                href={buildMailto(opp.applyEmail, opp.applyEmailSubject)}
-                className="block w-full text-center py-3 px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 text-sm"
-              >
-                Надіслати заявку на email →
-              </a>
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-semibold text-muted uppercase tracking-wider">Як подати заявку</p>
               <EmailApplyDetails email={opp.applyEmail} subject={opp.applyEmailSubject} instructions={opp.applyInstructions} />
-            </>
+            </div>
           ) : (
             // email method saved without an address — never render a broken mailto
             <div className="w-full text-center py-3 px-4 bg-muted-bg text-muted font-medium rounded-xl text-sm border border-border">
