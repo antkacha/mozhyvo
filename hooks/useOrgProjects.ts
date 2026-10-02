@@ -49,6 +49,10 @@ export interface OrgProject {
   autoClose?: boolean;
   formQuestions?: FormQuestion[];
   externalApplyUrl?: string;
+  applyMethod?: string;
+  applyEmail?: string;
+  applyEmailSubject?: string;
+  applyInstructions?: string;
   infoPackUrl?: string;
   photoUrl?: string;
   importantNote?: string;
@@ -93,6 +97,10 @@ function fromRow(row: Record<string, unknown>): OrgProject {
     autoClose:        (row.auto_close as boolean) ?? false,
     formQuestions:    (row.form_questions as FormQuestion[]) ?? [],
     externalApplyUrl: (row.external_apply_url as string) || undefined,
+    applyMethod:       (row.apply_method as string) || undefined,
+    applyEmail:        (row.apply_email as string) || undefined,
+    applyEmailSubject: (row.apply_email_subject as string) || undefined,
+    applyInstructions: (row.apply_instructions as string) || undefined,
     infoPackUrl:      (row.info_pack_url as string) || undefined,
     photoUrl:         (row.photo_url as string) || undefined,
     importantNote:    (row.important_note as string) || undefined,
@@ -133,6 +141,10 @@ function toRow(data: Partial<OrgProject>): Record<string, unknown> {
   if (data.autoClose        !== undefined) row.auto_close        = data.autoClose;
   if (data.formQuestions    !== undefined) row.form_questions    = data.formQuestions;
   if (data.externalApplyUrl !== undefined) row.external_apply_url = data.externalApplyUrl;
+  if (data.applyMethod       !== undefined) row.apply_method        = data.applyMethod;
+  if (data.applyEmail        !== undefined) row.apply_email         = data.applyEmail;
+  if (data.applyEmailSubject !== undefined) row.apply_email_subject = data.applyEmailSubject;
+  if (data.applyInstructions !== undefined) row.apply_instructions  = data.applyInstructions;
   if (data.infoPackUrl      !== undefined) row.info_pack_url    = data.infoPackUrl;
   if (data.photoUrl          !== undefined) row.photo_url        = data.photoUrl;
   if (data.importantNote     !== undefined) row.important_note   = data.importantNote;

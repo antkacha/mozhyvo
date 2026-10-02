@@ -8,7 +8,7 @@ import FormBuilder from "@/components/FormBuilder";
 import CoverPhotoUpload from "@/components/CoverPhotoUpload";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/draft-storage";
 import { resizeToCover, validateCoverFile, uploadCoverPhoto, deleteCoverPhoto } from "@/lib/cover-photo";
-import { validateExternalApplyUrl } from "@/lib/apply-method";
+import { validateExternalApplyUrl, validateApplyEmail, getApplyMethod, applyFieldsFor, APPLY_INSTRUCTIONS_MAX, type ApplyMethod } from "@/lib/apply-method";
 import { OPPORTUNITY_TYPES, normalizeType, typeNames, type OpportunityType } from "@/lib/data";
 
 const COUNTRIES: { emoji: string; name: string }[] = [
@@ -146,11 +146,11 @@ function EditProjectContent() {
 
   const [form, setForm] = useState<FormState | null>(null);
   const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
-  const [applyMode, setApplyMode] = useState<"form" | "external">("form");
+  const [applyMode, setApplyMode] = useState<ApplyMethod>("form");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [applyUrlError, setApplyUrlError] = useState<string | null>(null);
+  const [applyError, setApplyError] = useState<string | null>(null);
 
   const [coverUploading, setCoverUploading] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
@@ -179,7 +179,8 @@ function EditProjectContent() {
         tagsText: project.tags.join(", "),
       });
       setFormQuestions(project.formQuestions ?? []);
-      setApplyMode(project.externalApplyUrl ? "external" : "form");
+      // Stored apply_method, or the legacy guess for rows not yet backfilled.
+      setApplyMode(getApplyMethod(project));
     }
   }, [project, form]);
 
@@ -199,7 +200,7 @@ function EditProjectContent() {
   }, [form, formQuestions, applyMode]);
 
   function restoreDraft() {
-    type EditDraft = { form: FormState; formQuestions: FormQuestion[]; applyMode: "form" | "external" };
+    type EditDraft = { form: FormState; formQuestions: FormQuestion[]; applyMode: ApplyMethod };
     const d = loadDraft<EditDraft>(editDraftKey);
     if (!d) return;
     initialized.current = true; // prevent next render from skipping save
@@ -309,13 +310,16 @@ function EditProjectContent() {
 
   async function handleSave(statusOverride?: OrgProject["status"]) {
     if (!form || !project) return;
-    if (applyMode === "external") {
-      const urlError = validateExternalApplyUrl(form.externalApplyUrl);
-      setApplyUrlError(urlError);
-      if (urlError) {
-        setSaveError("Перевір посилання на форму заявки в розділі «Форма заявки»");
-        return;
-      }
+    const applyFieldError =
+      applyMode === "external" ? validateExternalApplyUrl(form.externalApplyUrl)
+      : applyMode === "email" ? validateApplyEmail(form.applyEmail)
+      : null;
+    setApplyError(applyFieldError);
+    if (applyFieldError) {
+      setSaveError(applyMode === "email"
+        ? "Перевір email для заявок в розділі «Форма заявки»"
+        : "Перевір посилання на форму заявки в розділі «Форма заявки»");
+      return;
     }
     setSaving(true);
     setSaveError(null);
@@ -353,7 +357,7 @@ function EditProjectContent() {
       status: statusOverride ?? form.status,
       autoClose: form.autoClose,
       formQuestions,
-      externalApplyUrl: applyMode === "external" ? (form.externalApplyUrl ?? "").trim() : "",
+      ...applyFieldsFor(applyMode, form),
       infoPackUrl: form.infoPackUrl?.trim() ?? "",
       importantNote: form.importantNote?.trim() ?? "",
       hasFee: !!form.hasFee,
@@ -695,9 +699,9 @@ function EditProjectContent() {
             <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">Форма заявки</h2>
             <p className="text-xs text-muted mt-1">Спосіб, яким учасники подаватимуть заявки</p>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button
-              onClick={() => { setApplyMode("form"); setApplyUrlError(null); }}
+              onClick={() => { setApplyMode("form"); setApplyError(null); }}
               className={`p-3.5 rounded-2xl border-2 text-left transition-all ${
                 applyMode === "form"
                   ? "border-primary bg-primary-light"
@@ -708,7 +712,7 @@ function EditProjectContent() {
               <p className="text-xs text-muted mt-0.5">Кастомні питання</p>
             </button>
             <button
-              onClick={() => setApplyMode("external")}
+              onClick={() => { setApplyMode("external"); setApplyError(null); }}
               className={`p-3.5 rounded-2xl border-2 text-left transition-all ${
                 applyMode === "external"
                   ? "border-primary bg-primary-light"
@@ -718,19 +722,68 @@ function EditProjectContent() {
               <p className="text-sm font-semibold text-foreground">Зовнішній сервіс</p>
               <p className="text-xs text-muted mt-0.5">Google Forms та інші</p>
             </button>
+            <button
+              onClick={() => { setApplyMode("email"); setApplyError(null); }}
+              className={`p-3.5 rounded-2xl border-2 text-left transition-all ${
+                applyMode === "email"
+                  ? "border-primary bg-primary-light"
+                  : "border-border hover:border-primary/40"
+              }`}
+            >
+              <p className="text-sm font-semibold text-foreground">Електронна пошта</p>
+              <p className="text-xs text-muted mt-0.5">Заявки на email</p>
+            </button>
           </div>
 
-          {applyMode === "external" ? (
+          {applyMode === "email" ? (
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className={label}>Email для заявок *</label>
+                <input
+                  type="email"
+                  value={form.applyEmail ?? ""}
+                  onChange={(e) => { set("applyEmail", e.target.value); setApplyError(null); }}
+                  placeholder="applications@organization.org"
+                  className={`${input} ${applyError ? "border-red-300 focus:ring-red-200 focus:border-red-400" : ""}`}
+                />
+                {applyError
+                  ? <p className="text-xs text-red-500 mt-1">{applyError}</p>
+                  : <p className="text-xs text-muted mt-1">Учасники надсилатимуть заявки на цю адресу</p>}
+              </div>
+              <div>
+                <label className={label}>Тема листа</label>
+                <input
+                  value={form.applyEmailSubject ?? ""}
+                  onChange={(e) => set("applyEmailSubject", e.target.value)}
+                  placeholder="Напр.: GREEN LANGUAGES Vol. 5"
+                  className={input}
+                />
+                <p className="text-xs text-muted mt-1">Якщо організація вимагає певну тему листа</p>
+              </div>
+              <div>
+                <label className={label}>Інструкції</label>
+                <textarea
+                  value={form.applyInstructions ?? ""}
+                  onChange={(e) => set("applyInstructions", e.target.value)}
+                  placeholder="Напр.: надішліть CV та мотиваційний лист (PDF, англійською)"
+                  maxLength={APPLY_INSTRUCTIONS_MAX}
+                  rows={3}
+                  className={`${input} resize-none`}
+                />
+                <p className="text-xs text-muted mt-1">{(form.applyInstructions ?? "").length}/{APPLY_INSTRUCTIONS_MAX}</p>
+              </div>
+            </div>
+          ) : applyMode === "external" ? (
             <div>
               <label className={label}>Посилання на форму</label>
               <input
                 value={form.externalApplyUrl ?? ""}
-                onChange={(e) => { set("externalApplyUrl", e.target.value); setApplyUrlError(null); }}
+                onChange={(e) => { set("externalApplyUrl", e.target.value); setApplyError(null); }}
                 placeholder="https://forms.google.com/..."
-                className={`${input} ${applyUrlError ? "border-red-300 focus:ring-red-200 focus:border-red-400" : ""}`}
+                className={`${input} ${applyError ? "border-red-300 focus:ring-red-200 focus:border-red-400" : ""}`}
               />
-              {applyUrlError
-                ? <p className="text-xs text-red-500 mt-1">{applyUrlError}</p>
+              {applyError
+                ? <p className="text-xs text-red-500 mt-1">{applyError}</p>
                 : <p className="text-xs text-muted mt-1">Учасники перенаправлятимуться на цей URL</p>}
             </div>
           ) : (

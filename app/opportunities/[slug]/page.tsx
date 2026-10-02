@@ -3,6 +3,7 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import type { Metadata } from "next";
 import { opportunities, typeColors, normalizeType, type Opportunity } from "@/lib/data";
+import { applyFieldsFromRow } from "@/lib/apply-method";
 import { orgNameToSlug } from "@/lib/organizations";
 import OpportunityClient from "@/components/OpportunityClient";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
@@ -65,7 +66,7 @@ async function fetchOrgProject(id: string): Promise<Opportunity | null> {
       requirements:     (data.requirements as string[]) ?? [],
       benefits:         (data.benefits as string[]) ?? [],
       tags:             (data.tags as string[]) ?? [],
-      applyUrl:         (data.external_apply_url as string) || `/opportunities/${data.id}/apply`,
+      ...applyFieldsFromRow(data),
       duration:         (data.duration as string) ?? "",
       infoPackUrl:      (data.info_pack_url as string) || undefined,
       photo:            (data.photo_url as string) || undefined,

@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Opportunity } from "@/lib/data";
 import { useSaved } from "@/hooks/useSaved";
 import { getDaysUntilDeadline } from "@/lib/recommendations";
+import { getApplyMethod, buildMailto } from "@/lib/apply-method";
 
 function DeadlineCountdown({ deadline }: { deadline: string }) {
   const days = getDaysUntilDeadline(deadline);
@@ -23,6 +24,66 @@ function DeadlineCountdown({ deadline }: { deadline: string }) {
         {days === 1 ? "день залишився" : days < 5 ? "дні залишилось" : "днів залишилось"}
       </p>
       {urgent && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">⏰ Дедлайн спливає!</p>}
+    </div>
+  );
+}
+
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // Clipboard API unavailable (older browser / insecure context)
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+}
+
+function CopyRow({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+  async function handleCopy() {
+    if (await copyText(value)) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-[11px] text-muted">{label}</p>
+        <p className="text-sm font-semibold text-foreground break-all select-all">{value}</p>
+      </div>
+      <button
+        onClick={handleCopy}
+        className="flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-lg border border-border text-muted hover:border-primary hover:text-primary transition-all"
+      >
+        {copied ? "Скопійовано" : "Копіювати"}
+      </button>
+    </div>
+  );
+}
+
+// Shown under the mailto button: many people use webmail, where mailto:
+// opens nothing useful, so the address/subject must be copyable by hand.
+function EmailApplyDetails({ email, subject, instructions }: { email: string; subject?: string; instructions?: string }) {
+  return (
+    <div className="rounded-xl bg-muted-bg/60 border border-border px-4 py-3 flex flex-col gap-3">
+      <CopyRow label="Email:" value={email} />
+      {subject && <CopyRow label="Тема листа:" value={subject} />}
+      {instructions && (
+        <p className="text-xs text-foreground/80 leading-relaxed whitespace-pre-line border-t border-border pt-3">{instructions}</p>
+      )}
     </div>
   );
 }
@@ -60,7 +121,8 @@ function ShareButton({ title, url }: { title: string; url: string }) {
 
 export default function OpportunityApplyCard({ opp }: { opp: Opportunity }) {
   const { isSaved, toggle, ready: savedReady } = useSaved();
-  const isExternal = opp.applyUrl.startsWith("http");
+  const method = opp.applyMethod ?? getApplyMethod({ externalApplyUrl: opp.applyUrl });
+  const isExternal = method === "external" && opp.applyUrl.startsWith("http");
   const saved = isSaved(opp.slug);
   const days = getDaysUntilDeadline(opp.deadline);
   // No parseable deadline (rolling/ASAP/empty) means it never "expires"
@@ -107,6 +169,23 @@ export default function OpportunityApplyCard({ opp }: { opp: Opportunity }) {
           <div className="flex items-center justify-center gap-2 w-full py-3 px-6 bg-muted-bg text-muted font-semibold rounded-xl text-sm border border-border">
             Прийом завершено
           </div>
+        ) : method === "email" ? (
+          opp.applyEmail ? (
+            <>
+              <a
+                href={buildMailto(opp.applyEmail, opp.applyEmailSubject)}
+                className="block w-full text-center py-3 px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 text-sm"
+              >
+                Надіслати заявку на email →
+              </a>
+              <EmailApplyDetails email={opp.applyEmail} subject={opp.applyEmailSubject} instructions={opp.applyInstructions} />
+            </>
+          ) : (
+            // email method saved without an address — never render a broken mailto
+            <div className="w-full text-center py-3 px-4 bg-muted-bg text-muted font-medium rounded-xl text-sm border border-border">
+              Деталі подачі — в описі програми
+            </div>
+          )
         ) : isExternal ? (
           <a
             href={opp.applyUrl}

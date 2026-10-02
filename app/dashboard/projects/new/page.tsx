@@ -8,7 +8,7 @@ import FormBuilder from "@/components/FormBuilder";
 import CoverPhotoUpload from "@/components/CoverPhotoUpload";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/draft-storage";
 import { resizeToCover, validateCoverFile, uploadCoverPhoto } from "@/lib/cover-photo";
-import { validateExternalApplyUrl } from "@/lib/apply-method";
+import { validateExternalApplyUrl, validateApplyEmail, applyFieldsFor, APPLY_INSTRUCTIONS_MAX, type ApplyMethod } from "@/lib/apply-method";
 import { OPPORTUNITY_TYPES, normalizeType, typeNames, type OpportunityType } from "@/lib/data";
 
 type PendingCover = { kind: "file"; blob: Blob } | { kind: "url"; url: string };
@@ -159,6 +159,9 @@ type FormData = {
   requirements: string;
   benefits: string;
   externalApplyUrl: string;
+  applyEmail: string;
+  applyEmailSubject: string;
+  applyInstructions: string;
   infoPackUrl: string;
   importantNote: string;
   feeAmount: string;
@@ -173,7 +176,8 @@ const INITIAL: FormData = {
   deadline: "", startDate: "", endDate: "", durationText: "",
   ageMin: "", ageMax: "", languages: [], tags: "",
   requirements: "", benefits: "",
-  externalApplyUrl: "", infoPackUrl: "", importantNote: "",
+  externalApplyUrl: "", applyEmail: "", applyEmailSubject: "", applyInstructions: "",
+  infoPackUrl: "", importantNote: "",
   feeAmount: "", feeWho: "selected",
 };
 
@@ -275,7 +279,7 @@ type NewProjectDraft = {
   form: FormData;
   step: number;
   formQuestions: FormQuestion[];
-  applyMode: "form" | "external";
+  applyMode: ApplyMethod;
   durationMode: "dates" | "text";
   deadlineMode: "date" | "rolling" | "asap";
   templateChosen: boolean;
@@ -293,7 +297,7 @@ function NewProjectContent() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(INITIAL);
   const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
-  const [applyMode, setApplyMode] = useState<"form" | "external">("form");
+  const [applyMode, setApplyMode] = useState<ApplyMethod>("form");
   const [durationMode, setDurationMode] = useState<"dates" | "text">("dates");
   const [deadlineMode, setDeadlineMode] = useState<"date" | "rolling" | "asap">("date");
   const [templateChosen, setTemplateChosen] = useState(false);
@@ -337,7 +341,9 @@ function NewProjectContent() {
     const d = loadDraft<NewProjectDraft>(NEW_DRAFT_KEY);
     if (!d) return;
     // Drafts saved before the canonical type list may hold "custom"/"volunteer".
-    setForm({ ...d.form, type: normalizeType(d.form.type, d.form.typeName) });
+    // Spread over INITIAL so drafts saved before newer fields (e.g. the
+    // email apply fields) still get every key.
+    setForm({ ...INITIAL, ...d.form, type: normalizeType(d.form.type, d.form.typeName) });
     setStep(d.step);
     setFormQuestions(d.formQuestions);
     setApplyMode(d.applyMode);
@@ -418,6 +424,10 @@ function NewProjectContent() {
       const urlError = validateExternalApplyUrl(form.externalApplyUrl);
       if (urlError) e.externalApplyUrl = urlError;
     }
+    if (s === 4 && applyMode === "email") {
+      const emailError = validateApplyEmail(form.applyEmail);
+      if (emailError) e.applyEmail = emailError;
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -478,7 +488,7 @@ function NewProjectContent() {
         ageMax: form.ageMax ? Number(form.ageMax) : undefined,
         status,
         formQuestions,
-        externalApplyUrl: applyMode === "external" ? form.externalApplyUrl.trim() : "",
+        ...applyFieldsFor(applyMode, form),
         infoPackUrl: form.infoPackUrl.trim() || undefined,
         importantNote: form.importantNote.trim() || undefined,
         hasFee,
@@ -1067,7 +1077,7 @@ function NewProjectContent() {
           <div>
             <p className="text-sm font-semibold text-foreground mb-1">Як учасники подаватимуть заявки?</p>
             <p className="text-xs text-muted mb-4">Оберіть спосіб подачі заявок на цей проект</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
                 onClick={() => setApplyMode("form")}
                 className={`p-4 rounded-2xl border-2 text-left transition-all ${
@@ -1090,10 +1100,59 @@ function NewProjectContent() {
                 <p className="text-sm font-semibold text-foreground">Зовнішній сервіс</p>
                 <p className="text-xs text-muted mt-0.5">Google Forms, Typeform та інші</p>
               </button>
+              <button
+                onClick={() => setApplyMode("email")}
+                className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                  applyMode === "email"
+                    ? "border-primary bg-primary-light"
+                    : "border-border hover:border-primary/40"
+                }`}
+              >
+                <p className="text-sm font-semibold text-foreground">Електронна пошта</p>
+                <p className="text-xs text-muted mt-0.5">Заявки на email</p>
+              </button>
             </div>
           </div>
 
-          {applyMode === "external" ? (
+          {applyMode === "email" ? (
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className={label}>Email для заявок *</label>
+                <input
+                  type="email"
+                  value={form.applyEmail}
+                  onChange={(e) => set("applyEmail", e.target.value)}
+                  placeholder="applications@organization.org"
+                  className={`${input} ${errors.applyEmail ? err : ""}`}
+                />
+                {errors.applyEmail
+                  ? <p className={`${hint} text-red-500`}>{errors.applyEmail}</p>
+                  : <p className={hint}>Учасники надсилатимуть заявки на цю адресу</p>}
+              </div>
+              <div>
+                <label className={label}>Тема листа</label>
+                <input
+                  value={form.applyEmailSubject}
+                  onChange={(e) => set("applyEmailSubject", e.target.value)}
+                  placeholder="Напр.: GREEN LANGUAGES Vol. 5"
+                  className={input}
+                />
+                <p className={hint}>Якщо організація вимагає певну тему листа</p>
+              </div>
+              <div>
+                <label className={label}>Інструкції</label>
+                <textarea
+                  value={form.applyInstructions}
+                  onChange={(e) => set("applyInstructions", e.target.value)}
+                  placeholder="Напр.: надішліть CV та мотиваційний лист (PDF, англійською)"
+                  maxLength={APPLY_INSTRUCTIONS_MAX}
+                  rows={3}
+                  className={`${input} resize-none`}
+                />
+                <p className={hint}>{form.applyInstructions.length}/{APPLY_INSTRUCTIONS_MAX}</p>
+              </div>
+            </div>
+          ) : applyMode === "external" ? (
             <div>
               <label className={label}>Посилання на форму</label>
               <input

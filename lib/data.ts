@@ -1,3 +1,5 @@
+import type { ApplyMethod } from "@/lib/apply-method";
+
 // ── Opportunity types: the ONE canonical list ──────────────────────
 // Every form writes these values, and every reader (catalog, filter,
 // org page, detail, apply, admin) routes the stored value through
@@ -97,6 +99,10 @@ export interface Opportunity {
   benefits: string[];
   tags: string[];
   applyUrl: string;
+  applyMethod?: ApplyMethod;
+  applyEmail?: string;
+  applyEmailSubject?: string;
+  applyInstructions?: string;
   featured?: boolean;
   duration?: string;
   photo?: string;

@@ -19,6 +19,7 @@ const ALLOWED_PROJECT_FIELDS = new Set([
   "duration", "languages", "age_min", "age_max", "status", "auto_close",
   "form_questions", "external_apply_url", "info_pack_url", "photo_url", "important_note",
   "has_fee", "fee_amount", "fee_who",
+  "apply_method", "apply_email", "apply_email_subject", "apply_instructions",
 ]);
 
 export async function PATCH(
