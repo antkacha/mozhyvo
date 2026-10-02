@@ -8,6 +8,7 @@ import FormBuilder from "@/components/FormBuilder";
 import CoverPhotoUpload from "@/components/CoverPhotoUpload";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/draft-storage";
 import { resizeToCover, validateCoverFile, uploadCoverPhoto } from "@/lib/cover-photo";
+import { validateExternalApplyUrl } from "@/lib/apply-method";
 import { OPPORTUNITY_TYPES, normalizeType, typeNames, type OpportunityType } from "@/lib/data";
 
 type PendingCover = { kind: "file"; blob: Blob } | { kind: "url"; url: string };
@@ -414,9 +415,8 @@ function NewProjectContent() {
       if (deadlineMode === "date" && !form.deadline) e.deadline = "Обов'язкове поле";
     }
     if (s === 4 && applyMode === "external") {
-      const url = form.externalApplyUrl.trim();
-      if (!url) e.externalApplyUrl = "Вкажи посилання на форму";
-      else if (!/^https?:\/\/.+/.test(url)) e.externalApplyUrl = "Вкажи повне посилання (https://...)";
+      const urlError = validateExternalApplyUrl(form.externalApplyUrl);
+      if (urlError) e.externalApplyUrl = urlError;
     }
     setErrors(e);
     return Object.keys(e).length === 0;

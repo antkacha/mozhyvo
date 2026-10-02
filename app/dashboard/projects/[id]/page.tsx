@@ -8,6 +8,7 @@ import FormBuilder from "@/components/FormBuilder";
 import CoverPhotoUpload from "@/components/CoverPhotoUpload";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/draft-storage";
 import { resizeToCover, validateCoverFile, uploadCoverPhoto, deleteCoverPhoto } from "@/lib/cover-photo";
+import { validateExternalApplyUrl } from "@/lib/apply-method";
 import { OPPORTUNITY_TYPES, normalizeType, typeNames, type OpportunityType } from "@/lib/data";
 
 const COUNTRIES: { emoji: string; name: string }[] = [
@@ -149,6 +150,7 @@ function EditProjectContent() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [applyUrlError, setApplyUrlError] = useState<string | null>(null);
 
   const [coverUploading, setCoverUploading] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
@@ -307,6 +309,14 @@ function EditProjectContent() {
 
   async function handleSave(statusOverride?: OrgProject["status"]) {
     if (!form || !project) return;
+    if (applyMode === "external") {
+      const urlError = validateExternalApplyUrl(form.externalApplyUrl);
+      setApplyUrlError(urlError);
+      if (urlError) {
+        setSaveError("Перевір посилання на форму заявки в розділі «Форма заявки»");
+        return;
+      }
+    }
     setSaving(true);
     setSaveError(null);
 
@@ -343,7 +353,7 @@ function EditProjectContent() {
       status: statusOverride ?? form.status,
       autoClose: form.autoClose,
       formQuestions,
-      externalApplyUrl: form.externalApplyUrl ?? "",
+      externalApplyUrl: applyMode === "external" ? (form.externalApplyUrl ?? "").trim() : "",
       infoPackUrl: form.infoPackUrl?.trim() ?? "",
       importantNote: form.importantNote?.trim() ?? "",
       hasFee: !!form.hasFee,
@@ -687,7 +697,7 @@ function EditProjectContent() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={() => setApplyMode("form")}
+              onClick={() => { setApplyMode("form"); setApplyUrlError(null); }}
               className={`p-3.5 rounded-2xl border-2 text-left transition-all ${
                 applyMode === "form"
                   ? "border-primary bg-primary-light"
@@ -715,11 +725,13 @@ function EditProjectContent() {
               <label className={label}>Посилання на форму</label>
               <input
                 value={form.externalApplyUrl ?? ""}
-                onChange={(e) => set("externalApplyUrl", e.target.value)}
+                onChange={(e) => { set("externalApplyUrl", e.target.value); setApplyUrlError(null); }}
                 placeholder="https://forms.google.com/..."
-                className={input}
+                className={`${input} ${applyUrlError ? "border-red-300 focus:ring-red-200 focus:border-red-400" : ""}`}
               />
-              <p className="text-xs text-muted mt-1">Учасники перенаправлятимуться на цей URL</p>
+              {applyUrlError
+                ? <p className="text-xs text-red-500 mt-1">{applyUrlError}</p>
+                : <p className="text-xs text-muted mt-1">Учасники перенаправлятимуться на цей URL</p>}
             </div>
           ) : (
             <div className="flex flex-col gap-3">

@@ -132,7 +132,7 @@ function toRow(data: Partial<OrgProject>): Record<string, unknown> {
   if (data.status           !== undefined) row.status            = data.status;
   if (data.autoClose        !== undefined) row.auto_close        = data.autoClose;
   if (data.formQuestions    !== undefined) row.form_questions    = data.formQuestions;
-  if (data.externalApplyUrl) row.external_apply_url = data.externalApplyUrl;
+  if (data.externalApplyUrl !== undefined) row.external_apply_url = data.externalApplyUrl;
   if (data.infoPackUrl      !== undefined) row.info_pack_url    = data.infoPackUrl;
   if (data.photoUrl          !== undefined) row.photo_url        = data.photoUrl;
   if (data.importantNote     !== undefined) row.important_note   = data.importantNote;
