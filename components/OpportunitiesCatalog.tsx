@@ -196,7 +196,7 @@ function FilterPanel({
       </Section>
       <Section title="Вік">
         <CheckRow
-          label="Доступні для <18"
+          label="Для учасників до 18 років"
           checked={ageU18}
           onChange={toggleAgeU18}
         />
@@ -356,7 +356,11 @@ export default function OpportunitiesCatalog() {
 
   // Derived filter options — computed from live data
   const allCountries = useMemo(
-    () => Array.from(new Set(allOpportunities.map((o) => o.country).filter(Boolean))).sort(),
+    // Ukrainian collation, not plain .sort(): code-unit order puts І/Ї/Є/Ґ
+    // (Іспанія, Італія…) ahead of А. Derived from the data, so a new
+    // country lands in its alphabetical place automatically.
+    () => Array.from(new Set(allOpportunities.map((o) => o.country).filter(Boolean)))
+      .sort((x, y) => x.localeCompare(y, "uk")),
     [allOpportunities]
   );
   const allLanguages = useMemo(
@@ -444,7 +448,7 @@ export default function OpportunitiesCatalog() {
     ...fundings.map((f)  => ({ label: fundingLabels[f], remove: () => toggleFunding(f) })),
     ...countries.map((c) => ({ label: c,                remove: () => toggleCountry(c) })),
     ...languages.map((l) => ({ label: `Мова: ${l}`,     remove: () => toggleLanguage(l) })),
-    ...(ageU18 ? [{ label: "Доступні для <18", remove: toggleAgeU18 }] : []),
+    ...(ageU18 ? [{ label: "Для учасників до 18 років", remove: toggleAgeU18 }] : []),
   ];
   const activeCount = activeChips.length;
 
