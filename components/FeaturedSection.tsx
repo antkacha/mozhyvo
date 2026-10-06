@@ -88,7 +88,7 @@ export default function FeaturedSection() {
 
   if (!ready) {
     return (
-      <section className="bg-white">
+      <section className="bg-white overflow-x-clip">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
           <div className="h-8 bg-muted-bg rounded w-64 mb-10 animate-pulse" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -109,7 +109,7 @@ export default function FeaturedSection() {
 
   if (featured.length === 0) {
     return (
-      <section className="bg-white">
+      <section className="bg-white overflow-x-clip">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
           <div className="flex items-end justify-between mb-10">
             <div>
@@ -131,7 +131,7 @@ export default function FeaturedSection() {
   }
 
   return (
-    <section className="bg-white">
+    <section className="bg-white overflow-x-clip">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="flex items-end justify-between mb-10">
           <div>
