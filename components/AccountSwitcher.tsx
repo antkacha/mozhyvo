@@ -9,15 +9,29 @@ interface Props {
   avatarUrl?: string;
   initials: string;
   firstName: string;
-  hasOrgAccess: boolean;
-  org: OrgAccess | null;
+  orgs: OrgAccess[];
+  activeOrgId: string | null;
   activeContext: ActiveContext;
-  switchContext: (context: ActiveContext) => void;
+  error: boolean;
+  retry: () => void;
+  switchContext: (context: ActiveContext, orgId?: string) => void;
   onSignOut: () => void;
 }
 
+function roleLabel(org: OrgAccess) {
+  if (org.isOwner) return "Власник";
+  if (org.role === "admin") return "Адміністратор";
+  return "Учасник";
+}
+
+const Check = () => (
+  <svg className="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+  </svg>
+);
+
 export default function AccountSwitcher({
-  avatarUrl, initials, firstName, hasOrgAccess, org, activeContext, switchContext, onSignOut,
+  avatarUrl, initials, firstName, orgs, activeOrgId, activeContext, error, retry, switchContext, onSignOut,
 }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -32,7 +46,8 @@ export default function AccountSwitcher({
 
   // A candidate with no org relationship at all gets the plain link this
   // button always used to be — no dropdown with a single option in it.
-  if (!hasOrgAccess) {
+  // A failed lookup is NOT "no orgs": keep the dropdown so the error shows.
+  if (!orgs.length && !error) {
     return (
       <Link
         href="/cabinet"
@@ -44,7 +59,8 @@ export default function AccountSwitcher({
     );
   }
 
-  const label = activeContext === "org" ? (org?.name ?? "Організація") : firstName;
+  const activeOrg = orgs.find((o) => o.id === activeOrgId) ?? null;
+  const label = activeContext === "org" ? (activeOrg?.name ?? "Організація") : firstName;
 
   return (
     <div ref={ref} className="relative">
@@ -74,30 +90,35 @@ export default function AccountSwitcher({
               <span className={`block text-sm truncate ${activeContext === "personal" ? "font-semibold text-foreground" : "text-foreground"}`}>Особистий акаунт</span>
               <span className="block text-xs text-muted truncate">{firstName}</span>
             </span>
-            {activeContext === "personal" && (
-              <svg className="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
+            {activeContext === "personal" && <Check />}
           </button>
 
-          <button
-            onClick={() => { setOpen(false); switchContext("org"); }}
-            className="w-full text-left px-4 py-2.5 flex items-center gap-2.5 hover:bg-muted-bg transition-colors"
-          >
-            <div className="w-7 h-7 rounded-lg bg-primary-light flex items-center justify-center text-[10px] font-black text-primary flex-shrink-0">
-              {(org?.name ?? "?").slice(0, 2).toUpperCase()}
+          {orgs.map((o) => {
+            const isActive = activeContext === "org" && o.id === activeOrgId;
+            return (
+              <button
+                key={o.id}
+                onClick={() => { setOpen(false); switchContext("org", o.id); }}
+                className="w-full text-left px-4 py-2.5 flex items-center gap-2.5 hover:bg-muted-bg transition-colors"
+              >
+                <div className="w-7 h-7 rounded-lg bg-primary-light flex items-center justify-center text-[10px] font-black text-primary flex-shrink-0">
+                  {(o.name || "?").slice(0, 2).toUpperCase()}
+                </div>
+                <span className="min-w-0 flex-1">
+                  <span className={`block text-sm truncate ${isActive ? "font-semibold text-foreground" : "text-foreground"}`}>{o.name}</span>
+                  <span className="block text-xs text-muted truncate">{roleLabel(o)}</span>
+                </span>
+                {isActive && <Check />}
+              </button>
+            );
+          })}
+
+          {error && (
+            <div className="px-4 py-2.5 text-xs text-muted">
+              Не вдалося завантажити організації.{" "}
+              <button onClick={retry} className="text-primary font-medium hover:underline">Спробувати ще раз</button>
             </div>
-            <span className="min-w-0 flex-1">
-              <span className={`block text-sm truncate ${activeContext === "org" ? "font-semibold text-foreground" : "text-foreground"}`}>{org?.name}</span>
-              <span className="block text-xs text-muted truncate">Організація</span>
-            </span>
-            {activeContext === "org" && (
-              <svg className="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-          </button>
+          )}
 
           <div className="border-t border-border mt-1 pt-1">
             <button

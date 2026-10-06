@@ -35,7 +35,7 @@ export default function Header({ initialContext = "personal" }: { initialContext
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile } = useProfile();
   const isAdmin = profile.role === "admin";
-  const { activeContext, hasOrgAccess, org, switchContext } = useAccountContext(initialContext);
+  const { activeContext, hasOrgAccess, orgs, activeOrgId, error: orgsError, retry: retryOrgs, switchContext } = useAccountContext(initialContext);
   const firstName = user?.user_metadata?.first_name ?? user?.email?.split("@")[0] ?? "";
   const initials = (user?.user_metadata?.first_name?.[0] ?? user?.email?.[0] ?? "?").toUpperCase();
 
@@ -109,9 +109,11 @@ export default function Header({ initialContext = "personal" }: { initialContext
                   avatarUrl={profile.avatarUrl}
                   initials={initials}
                   firstName={firstName}
-                  hasOrgAccess={hasOrgAccess}
-                  org={org}
+                  orgs={orgs}
+                  activeOrgId={activeOrgId}
                   activeContext={activeContext}
+                  error={orgsError}
+                  retry={retryOrgs}
                   switchContext={switchContext}
                   onSignOut={signOut}
                 />
@@ -205,7 +207,7 @@ export default function Header({ initialContext = "personal" }: { initialContext
                     <span className="text-sm font-medium text-foreground">Сповіщення</span>
                     <NotificationsBell />
                   </div>
-                  {hasOrgAccess ? (
+                  {hasOrgAccess || orgsError ? (
                     <>
                       <button
                         onClick={() => { setMenuOpen(false); switchContext("personal"); }}
@@ -216,17 +218,26 @@ export default function Header({ initialContext = "personal" }: { initialContext
                         <UserAvatar url={profile.avatarUrl} initials={initials} size={20} />
                         Особистий акаунт — {firstName}
                       </button>
-                      <button
-                        onClick={() => { setMenuOpen(false); switchContext("org"); }}
-                        className={`flex items-center gap-2.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-all ${
-                          activeContext === "org" ? "border-primary bg-primary-light text-primary" : "border-border text-foreground hover:border-primary hover:text-primary"
-                        }`}
-                      >
-                        <span className="w-5 h-5 rounded-md bg-primary-light flex items-center justify-center text-[9px] font-black text-primary flex-shrink-0">
-                          {(org?.name ?? "?").slice(0, 2).toUpperCase()}
-                        </span>
-                        {org?.name}
-                      </button>
+                      {orgs.map((o) => (
+                        <button
+                          key={o.id}
+                          onClick={() => { setMenuOpen(false); switchContext("org", o.id); }}
+                          className={`flex items-center gap-2.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-all ${
+                            activeContext === "org" && o.id === activeOrgId ? "border-primary bg-primary-light text-primary" : "border-border text-foreground hover:border-primary hover:text-primary"
+                          }`}
+                        >
+                          <span className="w-5 h-5 rounded-md bg-primary-light flex items-center justify-center text-[9px] font-black text-primary flex-shrink-0">
+                            {(o.name || "?").slice(0, 2).toUpperCase()}
+                          </span>
+                          <span className="truncate">{o.name}</span>
+                        </button>
+                      ))}
+                      {orgsError && (
+                        <p className="px-1 text-xs text-muted">
+                          Не вдалося завантажити організації.{" "}
+                          <button onClick={retryOrgs} className="text-primary font-medium hover:underline">Спробувати ще раз</button>
+                        </p>
+                      )}
                     </>
                   ) : (
                     <Link
