@@ -55,8 +55,10 @@ export default function Header({ initialContext = "personal" }: { initialContext
             </div>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-0.5">
+          {/* Desktop nav — from xl only: the full nav + account cluster needs
+              ≈1,070px (guest) to ≈1,240px (signed-in admin); below that the
+              hamburger menu (which has everything) takes over. */}
+          <nav className="hidden xl:flex items-center gap-0.5">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -101,7 +103,7 @@ export default function Header({ initialContext = "personal" }: { initialContext
           </nav>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden xl:flex items-center gap-2">
             {!authLoading && user ? (
               <>
                 <NotificationsBell />
@@ -155,7 +157,7 @@ export default function Header({ initialContext = "personal" }: { initialContext
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden flex flex-col gap-1.5 p-2 rounded-xl hover:bg-muted-bg transition-colors"
+            className="xl:hidden flex flex-col gap-1.5 p-2 rounded-xl hover:bg-muted-bg transition-colors"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Меню"
           >
@@ -166,9 +168,10 @@ export default function Header({ initialContext = "personal" }: { initialContext
         </div>
       </div>
 
-      {/* Mobile menu — second floating island */}
+      {/* Mobile/tablet menu — second floating island; a right-aligned panel
+          from md up so tablet widths don't get full-width buttons. */}
       {menuOpen && (
-        <div className="md:hidden max-w-7xl mx-auto mb-2">
+        <div className="xl:hidden max-w-7xl mx-auto mb-2 md:max-w-sm md:mr-0">
           <div className="bg-white/95 backdrop-blur-xl border border-border/70 rounded-2xl shadow-lg px-4 py-4 flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link
