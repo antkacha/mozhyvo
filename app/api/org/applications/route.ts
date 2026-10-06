@@ -68,29 +68,46 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ applications: result });
 }
 
+// Applicant-provided org_applications columns. id, org_id,
+// applicant_user_id, status, submitted_at and the org-only internal_note
+// are server/DB-set; project_title is taken from the project itself.
+const APPLICANT_FIELDS = new Set([
+  "first_name", "last_name", "email", "phone", "country", "institution",
+  "degree", "motivation", "languages", "cv_url", "portfolio_url", "custom_answers",
+]);
+
 // POST /api/org/applications — submit application to org (called after user submits)
 export async function POST(req: NextRequest) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json() as Record<string, unknown>;
-  const projectId = body.project_id as string;
-  if (!projectId) return NextResponse.json({ error: "Missing project_id" }, { status: 400 });
+  const body = await req.json().catch(() => null) as Record<string, unknown> | null;
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+  const projectId = body.project_id;
+  if (!projectId || typeof projectId !== "string") return NextResponse.json({ error: "Missing project_id" }, { status: 400 });
 
   const admin = createAdminClient();
 
   // Resolve org_id from the project
   const { data: project } = await admin
     .from("org_projects")
-    .select("org_id")
+    .select("org_id, title")
     .eq("id", projectId)
     .maybeSingle();
 
   if (!project?.org_id) return NextResponse.json({ error: "Project not found" }, { status: 404 });
 
+  const applicantFields = Object.fromEntries(
+    Object.entries(body).filter(([k]) => APPLICANT_FIELDS.has(k))
+  );
+
   const { error } = await admin.from("org_applications").insert({
-    ...body,
+    ...applicantFields,
+    project_id: projectId,
+    project_title: project.title,
     org_id: project.org_id,
     applicant_user_id: user.id,
     status: "new",

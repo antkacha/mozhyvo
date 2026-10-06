@@ -100,9 +100,11 @@ export async function DELETE(
   // Same has_org_access cleanup members/[userId] already does when someone
   // is individually removed — here for everyone who was on this org's team.
   for (const memberId of memberIds) {
-    const { data: otherMembership } = await admin
-      .from("org_members").select("id").eq("user_id", memberId).maybeSingle();
-    if (otherMembership) continue;
+    // limit(1), not maybeSingle — that errored to null for 2+ remaining
+    // memberships and stripped the flag from someone still on other teams.
+    const { data: otherMemberships, error: otherError } = await admin
+      .from("org_members").select("id").eq("user_id", memberId).limit(1);
+    if (otherError || otherMemberships?.length) continue;
     const { data: memberAuth } = await admin.auth.admin.getUserById(memberId);
     if (memberAuth?.user) {
       const meta = { ...memberAuth.user.user_metadata };

@@ -3,16 +3,7 @@ import { revalidateTag } from "next/cache";
 import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { assertAffected, ApiError } from "@/lib/supabase/assert-rows";
-
-const ALLOWED_PROJECT_FIELDS = new Set([
-  "title", "type", "type_name", "short_description", "full_description",
-  "requirements", "benefits", "tags", "deadline", "deadline_display",
-  "country", "city", "location", "flag", "format", "funding", "funding_details",
-  "duration", "languages", "age_min", "age_max", "status", "auto_close",
-  "form_questions", "external_apply_url", "info_pack_url", "photo_url", "important_note",
-  "has_fee", "fee_amount", "fee_who",
-  "apply_method", "apply_email", "apply_email_subject", "apply_instructions",
-]);
+import { pickProjectFields } from "@/lib/project-fields";
 
 export async function PATCH(
   req: NextRequest,
@@ -23,9 +14,7 @@ export async function PATCH(
   const orgId = ctx.org.id;
 
   const body = await req.json() as Record<string, unknown>;
-  const safeBody = Object.fromEntries(
-    Object.entries(body).filter(([k]) => ALLOWED_PROJECT_FIELDS.has(k))
-  );
+  const safeBody = pickProjectFields(body);
   if (Object.keys(safeBody).length === 0) {
     return NextResponse.json({ error: "No valid fields" }, { status: 400 });
   }

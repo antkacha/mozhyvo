@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { pickProjectFields } from "@/lib/project-fields";
 
 export async function GET() {
   const ctx = await requireActiveOrg();
@@ -24,12 +25,18 @@ export async function POST(req: NextRequest) {
   if (ctx.response) return ctx.response;
   const orgId = ctx.org.id;
 
-  const body = await req.json() as Record<string, unknown>;
+  const body = await req.json().catch(() => null) as unknown;
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+  // Same allowlist as project edit; org_id always comes from the caller's
+  // active org, never the body. id/views/saves/timestamps stay DB defaults.
+  const safeBody = pickProjectFields(body as Record<string, unknown>);
 
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("org_projects")
-    .insert({ ...body, org_id: orgId })
+    .insert({ ...safeBody, org_id: orgId })
     .select()
     .single();
 

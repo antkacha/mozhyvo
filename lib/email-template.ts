@@ -3,6 +3,13 @@ const LOGO_URL = "https://lqtikyzevpjbtueajpsh.supabase.co/storage/v1/object/pub
 export const EMAIL_FROM = "МОЖUВО <hello@mozhyvo.com.ua>";
 export const SITE_URL   = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.mozhyvo.com.ua";
 
+/** Escapes user-supplied text before it's put into email HTML. */
+export function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 export function wrapEmailTemplate(
   content: string,
   options: { heading: string; subtitle?: string; preview?: string },

@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
   EMAIL_FROM, SITE_URL,
-  wrapEmailTemplate, emailButton, emailInfoBox, emailDivider,
+  wrapEmailTemplate, emailButton, emailInfoBox, emailDivider, escapeHtml,
 } from "@/lib/email-template";
 
 export async function POST(req: NextRequest) {
@@ -23,6 +23,10 @@ export async function POST(req: NextRequest) {
     action: "verify" | "reject" | "block" | "unblock";
     rejectionReason?: string;
   };
+
+  if (!["verify", "reject", "block", "unblock"].includes(action)) {
+    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  }
 
   const admin = createAdminClient();
 
@@ -78,7 +82,7 @@ export async function POST(req: NextRequest) {
         html: wrapEmailTemplate(
           emailInfoBox(`
             <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#92400E;">Причина відмови:</p>
-            <p style="margin:0;font-size:14px;color:#78350F;">${rejectionReason}</p>`, "#FFF7ED") +
+            <p style="margin:0;font-size:14px;color:#78350F;">${escapeHtml(rejectionReason)}</p>`, "#FFF7ED") +
           emailButton("Написати адміністратору", `mailto:hello@mozhyvo.com.ua`),
           {
             heading: "Результат верифікації",
