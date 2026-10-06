@@ -118,6 +118,19 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
+// JSON-LD is embedded raw in a <script>, and JSON.stringify doesn't escape
+// "</script>" — org-written fields (title, description, tags…) could close
+// the tag and inject script. Escaping these as JSON \u sequences keeps the
+// JSON valid and identical in value, but inert as HTML.
+function safeJsonLd(data: unknown): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 export default async function OpportunityDetailPage({ params }: { params: { slug: string } }) {
   const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);
   if (!opp) notFound();
@@ -152,7 +165,7 @@ export default async function OpportunityDetailPage({ params }: { params: { slug
       {opp.projectId && <ViewTracker projectId={opp.projectId} />}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       {/* Hero */}
       <section className="bg-primary-light border-b border-primary/10">
