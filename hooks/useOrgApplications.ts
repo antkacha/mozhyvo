@@ -95,13 +95,8 @@ export function useOrgApplications(orgId?: string, projectId?: string) {
         fetch("/api/org/sync-status", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orgAppId:     id,
-            orgStatus:    data.status,
-            projectId:    current.projectId,
-            email:        current.email,
-            projectTitle: current.projectTitle,
-          }),
+          // Project, applicant and title are read server-side from the application row.
+          body: JSON.stringify({ orgAppId: id, orgStatus: data.status }),
         }).then((r) => {
           if (!r.ok) console.error("[status-sync] failed:", r.status);
         });
