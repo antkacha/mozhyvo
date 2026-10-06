@@ -105,6 +105,8 @@ const selectStyle = {
 
 function ProjectsContent() {
   const { org } = useOrgSession();
+  // Publishing needs a verified org (enforced server-side too).
+  const canPublish = org?.status === "verified";
   const { projects, update, remove } = useOrgProjects(org?.id);
   const { applications } = useOrgApplications(org?.id);
 
@@ -358,8 +360,9 @@ function ProjectsContent() {
                 <div className="flex items-center gap-1 w-full md:w-[100px] flex-shrink-0 md:justify-end md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => update(p.id, { status: p.status === "published" ? "draft" : "published" })}
-                    title={p.status === "published" ? "Зняти з публікації" : "Опублікувати"}
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${p.status === "published" ? "text-amber-500 hover:bg-amber-50" : "text-green-600 hover:bg-green-50"}`}
+                    disabled={p.status !== "published" && !canPublish}
+                    title={p.status === "published" ? "Зняти з публікації" : canPublish ? "Опублікувати" : "Доступно після верифікації організації"}
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed ${p.status === "published" ? "text-amber-500 hover:bg-amber-50" : "text-green-600 hover:bg-green-50"}`}
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       {p.status === "published" ? (

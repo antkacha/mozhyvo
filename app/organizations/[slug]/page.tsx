@@ -424,12 +424,15 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
   // page automatically picks up new org_projects columns (photo_url was
   // added later and missed here, which is exactly why cards showed no
   // cover photo while the catalog — already select("*") — had them).
-  const { data: projects } = await admin
-    .from("org_projects")
-    .select("*")
-    .eq("org_id", org.id)
-    .eq("status", "published")
-    .order("created_at", { ascending: false });
+  // Only verified orgs' projects are public; a pending org's page lists none.
+  const { data: projects } = org.status === "verified"
+    ? await admin
+        .from("org_projects")
+        .select("*")
+        .eq("org_id", org.id)
+        .eq("status", "published")
+        .order("created_at", { ascending: false })
+    : { data: [] };
 
   const today = new Date().toISOString().split("T")[0];
   const isExpired = (p: SupabaseProject) =>

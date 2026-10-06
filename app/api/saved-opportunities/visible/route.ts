@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Given a list of saved opportunity_slug values, returns which ones still
-// point to a real, published, non-blocked project. Used by SavedContext to
+// point to a real, published project of a verified org. Used by SavedContext to
 // keep the "Збережені" count in the header in sync with what the saved
 // list actually shows — org_projects isn't safely readable from the
 // browser client (every other read of it goes through an admin-client
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   const visible = (projects ?? [])
     .filter((p) => {
       const org = p.orgs as unknown as { status?: string };
-      return org?.status !== "rejected" && org?.status !== "blocked";
+      return org?.status === "verified";
     })
     .map((p) => p.id as string);
 

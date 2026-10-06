@@ -141,6 +141,8 @@ function EditProjectContent() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const { org } = useOrgSession();
+  // Publishing needs a verified org (enforced server-side too).
+  const canPublish = org?.status === "verified";
   const { projects, update } = useOrgProjects(org?.id);
   const project = projects.find((p) => p.id === params.id);
 
@@ -447,9 +449,17 @@ function EditProjectContent() {
               Зняти з публікації
             </button>
           ) : (
-            <button onClick={() => handleSave("published")} className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-green-50 text-green-700 hover:bg-green-100 transition-all">
-              Опублікувати
-            </button>
+            <>
+              {!canPublish && <span className="text-xs text-muted">Доступно після верифікації організації</span>}
+              <button
+                onClick={() => handleSave("published")}
+                disabled={!canPublish}
+                title={canPublish ? undefined : "Доступно після верифікації організації"}
+                className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-green-50 text-green-700 hover:bg-green-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-50"
+              >
+                Опублікувати
+              </button>
+            </>
           )}
         </div>
       </div>

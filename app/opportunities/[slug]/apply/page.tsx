@@ -22,6 +22,8 @@ async function fetchOrgProject(id: string): Promise<{ opp: Opportunity; formQues
       .maybeSingle();
     if (!data) return null;
     const org = data.orgs as { id: string; name: string; status?: string; slug?: string };
+    // Only verified orgs' projects are public — also by direct URL.
+    if (org.status !== "verified") return null;
     const opp: Opportunity = {
       slug:             data.id as string,
       type:             normalizeType(data.type as string, data.type_name as string),

@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { assertAffected, ApiError } from "@/lib/supabase/assert-rows";
-import { pickProjectFields } from "@/lib/project-fields";
+import { pickProjectFields, canPublish, PUBLISH_REQUIRES_VERIFIED } from "@/lib/project-fields";
 
 export async function PATCH(
   req: NextRequest,
@@ -21,6 +21,18 @@ export async function PATCH(
 
   try {
     const admin = createAdminClient();
+
+    // A non-verified org can't move a project TO published. Re-sending
+    // "published" for a project that already is (the edit form always sends
+    // its current status) is not a publish, so ordinary edits still work.
+    if (safeBody.status === "published" && !canPublish(ctx.org.status)) {
+      const { data: current } = await admin
+        .from("org_projects").select("status").eq("id", params.id).eq("org_id", orgId).limit(1);
+      if (current?.[0]?.status !== "published") {
+        return NextResponse.json({ error: PUBLISH_REQUIRES_VERIFIED }, { status: 403 });
+      }
+    }
+
     assertAffected(
       await admin
         .from("org_projects")

@@ -71,8 +71,9 @@ export async function GET(req: NextRequest) {
 
   const visible = rows
     .filter((row) => {
+      // Public only for verified orgs (pending/rejected/blocked stay hidden).
       const org = orgsMap.get(row.org_id as string);
-      if (org?.status === "rejected" || org?.status === "blocked") return false;
+      if (org?.status !== "verified") return false;
       if (!includeExpired) {
         const deadline = (row.deadline as string) ?? "";
         if (deadline && /^\d{4}-\d{2}-\d{2}$/.test(deadline) && deadline < today) return false;

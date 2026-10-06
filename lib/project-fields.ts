@@ -17,3 +17,12 @@ export const ALLOWED_PROJECT_FIELDS = new Set([
 export function pickProjectFields(body: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(body).filter(([k]) => ALLOWED_PROJECT_FIELDS.has(k)));
 }
+
+// Publishing rule: any org may create and edit drafts, but only a VERIFIED org
+// may move a project to "published". The org status is the active org's,
+// resolved server-side (lib/active-org) — never taken from the request.
+export const PUBLISH_REQUIRES_VERIFIED = "Публікувати можливості можна лише після верифікації організації";
+
+export function canPublish(orgStatus: string | null | undefined): boolean {
+  return orgStatus === "verified";
+}
