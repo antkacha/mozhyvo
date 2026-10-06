@@ -1,22 +1,21 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ctx = await requireActiveOrg();
+  if (ctx.response) {
+    // No org at all is an empty team, as before; auth/DB errors pass through.
+    return ctx.response.status === 403 ? NextResponse.json({ members: [] }) : ctx.response;
+  }
+  const orgId = ctx.org.id;
 
   const admin = createAdminClient();
 
-  // Get caller's org (use admin client to bypass RLS)
-  const { data: ownOrg } = await admin.from("orgs").select("id, name, user_id").eq("user_id", user.id).maybeSingle();
-  const { data: membership } = !ownOrg
-    ? await admin.from("org_members").select("org_id").eq("user_id", user.id).maybeSingle()
-    : { data: null };
-
-  const orgId = ownOrg?.id ?? membership?.org_id;
-  if (!orgId) return NextResponse.json({ members: [] });
+  // The active org's owner (orgs.user_id). Owners have no org_members row, so
+  // they're added as a synthetic entry — for every viewer, not just the owner.
+  const { data: orgRows } = await admin.from("orgs").select("user_id").eq("id", orgId).limit(1);
+  const ownerUserId = (orgRows?.[0]?.user_id as string | undefined) ?? null;
 
   // Get invited members from org_members
   const { data: rows } = await admin
@@ -36,19 +35,19 @@ export async function GET() {
   }[] = [];
 
   // Add org owner
-  if (ownOrg) {
+  if (ownerUserId) {
     const { data: ownerProfile } = await admin
       .from("profiles")
       .select("first_name, last_name, email")
-      .eq("id", ownOrg.user_id)
+      .eq("id", ownerUserId)
       .maybeSingle();
-    const ownerAuth = await admin.auth.admin.getUserById(ownOrg.user_id);
+    const ownerAuth = await admin.auth.admin.getUserById(ownerUserId);
     const ownerEmail = ownerProfile?.email ?? ownerAuth.data.user?.email ?? "";
     const ownerFirst = ownerProfile?.first_name ?? "";
     const ownerLast  = ownerProfile?.last_name  ?? "";
     members.push({
-      id:       `owner-${ownOrg.user_id}`,
-      userId:   ownOrg.user_id,
+      id:       `owner-${ownerUserId}`,
+      userId:   ownerUserId,
       email:    ownerEmail,
       name:     ownerFirst ? `${ownerFirst} ${ownerLast}`.trim() : ownerEmail.split("@")[0],
       role:     "owner",

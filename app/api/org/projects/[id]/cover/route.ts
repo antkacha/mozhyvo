@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import { lookup } from "dns/promises";
 import { isIP } from "net";
 import sharp from "sharp";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { COVER_ALLOWED_TYPES, COVER_MAX_BYTES, COVER_WIDTH, COVER_HEIGHT, COVER_BUCKET } from "@/lib/cover-photo";
 
@@ -22,14 +22,6 @@ export const maxDuration = 9;
 // return a clean error.
 const TOTAL_FETCH_BUDGET_MS = 7000;
 const MAX_REDIRECTS = 4;
-
-async function getCallerOrgId(userId: string): Promise<string | null> {
-  const admin = createAdminClient();
-  const { data: org } = await admin.from("orgs").select("id").eq("user_id", userId).maybeSingle();
-  if (org) return org.id;
-  const { data: member } = await admin.from("org_members").select("org_id").eq("user_id", userId).maybeSingle();
-  return member?.org_id ?? null;
-}
 
 function isPrivateIp(ip: string): boolean {
   if (isIP(ip) === 4) {
@@ -130,12 +122,9 @@ async function fetchRemoteImage(startUrl: string): Promise<Buffer> {
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const orgId = await getCallerOrgId(user.id);
-  if (!orgId) return NextResponse.json({ error: "No org" }, { status: 403 });
+  const ctx = await requireActiveOrg();
+  if (ctx.response) return ctx.response;
+  const orgId = ctx.org.id;
 
   const admin = createAdminClient();
   const { data: project } = await admin

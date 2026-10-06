@@ -21,7 +21,7 @@ const APP_STATUS_CLASS: Record<OrgApplication["status"], string> = {
 
 // ── Org Overview ─────────────────────────────────────────────────────
 function OrgOverview() {
-  const { org, isOwner } = useOrgSession();
+  const { org, canManageProjects } = useOrgSession();
   const { projects } = useOrgProjects(org?.id);
   const { applications } = useOrgApplications(org?.id);
 
@@ -76,7 +76,7 @@ function OrgOverview() {
           <p className="text-sm text-muted mb-1">{greeting}</p>
           <h1 className="text-2xl font-black text-foreground">{org?.name}</h1>
         </div>
-        {isOwner && (
+        {canManageProjects && (
           <Link
             href="/dashboard/projects/new"
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 flex-shrink-0"

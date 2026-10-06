@@ -185,7 +185,11 @@ export function useOrgSession() {
   // login() kept for backward compat — no-op in Supabase mode
   const login = useCallback((_profile: OrgProfile) => {}, []);
 
+  // Owner-only: team (invites/roles) and the org profile. Admin members
+  // manage opportunities. The API enforces the same rules; this only hides
+  // controls that would 403.
   const isOwner = memberRole === "owner";
+  const canManageProjects = isOwner || memberRole === "admin";
 
-  return { org, ready, reload, login, update, logout, memberRole, isOwner };
+  return { org, ready, reload, login, update, logout, memberRole, isOwner, canManageProjects };
 }

@@ -1,24 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-async function getCallerOrgId(userId: string): Promise<string | null> {
-  const admin = createAdminClient();
-  const { data: org } = await admin.from("orgs").select("id").eq("user_id", userId).maybeSingle();
-  if (org) return org.id;
-  const { data: member } = await admin.from("org_members").select("org_id").eq("user_id", userId).maybeSingle();
-  return member?.org_id ?? null;
-}
 
 // GET /api/org/applications?projectId=xxx — list applications for caller's org
 // Withdrawn applications are excluded: the candidate cancelled, nothing to action.
 export async function GET(req: NextRequest) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const orgId = await getCallerOrgId(user.id);
-  if (!orgId) return NextResponse.json({ error: "No org" }, { status: 403 });
+  const ctx = await requireActiveOrg();
+  if (ctx.response) return ctx.response;
+  const orgId = ctx.org.id;
 
   const admin = createAdminClient();
   const projectId = req.nextUrl.searchParams.get("projectId");

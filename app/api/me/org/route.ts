@@ -1,37 +1,28 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveOrgForRequest, requireActiveOrg } from "@/lib/active-org";
 
 export async function GET() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ org: null, role: null });
 
-  const admin = createAdminClient();
+  // The org the user is acting as right now (mzv_active_org cookie, validated
+  // against their real ownership/memberships — see lib/active-org).
+  let active;
+  try {
+    active = await getActiveOrgForRequest(user.id);
+  } catch (e) {
+    console.error("[GET /api/me/org] org lookup failed:", e);
+    return NextResponse.json({ error: "Не вдалося завантажити організацію" }, { status: 500 });
+  }
 
-  // Try to find org owned by this user (bypasses RLS)
-  const { data: org } = await admin
-    .from("orgs")
-    .select("*")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (org) return NextResponse.json({ org, role: "owner" });
-
-  // Check team membership
-  const { data: membership } = await admin
-    .from("org_members")
-    .select("org_id, role")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (membership) {
-    const { data: memberOrg } = await admin
-      .from("orgs")
-      .select("*")
-      .eq("id", membership.org_id)
-      .single();
-    if (memberOrg) return NextResponse.json({ org: memberOrg, role: membership.role });
+  if (active) {
+    const admin = createAdminClient();
+    const { data: rows, error } = await admin.from("orgs").select("*").eq("id", active.id).limit(1);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (rows?.[0]) return NextResponse.json({ org: rows[0], role: active.role });
   }
 
   // Deliberately no bootstrap fallback here. bootstrapOrgFromMetadata only
@@ -46,31 +37,12 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Editing the org profile is owner-only; admin members manage opportunities.
+  const ctx = await requireActiveOrg({ ownerOnly: true, ownerOnlyMessage: "Лише власник може редагувати профіль організації" });
+  if (ctx.response) return ctx.response;
+  const orgId = ctx.org.id;
 
   const admin = createAdminClient();
-
-  // Resolve the org ID for this user (owner or member)
-  let orgId: string | null = null;
-  const { data: ownedOrg } = await admin
-    .from("orgs")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (ownedOrg) {
-    orgId = ownedOrg.id;
-  } else {
-    const { data: membership } = await admin
-      .from("org_members")
-      .select("org_id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    orgId = membership?.org_id ?? null;
-  }
-
-  if (!orgId) return NextResponse.json({ error: "No org found" }, { status: 404 });
 
   const body = await req.json() as Record<string, unknown>;
 

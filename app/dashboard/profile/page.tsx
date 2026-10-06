@@ -210,7 +210,7 @@ const lbl = "block text-sm font-medium text-foreground mb-1.5";
 
 // ── Main component ───────────────────────────────────────────────────
 function ProfileContent() {
-  const { org, update } = useOrgSession();
+  const { org, update, isOwner } = useOrgSession();
   const logoRef = useRef<HTMLInputElement>(null);
   const [focusInput, setFocusInput] = useState("");
   const [saved, setSaved]   = useState(false);
@@ -340,13 +340,13 @@ function ProfileContent() {
                 Збережено
               </span>
             )}
-            <button
+            {isOwner ? <button
               onClick={handleSave}
               disabled={saving || !form.name.trim()}
               className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 disabled:opacity-50"
             >
               {saving ? "Зберігаємо..." : "Зберегти зміни"}
-            </button>
+            </button> : <span className="text-xs text-muted">Редагувати профіль може лише власник</span>}
           </div>
         </div>
 
@@ -375,7 +375,7 @@ function ProfileContent() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
 
           {/* ── LEFT: form ─────────────────────────────────────────── */}
-          <div className="lg:col-span-3 flex flex-col gap-5">
+          <fieldset disabled={!isOwner} className="lg:col-span-3 flex flex-col gap-5 min-w-0">
 
             {/* Обкладинка та логотип */}
             <Section
@@ -620,7 +620,7 @@ function ProfileContent() {
             </Section>
 
             {/* Save bottom */}
-            <div className="flex items-center justify-end gap-3 pb-4">
+            {isOwner && <div className="flex items-center justify-end gap-3 pb-4">
               {saved && (
                 <span className="flex items-center gap-1.5 text-xs text-green-600 font-semibold">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -636,8 +636,8 @@ function ProfileContent() {
               >
                 {saving ? "Зберігаємо..." : "Зберегти зміни"}
               </button>
-            </div>
-          </div>
+            </div>}
+          </fieldset>
 
           {/* ── RIGHT: sticky live preview ──────────────────────────── */}
           <div className="lg:col-span-2">

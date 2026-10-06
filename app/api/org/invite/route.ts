@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   EMAIL_FROM, SITE_URL,
@@ -7,9 +7,11 @@ import {
 } from "@/lib/email-template";
 
 export async function POST(req: NextRequest) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Inviting is owner-only; admin members manage opportunities, not the team.
+  const ctx = await requireActiveOrg({ ownerOnly: true, ownerOnlyMessage: "Лише власник може запрошувати членів команди" });
+  if (ctx.response) return ctx.response;
+  const { user } = ctx;
+  const org = { id: ctx.org.id, name: ctx.org.name };
 
   const { email, role } = await req.json() as { email: string; role: string };
   if (!email || !role) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -25,9 +27,6 @@ export async function POST(req: NextRequest) {
       error: "Цей користувач ще не зареєстрований на МОЖUВО. Попросіть їх спочатку створити акаунт на сайті.",
     }, { status: 404 });
   }
-
-  const { data: org } = await admin.from("orgs").select("id, name").eq("user_id", user.id).single();
-  if (!org) return NextResponse.json({ error: "Org not found" }, { status: 404 });
 
   const roleLabel = role === "admin" ? "Адміністратора" : "Рецензента";
 

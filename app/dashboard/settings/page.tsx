@@ -36,7 +36,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
 
 // ── Tabs ──────────────────────────────────────────────────────────────
 function GeneralTab() {
-  const { org, update: updateProfile } = useOrgSession();
+  const { org, update: updateProfile, isOwner } = useOrgSession();
   const [form, setForm] = useState({
     name: org?.name ?? "",
     description: org?.description ?? "",
@@ -59,7 +59,8 @@ function GeneralTab() {
     <div className="space-y-6">
       <div className="bg-white rounded-2xl border border-border p-6">
         <h2 className="text-sm font-bold text-foreground mb-4">Інформація про організацію</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {!isOwner && <p className="text-xs text-muted bg-muted-bg rounded-xl px-3 py-2 mb-4">Редагувати інформацію про організацію може лише власник.</p>}
+        <fieldset disabled={!isOwner} className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
           <div className="sm:col-span-2">
             <label className="text-xs font-semibold text-muted uppercase tracking-wider block mb-1.5">Назва організації</label>
             <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Назва організації" className={input} />
@@ -84,15 +85,15 @@ function GeneralTab() {
             <label className="text-xs font-semibold text-muted uppercase tracking-wider block mb-1.5">Місто</label>
             <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Київ" className={input} />
           </div>
-        </div>
-        <div className="mt-5 flex items-center gap-3">
+        </fieldset>
+        {isOwner && <div className="mt-5 flex items-center gap-3">
           <button
             onClick={handleSave}
             className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20"
           >
             {saved ? "✓ Збережено" : "Зберегти зміни"}
           </button>
-        </div>
+        </div>}
       </div>
 
       {/* Danger zone */}
@@ -108,6 +109,7 @@ function GeneralTab() {
 }
 
 function TeamTab() {
+  const { isOwner } = useOrgSession();
   const { members, invite, remove, updateRole } = useTeamMembers();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<TeamRole>("reviewer");
@@ -127,8 +129,8 @@ function TeamTab() {
 
   return (
     <div className="space-y-5">
-      {/* Invite */}
-      <div className="bg-white rounded-2xl border border-border p-6">
+      {/* Invite — owner only */}
+      {isOwner && <div className="bg-white rounded-2xl border border-border p-6">
         <h2 className="text-sm font-bold text-foreground mb-4">Запросити члена команди</h2>
         <div className="flex flex-col sm:flex-row gap-3">
           <input
@@ -160,7 +162,7 @@ function TeamTab() {
             </div>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* Member list */}
       <div className="bg-white rounded-2xl border border-border overflow-hidden">
@@ -190,7 +192,7 @@ function TeamTab() {
                   {m.status === "pending" && (
                     <span className="text-[11px] font-semibold bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">Очікує</span>
                   )}
-                  {m.role === "owner" ? (
+                  {m.role === "owner" || !isOwner ? (
                     <span className="text-xs font-bold text-primary bg-primary-light px-2.5 py-1 rounded-full">{ROLE_LABEL[m.role]}</span>
                   ) : (
                     <select
@@ -202,7 +204,7 @@ function TeamTab() {
                       <option value="reviewer">Рецензент</option>
                     </select>
                   )}
-                  {m.role !== "owner" && (
+                  {m.role !== "owner" && isOwner && (
                     <button
                       onClick={() => remove(m.id)}
                       className="w-7 h-7 rounded-xl bg-muted-bg hover:bg-red-50 text-muted hover:text-red-500 flex items-center justify-center transition-all"

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   EMAIL_FROM, SITE_URL,
@@ -31,21 +31,10 @@ const EMAIL_SUBTITLE: Record<string, string> = {
   reviewing: "Твоя заявка перебуває на розгляді. Ми повідомимо тебе про наступні зміни.",
 };
 
-async function getCallerOrgId(userId: string): Promise<string | null> {
-  const admin = createAdminClient();
-  const { data: org } = await admin.from("orgs").select("id").eq("user_id", userId).maybeSingle();
-  if (org) return org.id;
-  const { data: member } = await admin.from("org_members").select("org_id").eq("user_id", userId).maybeSingle();
-  return member?.org_id ?? null;
-}
-
 export async function POST(req: NextRequest) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const callerOrgId = await getCallerOrgId(user.id);
-  if (!callerOrgId) return NextResponse.json({ error: "No org" }, { status: 403 });
+  const ctx = await requireActiveOrg();
+  if (ctx.response) return ctx.response;
+  const callerOrgId = ctx.org.id;
 
   const { orgAppId, orgStatus, projectId, email, projectTitle } = await req.json() as {
     orgAppId: string;

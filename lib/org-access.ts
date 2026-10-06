@@ -8,6 +8,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 //
 // Server-side only (uses the service-role client by default).
 
+/** Cookie holding the org the user last selected in the account switcher. */
+export const ACTIVE_ORG_COOKIE = "mzv_active_org";
+
 export interface OrgAccess {
   id: string;
   name: string;

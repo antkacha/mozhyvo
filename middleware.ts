@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { listUserOrgs } from "@/lib/org-access";
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -52,23 +52,19 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // /dashboard — must be an org owner or org member
+  // /dashboard — must own or be a member of at least one org. Which org they
+  // act as is resolved per request downstream (lib/active-org); this only
+  // gates entry. Any number of orgs is fine (no maybeSingle).
   if (user && pathname.startsWith("/dashboard")) {
-    const adminDb = createAdminClient();
-    const { data: orgOwner } = await adminDb
-      .from("orgs")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!orgOwner) {
-      const { data: member } = await adminDb
-        .from("org_members")
-        .select("org_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!member) {
-        return NextResponse.redirect(new URL("/cabinet", request.url));
-      }
+    let orgCount = 0;
+    try {
+      orgCount = (await listUserOrgs(user.id)).length;
+    } catch (e) {
+      // Same outcome as before on a failed lookup (redirect), but logged.
+      console.error("[middleware] org lookup failed:", e);
+    }
+    if (!orgCount) {
+      return NextResponse.redirect(new URL("/cabinet", request.url));
     }
     // Reaching here means access is confirmed — keep the account-switcher
     // cookie in sync so a direct link/bookmark into /dashboard doesn't

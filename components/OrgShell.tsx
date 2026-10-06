@@ -90,7 +90,7 @@ const NAV_BOTTOM: { href: string; label: string; Icon: (p: React.SVGProps<SVGSVG
 // ── Sidebar ─────────────────────────────────────────────────────────
 function Sidebar() {
   const pathname = usePathname();
-  const { org, logout, isOwner } = useOrgSession();
+  const { org, logout, canManageProjects } = useOrgSession();
   const { profile } = useProfile();
   const { projects } = useOrgProjects(org?.id);
   const { applications } = useOrgApplications(org?.id);
@@ -223,8 +223,8 @@ function Sidebar() {
           )}
         </div>
 
-        {/* Quick action — owners only */}
-        {isOwner && (
+        {/* Quick action — owners and admins */}
+        {canManageProjects && (
           <div className="pt-3 border-t border-border">
             <Link
               href="/dashboard/projects/new"
