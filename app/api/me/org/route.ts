@@ -36,6 +36,18 @@ export async function GET() {
   return NextResponse.json({ org: null, role: null });
 }
 
+// Profile columns an org owner may edit — exactly what the edit form sends
+// (useOrgSession's toRow). Same pattern as ALLOWED_PROJECT_FIELDS in
+// app/api/org/projects/[id]. Anything else in the body — status, user_id,
+// id, slug, verified_at, rejection_reason, created_at, registration data —
+// is dropped: moderation and ownership are never writable from here.
+const ALLOWED_ORG_FIELDS = new Set([
+  "name", "type", "country", "city", "website", "phone", "contact_email",
+  "description", "mission", "founded",
+  "logo_url", "cover_image_url", "cover_video_url", "brand_color",
+  "focus_areas", "socials",
+]);
+
 export async function PATCH(req: Request) {
   // Editing the org profile is owner-only; admin members manage opportunities.
   const ctx = await requireActiveOrg({ ownerOnly: true, ownerOnlyMessage: "Лише власник може редагувати профіль організації" });
@@ -44,12 +56,21 @@ export async function PATCH(req: Request) {
 
   const admin = createAdminClient();
 
-  const body = await req.json() as Record<string, unknown>;
+  const body = await req.json().catch(() => null) as unknown;
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+  const safeBody = Object.fromEntries(
+    Object.entries(body).filter(([k]) => ALLOWED_ORG_FIELDS.has(k))
+  );
+  if (Object.keys(safeBody).length === 0) {
+    return NextResponse.json({ error: "No valid fields" }, { status: 400 });
+  }
 
   // Update and return the saved row so the client can verify what was actually written
   const { data: savedOrg, error } = await admin
     .from("orgs")
-    .update(body)
+    .update(safeBody)
     .eq("id", orgId)
     .select()
     .single();
