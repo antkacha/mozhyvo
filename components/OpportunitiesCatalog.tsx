@@ -36,13 +36,13 @@ function CheckRow({
   label, count, checked, onChange,
 }: { label: string; count?: number; checked: boolean; onChange: () => void }) {
   return (
-    <label className="flex items-center gap-2.5 cursor-pointer group py-0.5">
+    <label className="flex items-center gap-2.5 cursor-pointer group py-1 px-2 -mx-2 rounded-lg hover:bg-muted-bg transition-colors">
       <input
         type="checkbox" checked={checked} onChange={onChange}
         className="w-4 h-4 rounded border-border accent-primary cursor-pointer flex-shrink-0"
       />
-      <span className="text-sm text-muted group-hover:text-foreground transition-colors leading-tight flex-1">{label}</span>
-      {count !== undefined && <span className="text-xs text-muted tabular-nums">{count}</span>}
+      <span className={`text-sm leading-tight flex-1 transition-colors ${checked ? "text-foreground font-medium" : "text-muted group-hover:text-foreground"}`}>{label}</span>
+      {count !== undefined && <span className="text-[11px] text-muted tabular-nums">{count}</span>}
     </label>
   );
 }
@@ -51,17 +51,18 @@ function CheckRow({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
   return (
-    <div className="border-b border-border pb-4 mb-4 last:border-0">
+    <div className="border-b border-border/70 py-4 first:pt-0 last:border-0 last:pb-0">
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center justify-between w-full text-left mb-2"
       >
-        <span className="text-xs font-semibold text-foreground uppercase tracking-wider">{title}</span>
+        <span className="text-[11px] font-bold text-foreground uppercase tracking-wider">{title}</span>
         <svg className={`w-3.5 h-3.5 text-muted transition-transform ${open ? "" : "-rotate-90"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       <div
+        className="motion-reduce:!transition-none"
         style={{
           display: "grid",
           gridTemplateRows: open ? "1fr" : "0fr",
@@ -76,35 +77,124 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-// ── Urgent deadline banner ───────────────────────────────────────────
-function UrgentRow({ items }: { items: typeof opportunities }) {
-  if (items.length === 0) return null;
+// ── Urgent deadline panel ────────────────────────────────────────────
+// Shows at most URGENT_SHOWN of the urgent items (the selection itself —
+// deadline 0–7 days, first 8 — is computed in the catalog and unchanged).
+// Columns always equal the number of tiles in a row, so there are no empty
+// slots at any count: 1 → 1, 2 → 2, 3 → 3, 4 → 2×2 then 4 across on xl.
+// Mobile stacks at most 3.
+const URGENT_SHOWN = 4;
+const URGENT_COLS: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-1 sm:grid-cols-2",
+  3: "grid-cols-1 sm:grid-cols-3",
+  4: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-4",
+};
+
+function daysLabel(days: number) {
+  const n10 = days % 10, n100 = days % 100;
+  if (n10 === 1 && n100 !== 11) return "день";
+  if (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) return "дні";
+  return "днів";
+}
+
+function UrgentPanel({ items, onSeeAll }: { items: typeof opportunities; onSeeAll: () => void }) {
+  const shown = items.slice(0, URGENT_SHOWN);
+  if (shown.length === 0) return null;
   return (
-    <div className="mb-7">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-sm font-bold text-red-600">⏰ Спливає скоро</span>
-        <span className="text-xs text-muted">— дедлайн до 7 днів</span>
+    <section aria-labelledby="urgent-heading" className="mb-6 rounded-2xl bg-red-50/70 border border-red-100 p-4 sm:p-5">
+      <div className="flex items-center justify-between gap-x-4 gap-y-2 mb-3.5 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h2 id="urgent-heading" className="text-sm font-bold text-red-600">⏰ Спливає скоро</h2>
+          <span className="text-[11px] font-bold bg-red-500 text-white rounded-full px-2 py-0.5 tabular-nums leading-none">{items.length}</span>
+          <span className="text-xs text-muted">дедлайн до 7 днів</span>
+        </div>
+        <button onClick={onSeeAll} className="text-xs font-semibold text-primary hover:underline">
+          Усі за дедлайном →
+        </button>
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
-        {items.map((opp) => {
+      <div className={`grid gap-3 ${URGENT_COLS[shown.length]}`}>
+        {shown.map((opp, i) => {
+          // 4 across (xl) leaves little width per tile, so the day badge moves
+          // above the title there instead of beside it.
+          const stack = shown.length === 4;
           const days = getDaysUntilDeadline(opp.deadline);
           if (days === null) return null; // items here are pre-filtered to have a real deadline
           return (
             <a
               key={opp.slug}
               href={`/opportunities/${opp.slug}`}
-              className="flex-shrink-0 w-60 bg-white border border-red-200 border-t-4 border-t-red-500 rounded-2xl p-4 hover:shadow-md transition-all group"
+              className={`group flex items-center gap-3 bg-white rounded-xl border border-red-100 p-3 hover:border-primary/30 hover:shadow-md hover:shadow-primary/[0.06] transition-all min-w-0 ${i === 3 ? "max-sm:hidden" : ""} ${stack ? "xl:flex-col xl:items-start xl:gap-2" : ""}`}
             >
-              <p className="text-[11px] font-semibold text-red-600 mb-1">
-                {days === 0 ? "Сьогодні!" : `${days} ${days === 1 ? "день" : "дні"} залишилось`}
-              </p>
-              <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">{opp.title}</p>
-              <p className="text-xs text-muted mt-1 truncate">{opp.org}</p>
+              <span className={`w-12 h-12 rounded-xl bg-red-50 text-red-600 flex flex-col items-center justify-center flex-shrink-0 ${stack ? "xl:w-auto xl:h-auto xl:flex-row xl:gap-1 xl:px-2 xl:py-1 xl:rounded-lg" : ""}`}>
+                {days === 0 ? (
+                  <span className="text-[10px] font-bold leading-tight text-center">Сьогодні</span>
+                ) : (
+                  <>
+                    <span className="text-lg font-black leading-none tabular-nums">{days}</span>
+                    <span className="text-[10px] font-semibold leading-tight">{daysLabel(days)}</span>
+                  </>
+                )}
+              </span>
+              <span className={`min-w-0 flex-1 ${stack ? "xl:w-full" : ""}`}>
+                <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug break-words">{opp.title}</span>
+                <span className="block text-xs text-muted mt-0.5 truncate">{opp.org}</span>
+              </span>
             </a>
           );
         })}
       </div>
+    </section>
+  );
+}
+
+// ── Loading skeleton (also the page-level Suspense fallback) ─────────
+export function CatalogSkeleton() {
+  return (
+    <div className="flex gap-8 animate-pulse">
+      <div className="hidden lg:block w-60 flex-shrink-0 bg-white border border-border rounded-2xl p-5 space-y-3">
+        {Array.from({ length: 9 }).map((_, i) => (
+          <div key={i} className="h-4 bg-muted-bg rounded" />
+        ))}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="h-11 bg-muted-bg rounded-xl mb-4" />
+        <div className="h-4 w-40 bg-muted-bg rounded mb-5" />
+        <SkeletonGrid />
+      </div>
     </div>
+  );
+}
+
+// ── Country list: first COUNTRIES_SHOWN + "Показати всі", selected always visible
+const COUNTRIES_SHOWN = 8;
+function CountryFilter({ allCountries, countries, filtered, toggleCountry }: {
+  allCountries: string[];
+  countries: string[];
+  filtered: Opportunity[];
+  toggleCountry: (c: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded
+    ? allCountries
+    : allCountries.filter((c, i) => i < COUNTRIES_SHOWN || countries.includes(c));
+  return (
+    <>
+      {visible.map((c) => (
+        <CheckRow key={c} label={c}
+          count={filtered.filter((o) => o.country === c).length}
+          checked={countries.includes(c)}
+          onChange={() => toggleCountry(c)} />
+      ))}
+      {allCountries.length > COUNTRIES_SHOWN && (
+        <button
+          onClick={() => setExpanded((e) => !e)}
+          className="self-start text-xs font-semibold text-primary hover:underline mt-1"
+        >
+          {expanded ? "Згорнути" : `Показати всі (${allCountries.length})`}
+        </button>
+      )}
+    </>
   );
 }
 
@@ -170,14 +260,7 @@ function FilterPanel({
         ))}
       </Section>
       <Section title="Країна">
-        <div className="max-h-44 overflow-y-auto flex flex-col gap-1.5 pr-1">
-          {allCountries.map((c) => (
-            <CheckRow key={c} label={c}
-              count={filtered.filter((o) => o.country === c).length}
-              checked={countries.includes(c)}
-              onChange={() => toggleCountry(c)} />
-          ))}
-        </div>
+        <CountryFilter allCountries={allCountries} countries={countries} filtered={filtered} toggleCountry={toggleCountry} />
       </Section>
       <Section title="Мова">
         <div className="flex flex-wrap gap-1.5">
@@ -185,7 +268,7 @@ function FilterPanel({
             <button
               key={l}
               onClick={() => toggleLanguage(l)}
-              className={`text-xs font-semibold px-2.5 py-1 rounded-xl border transition-all ${
+              className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-all ${
                 languages.includes(l)
                   ? "bg-primary text-white border-primary"
                   : "border-border text-muted hover:border-primary/30 hover:text-foreground"
@@ -460,86 +543,99 @@ export default function OpportunitiesCatalog() {
   };
 
 
-  if (loading) return <SkeletonGrid />;
+  // Presentation only: the urgent panel is for browsing, so it's hidden while
+  // any filter/search is active, past page 1, or when the list is already
+  // sorted by deadline (it would just repeat the top of the grid).
+  const showUrgent = page === 1 && activeCount === 0 && !qParam.trim() && sort !== "deadline";
+  function seeAllByDeadline() {
+    updateParams({ sort: "deadline", page: null });
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById("catalog-results")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }
+
+  if (loading) return <CatalogSkeleton />;
 
   return (
     <div>
-      <UrgentRow items={urgent} />
-
-      {/* Search + sort */}
-      <div className="flex items-center gap-3 mb-5 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text" value={rawSearch}
-            onChange={(e) => updateSearch(e.target.value)}
-            placeholder="Пошук за назвою, організацією, тегами..."
-            className="w-full pl-10 pr-10 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white"
-          />
-          {rawSearch && (
-            <button onClick={() => updateSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          )}
-        </div>
-        <select
-          value={sort} onChange={(e) => updateParams({ sort: e.target.value === "newest" ? null : e.target.value, page: null })}
-          className="text-sm border border-border rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground flex-shrink-0"
-        >
-          {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="lg:hidden flex items-center gap-2 px-4 py-2.5 border border-border rounded-xl text-sm font-medium hover:border-primary hover:text-primary transition-all bg-white flex-shrink-0"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 8h10M11 12h4" /></svg>
-          Фільтри
-          {activeCount > 0 && <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">{activeCount}</span>}
-        </button>
-      </div>
-
-      {/* Active chips */}
-      {activeChips.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap mb-5">
-          {activeChips.map((chip) => (
-            <button key={chip.label} onClick={chip.remove}
-              className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 bg-primary-light text-primary rounded-xl hover:bg-red-50 hover:text-red-500 transition-all"
-            >
-              {chip.label}
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          ))}
-          <button onClick={clearAll} className="text-xs text-muted hover:text-red-500 transition-colors font-medium px-1">Скинути всі</button>
-        </div>
-      )}
-
-      <div className="flex gap-8">
-        {/* Desktop sidebar */}
-        <aside className="hidden lg:block w-52 flex-shrink-0">
-          <div className="sticky top-24">
-            <div className="flex items-center justify-between mb-4">
-              <p className="font-semibold text-sm text-foreground">Фільтри</p>
-              {activeCount > 0 && <button onClick={clearAll} className="text-xs text-primary hover:underline">Очистити</button>}
-            </div>
+      <div className="flex gap-8 items-start">
+        {/* Desktop sidebar — sticky under the header, capped at the viewport
+            height and scrolling inside itself, so every filter stays
+            reachable and it never half-sticks then jumps. */}
+        <aside className="hidden lg:flex flex-col w-60 flex-shrink-0 sticky top-[88px] max-h-[calc(100vh-104px)] bg-white border border-border rounded-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-border flex-shrink-0">
+            <p className="font-bold text-sm text-foreground flex items-center gap-2">
+              Фільтри
+              {activeCount > 0 && <span className="bg-primary text-white text-[11px] rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center font-semibold tabular-nums">{activeCount}</span>}
+            </p>
+            {activeCount > 0 && <button onClick={clearAll} className="text-xs font-semibold text-primary hover:underline">Очистити</button>}
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4">
             <FilterPanel {...filterPanelProps} />
           </div>
         </aside>
 
         {/* Results */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-5 gap-3">
-            <p className="text-sm text-muted">Знайдено: <span className="font-semibold text-foreground">{filtered.length}</span> можливостей</p>
-            {activeCount > 0 && <button onClick={clearAll} className="text-xs text-primary hover:underline lg:hidden">Очистити ({activeCount})</button>}
+        <div id="catalog-results" className="flex-1 min-w-0 scroll-mt-24">
+          {/* Search + sort */}
+          <div className="flex items-center gap-3 mb-4 flex-wrap sm:flex-nowrap">
+            <div className="relative basis-full sm:basis-auto flex-1 min-w-0">
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text" value={rawSearch}
+                onChange={(e) => updateSearch(e.target.value)}
+                placeholder="Пошук за назвою, організацією, тегами..."
+                className="w-full pl-10 pr-10 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white"
+              />
+              {rawSearch && (
+                <button onClick={() => updateSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              )}
+            </div>
+            <select
+              value={sort} onChange={(e) => updateParams({ sort: e.target.value === "newest" ? null : e.target.value, page: null })}
+              className="flex-1 sm:flex-none text-sm border border-border rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground"
+            >
+              {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden flex items-center gap-2 px-4 py-2.5 border border-border rounded-xl text-sm font-medium hover:border-primary hover:text-primary transition-all bg-white flex-shrink-0"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 8h10M11 12h4" /></svg>
+              Фільтри
+              {activeCount > 0 && <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">{activeCount}</span>}
+            </button>
           </div>
 
+          {/* Result count + active chips */}
+          <div className="flex items-center gap-2 flex-wrap mb-5 min-h-[28px]">
+            <p className="text-sm text-muted mr-1">Знайдено <span className="font-semibold text-foreground">{filtered.length}</span> можливостей</p>
+            {activeChips.map((chip) => (
+              <button key={chip.label} onClick={chip.remove}
+                className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 bg-primary-light text-primary rounded-full hover:bg-red-50 hover:text-red-500 transition-all"
+              >
+                {chip.label}
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            ))}
+            {activeChips.length > 0 && (
+              <button onClick={clearAll} className="text-xs text-muted hover:text-red-500 transition-colors font-medium px-1">Скинути всі</button>
+            )}
+          </div>
+
+          {showUrgent && <UrgentPanel items={urgent} onSeeAll={seeAllByDeadline} />}
+
           {filtered.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-border p-16 text-center">
-              <p className="text-5xl mb-4">🔍</p>
-              <p className="font-semibold text-foreground mb-2">Нічого не знайдено</p>
+            <div className="bg-white rounded-2xl border border-border px-6 py-14 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-primary-light text-primary flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              </div>
+              <p className="font-bold text-foreground mb-1.5">Нічого не знайдено</p>
               <p className="text-sm text-muted mb-5">Спробуй змінити фільтри або пошуковий запит</p>
-              <button onClick={clearAll} className="text-sm font-semibold text-primary hover:underline">Очистити всі фільтри</button>
+              <button onClick={clearAll} className="px-5 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all">Очистити всі фільтри</button>
             </div>
           ) : (
             <>
@@ -551,19 +647,20 @@ export default function OpportunitiesCatalog() {
                 <div className="flex items-center justify-center gap-2 mt-10 flex-wrap">
                   <button onClick={() => goToPage(Math.max(1, page - 1))}
                     disabled={page === 1}
-                    className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted hover:border-primary hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
+                    className="px-4 py-2 rounded-xl border border-border bg-white text-sm font-medium text-muted hover:border-primary hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
                   >← Назад</button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1).slice(
                     Math.max(0, page - 3), Math.min(totalPages, page + 2)
                   ).map((p) => (
                     <button key={p}
                       onClick={() => goToPage(p)}
-                      className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${p === page ? "bg-primary text-white shadow-md shadow-primary/25" : "border border-border text-muted hover:border-primary hover:text-primary"}`}
+                      aria-current={p === page ? "page" : undefined}
+                      className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${p === page ? "bg-primary text-white shadow-md shadow-primary/25" : "border border-border bg-white text-muted hover:border-primary hover:text-primary"}`}
                     >{p}</button>
                   ))}
                   <button onClick={() => goToPage(Math.min(totalPages, page + 1))}
                     disabled={page === totalPages}
-                    className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted hover:border-primary hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
+                    className="px-4 py-2 rounded-xl border border-border bg-white text-sm font-medium text-muted hover:border-primary hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
                   >Далі →</button>
                 </div>
               )}
