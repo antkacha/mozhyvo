@@ -1,15 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
 import type { Metadata } from "next";
-import { opportunities, typeColors, normalizeType, type Opportunity } from "@/lib/data";
-import { applyFieldsFromRow } from "@/lib/apply-method";
+import { opportunities, typeColors } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
 import OpportunityClient from "@/components/OpportunityClient";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 import OpportunityApplyCard from "@/components/OpportunityApplyCard";
 import BackToOpportunities from "@/components/BackToOpportunities";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { getPublicOpportunity } from "@/lib/opportunity-detail";
 import ViewTracker from "./ViewTracker";
 
 export function generateStaticParams() {
@@ -18,76 +16,10 @@ export function generateStaticParams() {
 
 export const dynamicParams = true;
 
-// Supabase-js's fetch is otherwise cached indefinitely and untagged by
-// Next.js's default fetch caching — revalidateTag("projects") (called by
-// every project mutation route, including the cover upload) would have no
-// entry to invalidate. Same tag/strategy as /api/public/opportunities so
-// catalog and detail page share one invalidation path.
-const fetchOrgProjectRow = unstable_cache(
-  async (id: string) => {
-    const admin = createAdminClient();
-    const { data } = await admin
-      .from("org_projects")
-      .select("*, orgs!inner(id, name, status, slug)")
-      .eq("id", id)
-      .eq("status", "published")
-      .maybeSingle();
-    return data;
-  },
-  ["org-project-detail"],
-  { tags: ["projects"], revalidate: 60 },
-);
-
-async function fetchOrgProject(id: string): Promise<Opportunity | null> {
-  try {
-    const data = await fetchOrgProjectRow(id);
-    if (!data) return null;
-    const org = data.orgs as { id: string; name: string; status?: string; slug?: string };
-    // Only verified orgs' projects are public — also by direct URL.
-    if (org.status !== "verified") return null;
-    return {
-      slug:             data.id as string,
-      type:             normalizeType(data.type as string, data.type_name as string),
-      typeName:         (data.type_name as string) ?? "",
-      org:              org.name ?? "",
-      orgSlug:          org.slug || org.id,
-      title:            (data.title as string) ?? "",
-      shortDescription: (data.short_description as string) ?? "",
-      fullDescription:  (data.full_description as string) ?? "",
-      deadline:         (data.deadline as string) ?? "",
-      deadlineDisplay:  (data.deadline_display as string) ?? "",
-      flag:             (data.flag as string) ?? "🇺🇦",
-      location:         (data.location as string) ?? "",
-      country:          (data.country as string) ?? "",
-      format:           (data.format as Opportunity["format"]) ?? "offline",
-      languages:        (data.languages as string[]) ?? [],
-      ageMin:           data.age_min as number | undefined,
-      ageMax:           data.age_max as number | undefined,
-      funding:          (data.funding as Opportunity["funding"]) ?? "fully-funded",
-      fundingDetails:   (data.funding_details as string) ?? "",
-      requirements:     (data.requirements as string[]) ?? [],
-      benefits:         (data.benefits as string[]) ?? [],
-      tags:             (data.tags as string[]) ?? [],
-      ...applyFieldsFromRow(data),
-      duration:         (data.duration as string) ?? "",
-      infoPackUrl:      (data.info_pack_url as string) || undefined,
-      photo:            (data.photo_url as string) || undefined,
-      importantNote:    (data.important_note as string) || undefined,
-      hasFee:           (data.has_fee as boolean) ?? false,
-      feeAmount:        (data.fee_amount as string) || undefined,
-      feeWho:           (data.fee_who as Opportunity["feeWho"]) ?? "selected",
-      projectId:        data.id as string,
-      orgVerified:      org.status === "verified",
-    };
-  } catch {
-    return null;
-  }
-}
-
 const BASE = "https://www.mozhyvo.com.ua";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);
+  const opp = opportunities.find((o) => o.slug === params.slug) ?? await getPublicOpportunity(params.slug);
   if (!opp) return {};
   const url = `${BASE}/opportunities/${opp.slug}`;
   return {
@@ -134,7 +66,7 @@ function safeJsonLd(data: unknown): string {
 }
 
 export default async function OpportunityDetailPage({ params }: { params: { slug: string } }) {
-  const opp = opportunities.find((o) => o.slug === params.slug) ?? await fetchOrgProject(params.slug);
+  const opp = opportunities.find((o) => o.slug === params.slug) ?? await getPublicOpportunity(params.slug);
   if (!opp) notFound();
 
   const related = opportunities
