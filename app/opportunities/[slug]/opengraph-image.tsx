@@ -1,166 +1,51 @@
-import { ImageResponse } from "next/og";
-import { type OpportunityType } from "@/lib/data";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import sharp from "sharp";
 import { getPublicOpportunity } from "@/lib/opportunity-detail";
 
 export const alt = "МОЖUВО — можливість";
 export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
+export const contentType = "image/jpeg";
 
-const TYPE_COLORS: Record<OpportunityType, string> = {
-  scholarship:  "#3B4FE8",
-  internship:   "#2563EB",
-  exchange:     "#16A34A",
-  volunteering: "#0D9488",
-  competition:  "#EA580C",
-  grant:        "#CA8A04",
-  conference:   "#DB2777",
-  hackathon:    "#DC2626",
-  training:     "#4F46E5",
-  research:     "#0891B2",
-  other:        "#3B4FE8",
-};
+// Supabase Storage's cold first byte alone was measured at ~2.6s.
+const COVER_FETCH_TIMEOUT_MS = 5000;
 
-const FUNDING_LABEL: Record<string, string> = {
-  "fully-funded":      "Повне фінансування",
-  "partially-funded":  "Часткове фінансування",
-  "self-funded":       "Без фінансування",
-};
+// JPEG, not ImageResponse's PNG: a photo as PNG is 1–2 MB, and WhatsApp/Viber
+// drop preview images over ~300 KB.
+function jpegResponse(body: Buffer, maxAge = 3600) {
+  return new Response(new Uint8Array(body), {
+    headers: { "Content-Type": contentType, "Cache-Control": `public, max-age=${maxAge}` },
+  });
+}
+
+// The site-wide brand image (app/opengraph-image.png), re-encoded so every
+// response from this route matches `contentType`.
+// Traced into the bundle via outputFileTracingIncludes in next.config.js.
+async function brandPlaceholder(maxAge?: number) {
+  const png = await readFile(join(process.cwd(), "app/opengraph-image.png"));
+  return jpegResponse(await sharp(png).jpeg({ quality: 85 }).toBuffer(), maxAge);
+}
 
 export default async function Image({ params }: { params: { slug: string } }) {
-  // Not found, not published, or org not verified → generic card, so a
-  // non-public opportunity never leaks a rich preview.
+  // Not found, not published, or org not verified → brand image, so a
+  // non-public opportunity never leaks a preview.
   const opp = await getPublicOpportunity(params.slug);
-  if (!opp) {
-    return new ImageResponse(
-      <div style={{ background: "#3B4FE8", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: "white", fontSize: 48, fontWeight: 900 }}>МОЖUВО</p>
-      </div>,
-      { ...size }
-    );
+  if (!opp?.photo) return brandPlaceholder();
+
+  // A missing, slow or non-image cover must never break the preview.
+  try {
+    const res = await fetch(opp.photo, {
+      signal: AbortSignal.timeout(COVER_FETCH_TIMEOUT_MS),
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`cover fetch ${res.status}`);
+    const jpeg = await sharp(Buffer.from(await res.arrayBuffer()))
+      .resize(size.width, size.height, { fit: "cover", position: "centre" })
+      .jpeg({ quality: 80, mozjpeg: true })
+      .toBuffer();
+    return jpegResponse(jpeg);
+  } catch {
+    // Short cache: a transient failure shouldn't pin the placeholder for an hour.
+    return brandPlaceholder(60);
   }
-
-  const accentColor = TYPE_COLORS[opp.type] ?? "#3B4FE8";
-
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          background: "#FAFAFA",
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          fontFamily: "system-ui, -apple-system, sans-serif",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Accent left border strip */}
-        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 12, background: accentColor }} />
-
-        {/* Content */}
-        <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "60px 72px 60px 84px", justifyContent: "space-between" }}>
-
-          {/* Top row: type badge + funding */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div
-              style={{
-                padding: "8px 20px",
-                background: accentColor,
-                borderRadius: 100,
-                color: "white",
-                fontSize: 18,
-                fontWeight: 700,
-              }}
-            >
-              {opp.typeName}
-            </div>
-            {opp.funding === "fully-funded" && (
-              <div
-                style={{
-                  padding: "8px 20px",
-                  background: "#DCFCE7",
-                  borderRadius: 100,
-                  color: "#15803D",
-                  fontSize: 18,
-                  fontWeight: 700,
-                }}
-              >
-                {FUNDING_LABEL[opp.funding]}
-              </div>
-            )}
-          </div>
-
-          {/* Middle: org + title */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <p
-              style={{
-                color: "#6B7280",
-                fontSize: 22,
-                fontWeight: 700,
-                margin: 0,
-                textTransform: "uppercase",
-                letterSpacing: "2px",
-              }}
-            >
-              {opp.org}
-            </p>
-            <h1
-              style={{
-                color: "#0F0F0F",
-                fontSize: opp.title.length > 60 ? 46 : 56,
-                fontWeight: 900,
-                lineHeight: 1.08,
-                margin: 0,
-                letterSpacing: "-1.5px",
-                maxWidth: "90%",
-              }}
-            >
-              {opp.title}
-            </h1>
-          </div>
-
-          {/* Bottom: meta + logo */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
-              {[
-                { label: "Місце",     val: `${opp.flag} ${opp.location}` },
-                { label: "Дедлайн",   val: opp.deadlineDisplay },
-                opp.duration ? { label: "Тривалість", val: opp.duration } : null,
-              ].filter(Boolean).map((item) => (
-                <div key={item!.label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <span style={{ color: "#9CA3AF", fontSize: 14, fontWeight: 600, textTransform: "uppercase", letterSpacing: "1px" }}>
-                    {item!.label}
-                  </span>
-                  <span style={{ color: "#374151", fontSize: 20, fontWeight: 700 }}>{item!.val}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Mozhyvo branding */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  background: accentColor,
-                  borderRadius: 10,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontSize: 18,
-                  fontWeight: 900,
-                }}
-              >
-                М
-              </div>
-              <span style={{ color: "#374151", fontSize: 20, fontWeight: 800 }}>mozhyvo.com.ua</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    ),
-    { ...size }
-  );
 }

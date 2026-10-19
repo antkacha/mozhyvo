@@ -65,6 +65,13 @@ const nextConfig = {
       },
     ];
   },
+  experimental: {
+    // The per-opportunity OG route reads the brand image from disk as its
+    // fallback; file tracing can't see a runtime readFile path, so ship it.
+    outputFileTracingIncludes: {
+      "/opportunities/[slug]/opengraph-image": ["./app/opengraph-image.png"],
+    },
+  },
 };
 
 module.exports = nextConfig;
