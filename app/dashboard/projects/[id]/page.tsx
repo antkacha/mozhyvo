@@ -10,6 +10,7 @@ import { saveDraft, loadDraft, clearDraft } from "@/lib/draft-storage";
 import { resizeToCover, validateCoverFile, uploadCoverPhoto, deleteCoverPhoto } from "@/lib/cover-photo";
 import { validateExternalApplyUrl, validateApplyEmail, getApplyMethod, applyFieldsFor, APPLY_INSTRUCTIONS_MAX, type ApplyMethod } from "@/lib/apply-method";
 import { OPPORTUNITY_TYPES, normalizeType, typeNames, type OpportunityType } from "@/lib/data";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 const COUNTRIES: { emoji: string; name: string }[] = [
   { emoji: "🌍", name: "Онлайн / міжнародний" },
@@ -396,8 +397,7 @@ function EditProjectContent() {
 
       {/* Expired banner */}
       {(() => {
-        const today = new Date().toISOString().split("T")[0];
-        const isExpired = project.deadline && /^\d{4}-\d{2}-\d{2}$/.test(project.deadline) && project.deadline < today;
+        const isExpired = isDeadlinePassed(project.deadline ?? "");
         if (!isExpired) return null;
         return (
           <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl mb-6">

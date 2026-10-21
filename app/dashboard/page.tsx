@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import { useOrgProjects } from "@/hooks/useOrgProjects";
 import { useOrgApplications, OrgApplication } from "@/hooks/useOrgApplications";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 // ── Status config ────────────────────────────────────────────────────
 const APP_STATUS_LABEL: Record<OrgApplication["status"], string> = {
@@ -25,11 +26,8 @@ function OrgOverview() {
   const { projects } = useOrgProjects(org?.id);
   const { applications } = useOrgApplications(org?.id);
 
-  const today = new Date().toISOString().split("T")[0];
   const published = projects.filter((p) => p.status === "published");
-  const activePublished = published.filter(
-    (p) => !p.deadline || !/^\d{4}-\d{2}-\d{2}$/.test(p.deadline) || p.deadline >= today,
-  );
+  const activePublished = published.filter((p) => !isDeadlinePassed(p.deadline ?? ""));
   const drafts = projects.filter((p) => p.status === "draft");
   const newApps = applications.filter((a) => a.status === "new");
   const selected = applications.filter((a) => a.status === "selected");

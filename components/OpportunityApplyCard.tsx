@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { Opportunity } from "@/lib/data";
 import { useSaved } from "@/hooks/useSaved";
-import { getDaysUntilDeadline } from "@/lib/recommendations";
+import { DEADLINE_SOON_DAYS, getDaysUntilDeadline } from "@/lib/deadline";
 import { getApplyMethod } from "@/lib/apply-method";
 
 function DeadlineCountdown({ deadline }: { deadline: string }) {
@@ -13,7 +13,7 @@ function DeadlineCountdown({ deadline }: { deadline: string }) {
   // The status text is already shown above this block via deadlineDisplay.
   if (days === null) return null;
   if (days < 0) return <span className="text-sm font-semibold text-muted">Завершено</span>;
-  const urgent = days <= 7;
+  const urgent = days <= DEADLINE_SOON_DAYS;
   const soon   = days <= 14;
   return (
     <div className={`rounded-xl px-4 py-3 text-center ${urgent ? "bg-red-50" : soon ? "bg-amber-50" : "bg-primary-light"}`}>
@@ -21,7 +21,7 @@ function DeadlineCountdown({ deadline }: { deadline: string }) {
         {days}
       </p>
       <p className={`text-xs font-semibold mt-0.5 ${urgent ? "text-red-500" : soon ? "text-amber-500" : "text-primary/70"}`}>
-        {days === 1 ? "день залишився" : days < 5 ? "дні залишилось" : "днів залишилось"}
+        {days === 0 ? "останній день — сьогодні" : days === 1 ? "день залишився" : days < 5 ? "дні залишилось" : "днів залишилось"}
       </p>
       {urgent && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">⏰ Дедлайн спливає!</p>}
     </div>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Opportunity, OpportunityType, typeColors, typeEmoji, formatLabels } from "@/lib/data";
 import { orgNameToSlug } from "@/lib/organizations";
 import { useSaved } from "@/hooks/useSaved";
-import { getDaysUntilDeadline } from "@/lib/recommendations";
+import { isDeadlineSoon } from "@/lib/deadline";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 
 const typeAvatarBg: Record<OpportunityType, string> = {
@@ -22,13 +22,8 @@ const typeAvatarBg: Record<OpportunityType, string> = {
   other: "bg-slate-50",
 };
 
-function isExpiringSoon(deadline: string): boolean {
-  const days = getDaysUntilDeadline(deadline);
-  return days !== null && days <= 14 && days > 0;
-}
-
 function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; index?: number }) {
-  const expiring = isExpiringSoon(opp.deadline);
+  const expiring = isDeadlineSoon(opp.deadline);
   const { isSaved, toggle, ready } = useSaved();
   const saved = isSaved(opp.slug);
   const orgSlug = opp.orgSlug ?? orgNameToSlug[opp.org];

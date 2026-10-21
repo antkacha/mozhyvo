@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { useSaved } from "@/hooks/useSaved";
 import { opportunities } from "@/lib/data";
 import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
-import { getDaysUntilDeadline } from "@/lib/recommendations";
+import { isDeadlinePassed } from "@/lib/deadline";
 import OpportunityCard from "@/components/OpportunityCard";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 
@@ -23,8 +23,9 @@ export default function CabinetSavedPage() {
   );
 
   const savedOpps = allOpportunities.filter((o) => saved.includes(o.slug));
-  const expired   = savedOpps.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d !== null && d <= 0; });
-  const active    = savedOpps.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d === null || d > 0; });
+  // Due today is still open — only a deadline date before Kyiv-today is expired.
+  const expired   = savedOpps.filter((o) => isDeadlinePassed(o.deadline));
+  const active    = savedOpps.filter((o) => !isDeadlinePassed(o.deadline));
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">

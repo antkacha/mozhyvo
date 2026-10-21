@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSaved } from "@/hooks/useSaved";
 import { opportunities } from "@/lib/data";
 import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
-import { getDaysUntilDeadline } from "@/lib/recommendations";
+import { isDeadlinePassed } from "@/lib/deadline";
 import OpportunityCard from "@/components/OpportunityCard";
 
 export default function SavedList() {
@@ -33,14 +33,9 @@ export default function SavedList() {
   }
 
   const savedOpportunities = allOpportunities.filter((o) => saved.includes(o.slug));
-  const activeOpportunities = savedOpportunities.filter((o) => {
-    const d = getDaysUntilDeadline(o.deadline);
-    return d === null || d > 0;
-  });
-  const expiredOpportunities = savedOpportunities.filter((o) => {
-    const d = getDaysUntilDeadline(o.deadline);
-    return d !== null && d <= 0;
-  });
+  // Due today is still open — only a deadline date before Kyiv-today is expired.
+  const activeOpportunities = savedOpportunities.filter((o) => !isDeadlinePassed(o.deadline));
+  const expiredOpportunities = savedOpportunities.filter((o) => isDeadlinePassed(o.deadline));
 
   if (saved.length === 0) {
     return (

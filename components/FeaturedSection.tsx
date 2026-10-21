@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
 import { typeColors, typeNames } from "@/lib/data";
-import { getDaysUntilDeadline } from "@/lib/recommendations";
+import { getDaysUntilDeadline } from "@/lib/deadline";
 import type { Opportunity } from "@/lib/data";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 

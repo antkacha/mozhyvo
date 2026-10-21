@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { orgsBySlug } from "@/lib/organizations";
 import OpportunityCoverImage from "@/components/OpportunityCoverImage";
 import { normalizeType, typeNames } from "@/lib/data";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -55,8 +56,6 @@ export default async function OrgArchivePage({
 
   if (!org) notFound();
 
-  const today = new Date().toISOString().split("T")[0];
-
   const { data: allProjects } = await admin
     .from("org_projects")
     .select("id, title, type, type_name, country, flag, deadline, deadline_display, funding, short_description, photo_url")
@@ -65,7 +64,7 @@ export default async function OrgArchivePage({
     .order("deadline", { ascending: false });
 
   const archived = ((allProjects ?? []) as Project[]).filter(
-    (p) => p.deadline && /^\d{4}-\d{2}-\d{2}$/.test(p.deadline) && p.deadline < today,
+    (p) => isDeadlinePassed(p.deadline ?? ""),
   );
 
   const typeOf = (p: Project) => normalizeType(p.type, p.type_name);

@@ -14,7 +14,7 @@ import {
   type FundingType,
   type FormatType,
 } from "@/lib/data";
-import { getDaysUntilDeadline } from "@/lib/recommendations";
+import { getDaysUntilDeadline, getKyivToday, isDeadlinePassed, isDeadlineSoon } from "@/lib/deadline";
 import OpportunityCard from "@/components/OpportunityCard";
 import { SkeletonGrid } from "@/components/SkeletonCard";
 import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
@@ -452,11 +452,12 @@ export default function OpportunitiesCatalog() {
   );
 
   // Filtered + sorted list
-  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const today = useMemo(() => getKyivToday(), []);
   const filtered = useMemo(() => {
     let result = allOpportunities.filter((o) => {
-      // hide expired (only if deadline is a real date, not empty/rolling)
-      if (o.deadline && o.deadline.match(/^\d{4}-\d{2}-\d{2}$/) && o.deadline < today) return false; // eslint-disable-line react-hooks/exhaustive-deps
+      // hide expired (only if deadline is a real date, not empty/rolling) —
+      // due today is still open
+      if (isDeadlinePassed(o.deadline, today)) return false;
       if (types.length > 0    && !types.includes(o.type))      return false;
       if (formats.length > 0  && !formats.includes(o.format))  return false;
       if (fundings.length > 0 && !fundings.includes(o.funding)) return false;
@@ -500,7 +501,7 @@ export default function OpportunitiesCatalog() {
   }, [allOpportunities, types, formats, fundings, countries, languages, ageU18, qParam, sort, today]);
 
   const urgent = useMemo(() =>
-    allOpportunities.filter((o) => { const d = getDaysUntilDeadline(o.deadline); return d !== null && d >= 0 && d <= 7; }).slice(0, 8),
+    allOpportunities.filter((o) => isDeadlineSoon(o.deadline)).slice(0, 8),
   [allOpportunities]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));

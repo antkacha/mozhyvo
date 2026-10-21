@@ -5,7 +5,8 @@ import { useProfile } from "@/hooks/useProfile";
 import { useApplications } from "@/hooks/useApplications";
 import { useSaved } from "@/hooks/useSaved";
 import { profileCompleteness } from "@/lib/types";
-import { getRecommendations, getDaysUntilDeadline } from "@/lib/recommendations";
+import { getRecommendations } from "@/lib/recommendations";
+import { getDaysUntilDeadline, isDeadlineSoon } from "@/lib/deadline";
 import { usePublicOrgProjects } from "@/hooks/usePublicOrgProjects";
 import StatusBadge from "@/components/StatusBadge";
 import OpportunityCard from "@/components/OpportunityCard";
@@ -22,7 +23,7 @@ export default function CabinetOverviewPage() {
   const recentApps   = applications.slice(0, 5);
   const recommendations = (profileReady && projectsReady) ? getRecommendations(liveProjects, profile, 4) : [];
   const upcoming = applications
-    .filter((a) => { const d = getDaysUntilDeadline(a.deadline); return d !== null && d > 0 && d <= 14; })
+    .filter((a) => isDeadlineSoon(a.deadline))
     .sort((a, b) => (getDaysUntilDeadline(a.deadline) ?? Infinity) - (getDaysUntilDeadline(b.deadline) ?? Infinity))
     .slice(0, 3);
 
@@ -104,8 +105,8 @@ export default function CabinetOverviewPage() {
                     <p className="text-xs text-muted">{a.org}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className={`text-lg font-black ${days <= 3 ? "text-red-600" : "text-amber-600"}`}>{days}д</p>
-                    <p className="text-[10px] text-muted">залишилось</p>
+                    <p className={`text-lg font-black ${days <= 3 ? "text-red-600" : "text-amber-600"}`}>{days === 0 ? "Сьогодні" : `${days}д`}</p>
+                    <p className="text-[10px] text-muted">{days === 0 ? "останній день" : "залишилось"}</p>
                   </div>
                 </div>
               );

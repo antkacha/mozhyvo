@@ -1,5 +1,6 @@
 import type { Opportunity } from "@/lib/data";
 import type { UserProfile } from "@/lib/types";
+import { DEADLINE_SOON_DAYS, getDaysUntilDeadline, isDeadlinePassed } from "@/lib/deadline";
 
 // ════════════════════════════════════════════════════════
 // Rule-based recommendation scoring
@@ -27,16 +28,6 @@ const TYPE_INTEREST_MAP: Record<string, string[]> = {
   training:      ["тренінг", "школа", "навчання"],
   research:      ["дослідження", "наука", "навчання"],
 };
-
-// deadline is either a real ISO date or "" for rolling/ASAP/no-deadline
-// programs (the human-readable text lives in deadlineDisplay instead) —
-// null means "no countdown applies", not an error.
-function daysUntil(deadline: string): number | null {
-  if (!deadline) return null;
-  const t = new Date(deadline).getTime();
-  if (isNaN(t)) return null;
-  return (t - Date.now()) / (1000 * 60 * 60 * 24);
-}
 
 export function scoreOpportunity(opp: Opportunity, profile: UserProfile): number {
   let score = 0;
@@ -73,8 +64,8 @@ export function scoreOpportunity(opp: Opportunity, profile: UserProfile): number
 
   // Deadline safety bonus (more than 7 days left) — no bonus either way
   // when there's no countdown (rolling/ASAP)
-  const days = daysUntil(opp.deadline);
-  if (days !== null && days > 7) score += WEIGHTS.deadlineSafe;
+  const days = getDaysUntilDeadline(opp.deadline);
+  if (days !== null && days > DEADLINE_SOON_DAYS) score += WEIGHTS.deadlineSafe;
 
   // Verified org proxy (featured opportunities represent verified/established orgs)
   if (opp.featured) score += WEIGHTS.verifiedOrg;
@@ -90,12 +81,9 @@ export function getRecommendations(
   profile: UserProfile,
   limit = 6
 ): Opportunity[] {
-  // Only include open opportunities — a deadline in the future, or no
+  // Only include open opportunities — due today or later, or no
   // countdown at all (rolling/ASAP programs are always "open")
-  const open = opportunities.filter((o) => {
-    const d = daysUntil(o.deadline);
-    return d === null || d > 0;
-  });
+  const open = opportunities.filter((o) => !isDeadlinePassed(o.deadline));
 
   return open
     .map((opp) => ({ opp, score: scoreOpportunity(opp, profile) }))
@@ -104,16 +92,9 @@ export function getRecommendations(
     .map(({ opp }) => opp);
 }
 
-export function getUrgent(opportunities: Opportunity[], maxDays = 7): Opportunity[] {
+export function getUrgent(opportunities: Opportunity[], maxDays = DEADLINE_SOON_DAYS): Opportunity[] {
   return opportunities.filter((o) => {
-    const days = daysUntil(o.deadline);
-    return days !== null && days > 0 && days <= maxDays;
-  }).sort((a, b) => (daysUntil(a.deadline) ?? Infinity) - (daysUntil(b.deadline) ?? Infinity));
-}
-
-// Returns null when the deadline is empty/unparseable (rolling/ASAP/no
-// deadline) — callers must handle that instead of assuming a number.
-export function getDaysUntilDeadline(deadline: string): number | null {
-  const d = daysUntil(deadline);
-  return d === null ? null : Math.ceil(d);
+    const days = getDaysUntilDeadline(o.deadline);
+    return days !== null && days >= 0 && days <= maxDays;
+  }).sort((a, b) => (getDaysUntilDeadline(a.deadline) ?? Infinity) - (getDaysUntilDeadline(b.deadline) ?? Infinity));
 }

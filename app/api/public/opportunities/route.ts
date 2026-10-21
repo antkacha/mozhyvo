@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 // Keep the handler always dynamic — handler runs on every request,
 // but the DB queries inside are served from Next.js Data Cache
@@ -54,9 +55,9 @@ export async function GET(req: NextRequest) {
   // this, so their behavior is unchanged.
   const includeExpired = new URL(req.url).searchParams.get("includeExpired") === "1";
 
-  // today is evaluated fresh on every request — deadline filter stays accurate
-  // even when rows are served from cache.
-  const today = new Date().toISOString().split("T")[0];
+  // "today" (Kyiv) is evaluated fresh on every request inside
+  // isDeadlinePassed — deadline filter stays accurate even when rows are
+  // served from cache.
 
   let rows: Record<string, unknown>[];
   let orgs: OrgEntry[];
@@ -75,8 +76,7 @@ export async function GET(req: NextRequest) {
       const org = orgsMap.get(row.org_id as string);
       if (org?.status !== "verified") return false;
       if (!includeExpired) {
-        const deadline = (row.deadline as string) ?? "";
-        if (deadline && /^\d{4}-\d{2}-\d{2}$/.test(deadline) && deadline < today) return false;
+        if (isDeadlinePassed((row.deadline as string) ?? "")) return false;
       }
       return true;
     })

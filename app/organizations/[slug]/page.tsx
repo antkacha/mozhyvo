@@ -8,6 +8,7 @@ import { orgsBySlug, orgNameToSlug } from "@/lib/organizations";
 import ArchiveSection from "./ArchiveSection";
 import { opportunities, normalizeType, typeNames, type Opportunity } from "@/lib/data";
 import OpportunityCard from "@/components/OpportunityCard";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -434,9 +435,7 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
         .order("created_at", { ascending: false })
     : { data: [] };
 
-  const today = new Date().toISOString().split("T")[0];
-  const isExpired = (p: SupabaseProject) =>
-    !!p.deadline && /^\d{4}-\d{2}-\d{2}$/.test(p.deadline) && p.deadline < today;
+  const isExpired = (p: SupabaseProject) => isDeadlinePassed(p.deadline ?? "");
   const all = (projects ?? []) as SupabaseProject[];
 
   return (
