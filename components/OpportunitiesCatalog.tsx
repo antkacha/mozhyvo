@@ -79,7 +79,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 // ── Urgent deadline panel ────────────────────────────────────────────
 // Shows at most URGENT_SHOWN of the urgent items (the selection itself —
-// deadline 0–7 days, first 8 — is computed in the catalog and unchanged).
+// deadline 0–7 days, most urgent first, first 8 — is computed in the catalog and unchanged).
 // Columns always equal the number of tiles in a row, so there are no empty
 // slots at any count: 1 → 1, 2 → 2, 3 → 3, 4 → 2×2 then 4 across on xl.
 // Mobile stacks at most 3.
@@ -500,8 +500,15 @@ export default function OpportunitiesCatalog() {
     return result;
   }, [allOpportunities, types, formats, fundings, countries, languages, ageU18, qParam, sort, today]);
 
+  // Most urgent first, sorted before slicing so the cap keeps the soonest
+  // deadlines. Array.sort is stable, so equal day counts keep catalog order.
   const urgent = useMemo(() =>
-    allOpportunities.filter((o) => isDeadlineSoon(o.deadline)).slice(0, 8),
+    allOpportunities
+      .filter((o) => isDeadlineSoon(o.deadline))
+      .map((o) => ({ o, days: getDaysUntilDeadline(o.deadline) ?? 0 }))
+      .sort((a, b) => a.days - b.days)
+      .map(({ o }) => o)
+      .slice(0, 8),
   [allOpportunities]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
