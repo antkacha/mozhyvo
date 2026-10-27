@@ -28,6 +28,8 @@ export interface OrgProfile {
   mission: string;
   founded: string;
   logo: string | null;
+  /** Wide homepage-strip logo. Read-only here: set via /api/org/showcase-logo, never via update(). */
+  showcaseLogo: string | null;
   coverImage: string | null;
   coverVideo: string | null;
   brandColor: string;
@@ -62,6 +64,7 @@ function fromRow(row: Record<string, unknown>): OrgProfile {
     mission:      (row.mission as string) ?? "",
     founded:      (row.founded as string) ?? "",
     logo:         (row.logo_url as string | null) ?? null,
+    showcaseLogo: (row.showcase_logo_url as string | null) ?? null,
     coverImage:   (row.cover_image_url as string | null) ?? null,
     coverVideo:   (row.cover_video_url as string | null) ?? null,
     brandColor:   (row.brand_color as string) ?? "#3B4FE8",
@@ -182,6 +185,11 @@ export function useOrgSession() {
     load();
   }, [load]);
 
+  /** Updates the cached org in place (no refetch), e.g. after a dedicated upload route. */
+  const patchLocal = useCallback((data: Partial<OrgProfile>) => {
+    if (_cachedOrg) setCache({ ..._cachedOrg, ...data }, true, _cachedMemberRole);
+  }, [setCache]);
+
   // login() kept for backward compat — no-op in Supabase mode
   const login = useCallback((_profile: OrgProfile) => {}, []);
 
@@ -191,5 +199,5 @@ export function useOrgSession() {
   const isOwner = memberRole === "owner";
   const canManageProjects = isOwner || memberRole === "admin";
 
-  return { org, ready, reload, login, update, logout, memberRole, isOwner, canManageProjects };
+  return { org, ready, reload, patchLocal, login, update, logout, memberRole, isOwner, canManageProjects };
 }

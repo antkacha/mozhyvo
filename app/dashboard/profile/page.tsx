@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { useOrgSession } from "@/hooks/useOrgSession";
 import CoverPickerModal, { type CoverResult } from "@/components/CoverPickerModal";
+import ShowcaseLogoField from "@/components/ShowcaseLogoField";
 
 const ORG_TYPES = [
   "Бізнес / Приватна компанія",
@@ -210,7 +211,7 @@ const lbl = "block text-sm font-medium text-foreground mb-1.5";
 
 // ── Main component ───────────────────────────────────────────────────
 function ProfileContent() {
-  const { org, update, isOwner } = useOrgSession();
+  const { org, update, isOwner, patchLocal } = useOrgSession();
   const logoRef = useRef<HTMLInputElement>(null);
   const [focusInput, setFocusInput] = useState("");
   const [saved, setSaved]   = useState(false);
@@ -507,6 +508,25 @@ function ProfileContent() {
                   />
                 </div>
               </div>
+            </Section>
+
+            {/* Wide logo for the homepage partner strip — separate from the square avatar above */}
+            <Section
+              title="Логотип для партнерської стрічки на головній"
+              hint="Широкий (горизонтальний) логотип, який показується у стрічці «Партнери» на головній сторінці МОЖUВО. Це окремий файл — квадратний логотип профілю вище не змінюється. Стрічка показує лише верифіковані організації з цим логотипом. Зберігається одразу, без кнопки «Зберегти»."
+            >
+              <ShowcaseLogoField
+                endpoint="/api/org/showcase-logo"
+                value={org.showcaseLogo}
+                onChange={(url) => patchLocal({ showcaseLogo: url })}
+                disabled={!isOwner}
+                orgName={org.name}
+              />
+              {org.status !== "verified" && (
+                <p className="text-xs text-amber-600 bg-amber-50 rounded-xl px-3 py-2">
+                  Логотип з’явиться на головній після верифікації організації.
+                </p>
+              )}
             </Section>
 
             {/* Загальна інформація */}

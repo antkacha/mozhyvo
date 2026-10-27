@@ -1,17 +1,17 @@
 import PartnerLogo from "@/components/PartnerLogo";
-import { getActivePartners, PARTNERS_STATIC_MAX, type Partner } from "@/lib/partners";
+import { getPartnerOrgs, PARTNERS_STATIC_MAX, type Partner } from "@/lib/partners";
 
 function StaticRow({ partners, className = "flex" }: { partners: Partner[]; className?: string }) {
   return (
     <div className={`${className} flex-wrap justify-center gap-x-8 md:gap-x-10 gap-y-6`}>
-      {partners.map((p) => <PartnerLogo key={p.id} partner={p} />)}
+      {partners.map((p) => <PartnerLogo key={p.slug} partner={p} />)}
     </div>
   );
 }
 
 /**
- * Homepage partner strip — the admin-curated partners table (active rows,
- * in sort_order). Few partners → static centered row. More than
+ * Homepage partner strip: verified orgs with a showcase logo that an admin
+ * hasn't hidden (see lib/partners). Few partners → static centered row. More than
  * PARTNERS_STATIC_MAX → slow looping marquee, with a static wrapped grid for
  * prefers-reduced-motion. The count rule runs once on the server, so server
  * and client render the same mode.
@@ -45,7 +45,7 @@ export function PartnersView({ partners }: { partners: Partner[] }) {
                     aria-hidden={copy === 1 ? true : undefined}
                     className="flex flex-none items-center gap-8 md:gap-10 pr-8 md:pr-10"
                   >
-                    {partners.map((p) => <PartnerLogo key={p.id} partner={p} duplicate={copy === 1} />)}
+                    {partners.map((p) => <PartnerLogo key={p.slug} partner={p} duplicate={copy === 1} eager />)}
                   </div>
                 ))}
               </div>
@@ -59,6 +59,6 @@ export function PartnersView({ partners }: { partners: Partner[] }) {
 }
 
 export default async function PartnersSection() {
-  const partners = await getActivePartners();
+  const partners = await getPartnerOrgs();
   return <PartnersView partners={partners} />;
 }

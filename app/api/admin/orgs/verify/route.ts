@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePartners } from "@/lib/partners";
 import {
   EMAIL_FROM, SITE_URL,
   wrapEmailTemplate, emailButton, emailInfoBox, emailDivider, escapeHtml,
@@ -45,6 +46,8 @@ export async function POST(req: NextRequest) {
   if (action === "unblock")  { updates.status = "verified"; }
 
   await admin.from("orgs").update(updates).eq("id", orgId);
+  // Status decides who is in the homepage partner strip.
+  revalidatePartners();
 
   if (org.contact_email && process.env.RESEND_API_KEY) {
     const resend = new Resend(process.env.RESEND_API_KEY);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import ShowcaseLogoField from "@/components/ShowcaseLogoField";
 
 type OrgStatus = "verified" | "pending" | "rejected" | "blocked";
 
@@ -16,7 +17,19 @@ interface OrgRow {
   created_at: string;
   verified_at: string | null;
   rejection_reason: string | null;
+  slug: string;
+  showcase_logo_url: string | null;
+  partner_hidden: boolean;
   _projectCount?: number;
+}
+
+// Mirrors the homepage rule in lib/partners.
+function partnerStripState(o: OrgRow): { shown: boolean; reason: string } {
+  if (o.slug === "mozhuvo") return { shown: false, reason: "платформа не показується" };
+  if (o.status !== "verified") return { shown: false, reason: "організація не верифікована" };
+  if (!o.showcase_logo_url) return { shown: false, reason: "немає логотипу для стрічки" };
+  if (o.partner_hidden) return { shown: false, reason: "приховано адміністратором" };
+  return { shown: true, reason: "" };
 }
 
 const STATUS_MAP: Record<OrgStatus, { label: string; cls: string }> = {
@@ -38,6 +51,8 @@ export default function AdminOrganizationsPage() {
   const [deleteTarget, setDeleteTarget] = useState<OrgRow | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [hideSaving, setHideSaving] = useState(false);
+  const [hideError, setHideError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -75,6 +90,34 @@ export default function AdminOrganizationsPage() {
     setRejectTarget(null);
     setRejectReason("");
     if (selected?.id === orgId) setSelected(null);
+  }
+
+  /** Applies a change to one org in both the list and the open drawer. */
+  function patchOrg(orgId: string, patch: Partial<OrgRow>) {
+    setOrgs((prev) => prev.map((o) => (o.id === orgId ? { ...o, ...patch } : o)));
+    setSelected((prev) => (prev?.id === orgId ? { ...prev, ...patch } : prev));
+  }
+
+  async function setPartnerHidden(org: OrgRow, hidden: boolean) {
+    setHideSaving(true);
+    setHideError("");
+    patchOrg(org.id, { partner_hidden: hidden });
+    try {
+      const res = await fetch(`/api/admin/orgs/${org.id}/partner-hidden`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hidden }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(json.error ?? "Не вдалося зберегти");
+      }
+    } catch (e) {
+      patchOrg(org.id, { partner_hidden: !hidden });
+      setHideError(e instanceof Error ? e.message : "Не вдалося зберегти");
+    } finally {
+      setHideSaving(false);
+    }
   }
 
   async function doDelete() {
@@ -166,7 +209,7 @@ export default function AdminOrganizationsPage() {
                 {filtered.map((org) => (
                   <tr key={org.id} className="border-b border-border/50 last:border-0 hover:bg-muted-bg/20 transition-colors">
                     <td className="px-5 py-4">
-                      <button onClick={() => setSelected(org)} className="text-left group">
+                      <button onClick={() => { setSelected(org); setHideError(""); }} className="text-left group">
                         <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{org.name}</p>
                         <p className="text-xs text-muted">{org.contact_email}</p>
                       </button>
@@ -294,6 +337,48 @@ export default function AdminOrganizationsPage() {
                   <p className="text-sm text-foreground leading-relaxed bg-muted-bg rounded-xl p-4">{selected.description}</p>
                 </div>
               )}
+              {/* Homepage partner strip */}
+              <div data-testid="partner-strip-admin" className="border border-border rounded-xl p-4 space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold text-muted uppercase tracking-wider">Партнерська стрічка на головній</p>
+                    {(() => {
+                      const st = partnerStripState(selected);
+                      return st.shown ? (
+                        <p className="text-xs text-green-700 mt-1">Показується на головній</p>
+                      ) : (
+                        <p className="text-xs text-muted mt-1">Не показується: {st.reason}</p>
+                      );
+                    })()}
+                  </div>
+                </div>
+                <ShowcaseLogoField
+                  key={selected.id}
+                  endpoint={`/api/admin/orgs/${selected.id}/showcase-logo`}
+                  value={selected.showcase_logo_url}
+                  onChange={(url) => patchOrg(selected.id, { showcase_logo_url: url })}
+                  orgName={selected.name}
+                />
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Приховати з партнерів</p>
+                    <p className="text-xs text-muted">Організація не з’явиться у стрічці, навіть якщо має логотип</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={selected.partner_hidden}
+                    aria-label="Приховати з партнерів"
+                    disabled={hideSaving}
+                    onClick={() => setPartnerHidden(selected, !selected.partner_hidden)}
+                    className={`relative w-11 h-6 rounded-full flex-shrink-0 transition-colors disabled:opacity-50 ${selected.partner_hidden ? "bg-red-500" : "bg-gray-200"}`}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${selected.partner_hidden ? "translate-x-5" : ""}`} />
+                  </button>
+                </div>
+                {hideError && <p className="text-xs text-red-500" role="alert">{hideError}</p>}
+              </div>
+
               {selected.rejection_reason && (
                 <div className="bg-red-50 rounded-xl p-4">
                   <p className="text-xs font-semibold text-red-600 mb-1">Причина відхилення</p>

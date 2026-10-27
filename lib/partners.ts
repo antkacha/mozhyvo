@@ -1,41 +1,60 @@
-import { createClient } from "@supabase/supabase-js";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-/** A homepage partner, as the public section needs it. */
+// Homepage partner strip: verified orgs that uploaded a wide showcase logo
+// and that an admin hasn't hidden. The platform's own org is never listed.
+
 export interface Partner {
-  id: string;
   name: string;
-  logoUrl: string | null;
-  linkUrl: string | null;
+  slug: string;
+  showcaseLogoUrl: string;
 }
 
-// Up to this many partners sit in a static centered row; more become a marquee.
 export const PARTNERS_STATIC_MAX = 6;
+const PLATFORM_ORG_SLUG = "mozhuvo";
+const PARTNERS_TAG = "partners";
 
 /**
- * Active partners in display order. Uses the public anon key with no user
- * session, so the partners RLS policy (public read of is_active rows) is
- * what decides visibility — and the homepage stays statically cacheable.
+ * Service-role read (orgs isn't publicly readable), limited to the three
+ * public columns. Cached for an hour; every write that can change the strip
+ * calls revalidatePartners().
  */
-export async function getActivePartners(): Promise<Partner[]> {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false, autoRefreshToken: false } },
-  );
-  const { data, error } = await supabase
-    .from("partners")
-    .select("id, name, logo_url, link_url")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
-  if (error) {
-    console.error("[partners] query failed:", error.message);
+const cachedPartnerOrgs = unstable_cache(
+  async (): Promise<Partner[]> => {
+    const { data, error } = await createAdminClient()
+      .from("orgs")
+      .select("name, slug, showcase_logo_url")
+      .eq("status", "verified")
+      .not("showcase_logo_url", "is", null)
+      .eq("partner_hidden", false)
+      .neq("slug", PLATFORM_ORG_SLUG)
+      .order("verified_at", { ascending: true, nullsFirst: false })
+      .order("name", { ascending: true });
+    // Throw rather than return []: a failed read must not be cached for an hour.
+    if (error) throw new Error(error.message);
+    return (data ?? [])
+      .filter((o) => o.slug && o.showcase_logo_url)
+      .map((o) => ({
+        name: (o.name as string) ?? "",
+        slug: o.slug as string,
+        showcaseLogoUrl: o.showcase_logo_url as string,
+      }));
+  },
+  ["partner-orgs"],
+  { revalidate: 3600, tags: [PARTNERS_TAG] },
+);
+
+export async function getPartnerOrgs(): Promise<Partner[]> {
+  try {
+    return await cachedPartnerOrgs();
+  } catch (e) {
+    console.error("[partners] query failed:", e instanceof Error ? e.message : e);
     return [];
   }
-  return (data ?? []).map((p) => ({
-    id: p.id as string,
-    name: p.name as string,
-    logoUrl: (p.logo_url as string | null) || null,
-    linkUrl: (p.link_url as string | null) || null,
-  }));
+}
+
+/** Drops the cached partner list and the homepage, so changes show right away. */
+export function revalidatePartners() {
+  revalidateTag(PARTNERS_TAG);
+  revalidatePath("/");
 }

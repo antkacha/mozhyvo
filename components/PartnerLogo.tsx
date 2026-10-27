@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { Partner } from "@/lib/partners";
 
@@ -8,13 +9,15 @@ const TILE =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary";
 
 /**
- * One partner tile: the uploaded color logo, or the name as text when there
- * is no logo or it fails to load. Links out only when the partner has a
- * link. `duplicate` marks the marquee's second copy — hidden from screen
- * readers and skipped by keyboard focus.
+ * One partner tile: the org's wide showcase logo, linking to its profile.
+ * If the image fails to load, the org name is shown instead of a broken
+ * image. `duplicate` marks the marquee's second copy, which is hidden from
+ * screen readers and skipped by keyboard focus. `eager` is for marquee tiles:
+ * browsers don't lazy-load images clipped by an overflow-hidden track, so
+ * lazy tiles would pop in as they scroll into view.
  */
-export default function PartnerLogo({ partner, duplicate = false }: { partner: Partner; duplicate?: boolean }) {
-  const [failed, setFailed] = useState(!partner.logoUrl);
+export default function PartnerLogo({ partner, duplicate = false, eager = false }: { partner: Partner; duplicate?: boolean; eager?: boolean }) {
+  const [failed, setFailed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
   // An image that failed before hydration never fires React's onError.
@@ -23,36 +26,28 @@ export default function PartnerLogo({ partner, duplicate = false }: { partner: P
     if (img && img.complete && img.naturalWidth === 0) setFailed(true);
   }, []);
 
-  const content = failed ? (
-    <span className="font-black text-gray-900 text-center leading-tight line-clamp-2">{partner.name}</span>
-  ) : (
-    // Plain <img>: the file is already resized WebP on Storage, and images
-    // are unoptimized site-wide anyway.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      ref={imgRef}
-      src={partner.logoUrl!}
-      alt={partner.name}
-      loading="lazy"
-      decoding="async"
-      onError={() => setFailed(true)}
-      className="max-h-full max-w-full object-contain"
-    />
-  );
-
-  if (!partner.linkUrl) {
-    return <div className={TILE} title={partner.name}>{content}</div>;
-  }
   return (
-    <a
-      href={partner.linkUrl}
-      target="_blank"
-      rel="noopener noreferrer"
+    <Link
+      href={`/organizations/${partner.slug}`}
       tabIndex={duplicate ? -1 : undefined}
       title={partner.name}
       className={TILE}
     >
-      {content}
-    </a>
+      {failed ? (
+        <span className="font-black text-gray-900 text-center leading-tight line-clamp-2">{partner.name}</span>
+      ) : (
+        // Plain <img>: the file is already a resized WebP on Storage.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          ref={imgRef}
+          src={partner.showcaseLogoUrl}
+          alt={partner.name}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          onError={() => setFailed(true)}
+          className="max-h-full max-w-full object-contain"
+        />
+      )}
+    </Link>
   );
 }
