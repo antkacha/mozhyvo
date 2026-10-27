@@ -3,6 +3,11 @@ import Link from "next/link";
 import FeaturedSection from "@/components/FeaturedSection";
 import HomeRecommendations from "@/components/HomeRecommendations";
 import NewsletterSubscribe from "@/components/NewsletterSubscribe";
+import PartnersSection from "@/components/PartnersSection";
+
+// Partner list is read from the DB; refresh hourly (the admin partner
+// toggle also revalidates "/" right away).
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://www.mozhyvo.com.ua" },
@@ -297,6 +302,7 @@ export default function Home() {
       {/* ── Recommendations + Featured ───────────────────────────────── */}
       <HomeRecommendations />
       <FeaturedSection />
+      <PartnersSection />
 
       {/* ── Marquee — blue (above org CTA) ──────────────────────────── */}
       <div className="bg-primary py-4 overflow-hidden">

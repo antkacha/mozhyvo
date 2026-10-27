@@ -61,6 +61,7 @@ const config: Config = {
       },
       animation: {
         marquee: "marquee 28s linear infinite",
+        "marquee-slow": "marquee 50s linear infinite",
         float1: "float1 4s ease-in-out infinite",
         float2: "float2 3.6s ease-in-out infinite 0.8s",
         float3: "float3 3.2s ease-in-out infinite 1.6s",
