@@ -16,7 +16,6 @@ interface OrgRow {
   created_at: string;
   verified_at: string | null;
   rejection_reason: string | null;
-  show_as_partner?: boolean;
   _projectCount?: number;
 }
 
@@ -39,8 +38,6 @@ export default function AdminOrganizationsPage() {
   const [deleteTarget, setDeleteTarget] = useState<OrgRow | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
-  const [partnerLoading, setPartnerLoading] = useState<string | null>(null);
-  const [partnerError, setPartnerError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,42 +75,6 @@ export default function AdminOrganizationsPage() {
     setRejectTarget(null);
     setRejectReason("");
     if (selected?.id === orgId) setSelected(null);
-  }
-
-  // Homepage "Партнери" strip. Only shows once the org is also verified.
-  async function togglePartner(org: OrgRow) {
-    const next = !org.show_as_partner;
-    setPartnerLoading(org.id);
-    setPartnerError("");
-    const res = await fetch(`/api/admin/orgs/${org.id}/partner`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ show_as_partner: next }),
-    });
-    if (res.ok) {
-      const patch = (o: OrgRow) => (o.id === org.id ? { ...o, show_as_partner: next } : o);
-      setOrgs((list) => list.map(patch));
-      setSelected((s) => (s ? patch(s) : s));
-    } else {
-      setPartnerError(`Не вдалося оновити «${org.name}»`);
-    }
-    setPartnerLoading(null);
-  }
-
-  function partnerSwitch(org: OrgRow) {
-    const on = !!org.show_as_partner;
-    return (
-      <button
-        type="button" role="switch" aria-checked={on}
-        aria-label="Показувати як партнера на головній"
-        title={on && org.status !== "verified" ? "З'явиться на головній після верифікації" : "Показувати як партнера на головній"}
-        disabled={partnerLoading === org.id}
-        onClick={() => togglePartner(org)}
-        className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${on ? "bg-primary" : "bg-gray-200"}`}
-      >
-        <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${on ? "translate-x-[18px]" : "translate-x-0.5"}`} />
-      </button>
-    );
   }
 
   async function doDelete() {
@@ -179,10 +140,6 @@ export default function AdminOrganizationsPage() {
         })}
       </div>
 
-      {partnerError && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{partnerError}</p>
-      )}
-
       {/* Table */}
       <div className="bg-white rounded-2xl border border-border overflow-hidden">
         {loading ? (
@@ -202,7 +159,6 @@ export default function AdminOrganizationsPage() {
                   <th className="text-left text-xs font-semibold text-muted px-5 py-3 hidden md:table-cell">Тип / Країна</th>
                   <th className="text-left text-xs font-semibold text-muted px-5 py-3 hidden sm:table-cell">Проектів</th>
                   <th className="text-left text-xs font-semibold text-muted px-5 py-3">Статус</th>
-                  <th className="text-left text-xs font-semibold text-muted px-5 py-3" title="Показувати як партнера на головній">Партнер</th>
                   <th className="text-left text-xs font-semibold text-muted px-5 py-3">Дії</th>
                 </tr>
               </thead>
@@ -226,9 +182,6 @@ export default function AdminOrganizationsPage() {
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_MAP[org.status].cls}`}>
                         {STATUS_MAP[org.status].label}
                       </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      {partnerSwitch(org)}
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -341,17 +294,6 @@ export default function AdminOrganizationsPage() {
                   <p className="text-sm text-foreground leading-relaxed bg-muted-bg rounded-xl p-4">{selected.description}</p>
                 </div>
               )}
-              <div className="flex items-center justify-between gap-4 bg-muted-bg rounded-xl p-4">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Показувати як партнера на головній</p>
-                  <p className="text-xs text-muted mt-0.5">
-                    {selected.status === "verified"
-                      ? "Логотип з'явиться в блоці «Партнери»"
-                      : "З'явиться лише після верифікації"}
-                  </p>
-                </div>
-                {partnerSwitch(selected)}
-              </div>
               {selected.rejection_reason && (
                 <div className="bg-red-50 rounded-xl p-4">
                   <p className="text-xs font-semibold text-red-600 mb-1">Причина відхилення</p>

@@ -55,9 +55,7 @@ const nextConfig = {
         ],
       },
       {
-        // Everything under /api/public except the partner logo route, which
-        // sets its own long public cache header.
-        source: "/api/public/:path((?!orgs/[^/]+/logo$).*)",
+        source: "/api/public/:path*",
         headers: [
           {
             key: "Cache-Control",

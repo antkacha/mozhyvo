@@ -5,8 +5,8 @@ import HomeRecommendations from "@/components/HomeRecommendations";
 import NewsletterSubscribe from "@/components/NewsletterSubscribe";
 import PartnersSection from "@/components/PartnersSection";
 
-// Partner list is read from the DB; refresh hourly (the admin partner
-// toggle also revalidates "/" right away).
+// Partners are read from the DB; refresh hourly (admin partner edits also
+// revalidate "/" right away).
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
