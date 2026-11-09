@@ -80,7 +80,16 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // Only where middleware does real work: the guarded areas below, plus the
+  // apply page — a Server Component that calls getUser() and can't persist a
+  // refreshed session itself (lib/supabase/server.ts swallows the cookie
+  // write there). Everything else skips middleware: API routes check auth
+  // themselves and persist refreshes as Route Handlers, /auth/* routes set
+  // their own cookies, and the browser client auto-refreshes tokens.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/cabinet/:path*",
+    "/dashboard/:path*",
+    "/admin/:path*",
+    "/opportunities/:slug/apply",
   ],
 };
