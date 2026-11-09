@@ -35,7 +35,7 @@ export default function Header({ initialContext = "personal" }: { initialContext
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile } = useProfile();
   const isAdmin = profile.role === "admin";
-  const { activeContext, hasOrgAccess, orgs, activeOrgId, error: orgsError, retry: retryOrgs, switchContext } = useAccountContext(initialContext);
+  const { activeContext, hasOrgAccess, orgs, activeOrgId, error: orgsError, retry: retryOrgs, switchContext } = useAccountContext(initialContext, !!user);
   const firstName = user?.user_metadata?.first_name ?? user?.email?.split("@")[0] ?? "";
   const initials = (user?.user_metadata?.first_name?.[0] ?? user?.email?.[0] ?? "?").toUpperCase();
 

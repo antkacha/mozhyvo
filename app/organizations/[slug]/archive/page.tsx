@@ -204,6 +204,7 @@ export default async function OrgArchivePage({
                       title={p.title}
                       type={typeOf(p)}
                       sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 320px"
+                      thumb
                     />
                   </div>
                   <div className="p-5">

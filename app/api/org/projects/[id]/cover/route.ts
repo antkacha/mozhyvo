@@ -5,7 +5,8 @@ import { isIP } from "net";
 import sharp from "sharp";
 import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { COVER_ALLOWED_TYPES, COVER_MAX_BYTES, COVER_WIDTH, COVER_HEIGHT, COVER_BUCKET } from "@/lib/cover-photo";
+import { COVER_ALLOWED_TYPES, COVER_MAX_BYTES, COVER_WIDTH, COVER_HEIGHT, COVER_BUCKET, COVER_THUMB_WIDTH, COVER_THUMB_HEIGHT, COVER_THUMB_QUALITY } from "@/lib/cover-photo";
+import { COVER_FILE, COVER_THUMB_FILE } from "@/lib/cover-url";
 
 export const runtime = "nodejs";
 // Vercel Hobby's hard function limit is 10s — this route must always
@@ -146,11 +147,30 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       .jpeg({ quality: 78 })
       .toBuffer();
 
-    const path = `${params.id}/cover.jpg`;
+    const path = `${params.id}/${COVER_FILE}`;
     const { error: uploadError } = await admin.storage
       .from(COVER_BUCKET)
       .upload(path, jpeg, { contentType: "image/jpeg", upsert: true, cacheControl: "31536000" });
     if (uploadError) throw new Error(uploadError.message);
+
+    // Card thumbnail next to the cover (from the 1280x720 result, so always a
+    // downscale). Never fails the cover import: cards fall back to the full
+    // cover when the thumb is missing.
+    const thumbPath = `${params.id}/${COVER_THUMB_FILE}`;
+    try {
+      const thumb = await sharp(jpeg)
+        .resize(COVER_THUMB_WIDTH, COVER_THUMB_HEIGHT, { fit: "cover", position: "centre", withoutEnlargement: true })
+        .jpeg({ quality: COVER_THUMB_QUALITY })
+        .toBuffer();
+      const { error: thumbError } = await admin.storage
+        .from(COVER_BUCKET)
+        .upload(thumbPath, thumb, { contentType: "image/jpeg", upsert: true, cacheControl: "31536000" });
+      if (thumbError) throw new Error(thumbError.message);
+    } catch (e) {
+      console.error("[cover] thumbnail upload failed, cards will use the full cover:", e);
+      // Don't leave a previous cover's thumb behind under the new ?v=.
+      await admin.storage.from(COVER_BUCKET).remove([thumbPath]).catch(() => {});
+    }
 
     const { data: { publicUrl } } = admin.storage.from(COVER_BUCKET).getPublicUrl(path);
     const photoUrl = `${publicUrl}?v=${Date.now()}`;

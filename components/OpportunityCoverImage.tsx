@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { typeEmoji, typeGradient, type OpportunityType } from "@/lib/data";
+import { getCoverThumbUrl } from "@/lib/cover-url";
 
 // Must match next.config.js's images.remotePatterns hostname — that's the
 // only host next/image is actually allowed to fetch/optimize.
@@ -32,19 +33,37 @@ interface Props {
   // itself be the "мерцання" this is meant to kill; priority images should
   // just be in place, not animate into place.
   priority?: boolean;
+  // Small card grids only: load the 640x360 cover-thumb.jpg next to the
+  // cover instead of the full 1280x720 file. If the thumb is missing (not
+  // backfilled yet, or its upload failed) the full cover is used instead —
+  // once; a failure of the full cover then shows the gradient as before.
+  thumb?: boolean;
 }
 
 export default function OpportunityCoverImage({
-  photo, title, type, className = "", sizes = "100vw", priority = false,
+  photo, title, type, className = "", sizes = "100vw", priority = false, thumb = false,
 }: Props) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(priority);
+  const [thumbFailed, setThumbFailed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   const gradient = typeGradient[type] ?? "linear-gradient(135deg,#3B4FE8,#7C3AED)";
+
+  // What is actually requested: the thumb (when asked for and derivable),
+  // else the cover itself. getCoverThumbUrl returns non-Storage URLs as-is.
+  const src = thumb && !thumbFailed ? getCoverThumbUrl(photo) : photo;
+
+  // Thumb → full cover exactly once; any error on the full cover (or when no
+  // thumb was in play, src === photo) is final.
+  function handleError() {
+    if (src !== photo) setThumbFailed(true);
+    else setFailed(true);
+  }
 
   useEffect(() => {
     setFailed(false);
     setLoaded(priority);
+    setThumbFailed(false);
   }, [photo, priority]);
 
   useEffect(() => {
@@ -55,9 +74,10 @@ export default function OpportunityCoverImage({
     // already-settled state on mount.
     const img = imgRef.current;
     if (!img || !img.complete) return;
-    if (img.naturalWidth === 0) setFailed(true);
+    if (img.naturalWidth === 0) handleError();
     else setLoaded(true);
-  }, [photo]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src]);
 
   // next/image can only optimize URLs matching next.config.js's
   // remotePatterns (our Supabase Storage host) — anything else throws a
@@ -92,16 +112,16 @@ export default function OpportunityCoverImage({
           // eslint-disable-next-line @next/next/no-img-element -- not on our Storage yet, not optimizable
           <img
             ref={imgRef}
-            src={photo}
+            src={src}
             alt={title}
             className={`absolute inset-0 w-full h-full ${imgClassName}`}
             onLoad={() => setLoaded(true)}
-            onError={() => setFailed(true)}
+            onError={handleError}
           />
         ) : (
           <Image
             ref={imgRef}
-            src={photo}
+            src={src!}
             alt={title}
             fill
             sizes={sizes}
@@ -109,7 +129,7 @@ export default function OpportunityCoverImage({
             quality={85}
             className={imgClassName}
             onLoad={() => setLoaded(true)}
-            onError={() => setFailed(true)}
+            onError={handleError}
           />
         )}
       </div>

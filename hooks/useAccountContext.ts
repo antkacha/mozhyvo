@@ -27,7 +27,7 @@ interface ContextResponse {
  * If the lookup fails, `error` is set and the previous state is kept — a
  * failed request must never look like "you have no orgs".
  */
-export function useAccountContext(initialContext: ActiveContext = "personal") {
+export function useAccountContext(initialContext: ActiveContext = "personal", enabled = true) {
   const [activeContext, setActiveContext] = useState<ActiveContext>(initialContext);
   const [orgs, setOrgs] = useState<OrgAccess[]>([]);
   const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
@@ -50,7 +50,9 @@ export function useAccountContext(initialContext: ActiveContext = "personal") {
       .finally(() => setReady(true));
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  // Signed-out visitors have no orgs — don't spend a request (and a function
+  // invocation) finding that out. Fetches once when a user appears.
+  useEffect(() => { if (enabled) load(); }, [enabled, load]);
 
   const switchContext = useCallback(async (context: ActiveContext, orgId?: string) => {
     const res = await fetch("/api/me/context", {

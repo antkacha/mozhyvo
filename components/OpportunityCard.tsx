@@ -39,6 +39,7 @@ function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; index?: number 
         type={opp.type}
         sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 320px"
         priority={index === 0}
+        thumb
       />
 
       <div className="p-5 flex flex-col gap-4 flex-1">
@@ -55,6 +56,7 @@ function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; index?: number 
               {orgSlug ? (
                 <Link
                   href={`/organizations/${orgSlug}`}
+                  prefetch={false}
                   onClick={(e) => e.stopPropagation()}
                   className="text-[11px] font-bold text-muted/60 uppercase tracking-wider truncate leading-none mb-1.5 hover:text-primary transition-colors block"
                 >
@@ -100,7 +102,7 @@ function OpportunityCard({ opp, index = 0 }: { opp: Opportunity; index?: number 
 
         {/* ── Title + description ──────────────────────────────── */}
         <div className="flex-1">
-          <Link href={`/opportunities/${opp.slug}`}>
+          <Link href={`/opportunities/${opp.slug}`} prefetch={false}>
             <h3 className="font-extrabold text-foreground text-[15px] leading-snug group-hover:text-primary transition-colors duration-150 line-clamp-2 mb-2">
               {opp.title}
             </h3>
