@@ -2,8 +2,8 @@ import { createClient } from "@/lib/supabase/client";
 
 export const COVER_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export const COVER_MAX_BYTES = 4 * 1024 * 1024;
-export const COVER_WIDTH = 1920;
-export const COVER_HEIGHT = 1080; // 16:9
+export const COVER_WIDTH = 1280;
+export const COVER_HEIGHT = 720; // 16:9 — cards show ≤~600 CSS px, detail hero ≤~720
 export const COVER_BUCKET = "opportunities";
 
 /**
@@ -29,7 +29,7 @@ export function resizeToCover(file: File | Blob): Promise<Blob> {
       canvas.toBlob(
         (blob) => (blob ? resolve(blob) : reject(new Error("Не вдалося обробити зображення"))),
         "image/jpeg",
-        0.85,
+        0.78,
       );
     };
     img.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error("Не вдалося завантажити файл як зображення")); };
@@ -49,7 +49,7 @@ export async function uploadCoverPhoto(projectId: string, blob: Blob): Promise<s
   const path = `${projectId}/cover.jpg`;
   const { error } = await supabase.storage
     .from(COVER_BUCKET)
-    .upload(path, blob, { contentType: "image/jpeg", upsert: true });
+    .upload(path, blob, { contentType: "image/jpeg", upsert: true, cacheControl: "31536000" });
   if (error) throw error;
 
   const { data: { publicUrl } } = supabase.storage.from(COVER_BUCKET).getPublicUrl(path);

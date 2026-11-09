@@ -143,13 +143,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const raw = await fetchRemoteImage(url);
     const jpeg = await sharp(raw)
       .resize(COVER_WIDTH, COVER_HEIGHT, { fit: "cover", position: "centre" })
-      .jpeg({ quality: 85 })
+      .jpeg({ quality: 78 })
       .toBuffer();
 
     const path = `${params.id}/cover.jpg`;
     const { error: uploadError } = await admin.storage
       .from(COVER_BUCKET)
-      .upload(path, jpeg, { contentType: "image/jpeg", upsert: true });
+      .upload(path, jpeg, { contentType: "image/jpeg", upsert: true, cacheControl: "31536000" });
     if (uploadError) throw new Error(uploadError.message);
 
     const { data: { publicUrl } } = admin.storage.from(COVER_BUCKET).getPublicUrl(path);

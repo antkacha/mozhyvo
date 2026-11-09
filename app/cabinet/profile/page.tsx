@@ -111,7 +111,7 @@ export default function CabinetProfilePage() {
       const path = `${user.id}/avatar.jpg`;
       const { error: storageError } = await supabase.storage
         .from("avatars")
-        .upload(path, blob, { contentType: "image/jpeg", upsert: true });
+        .upload(path, blob, { contentType: "image/jpeg", upsert: true, cacheControl: "31536000" });
       if (storageError) throw storageError;
 
       const { data: { publicUrl } } = supabase.storage

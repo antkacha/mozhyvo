@@ -82,11 +82,12 @@ export async function GET(req: NextRequest) {
     })
     .map((row) => ({ ...row, orgs: orgsMap.get(row.org_id as string) ?? null }));
 
-  console.log(`[public/opportunities] ${visible.length}/${rows.length} returned`);
-
   return NextResponse.json(
     { projects: visible },
-    // Browser must not cache; only Next.js Data Cache (server-side) is used.
-    { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } },
+    // Public data only (published projects of verified orgs, nothing per-user),
+    // so Vercel's edge may serve it for 60s (+5 min stale while refreshing)
+    // instead of invoking this function on every home/catalog view. Browsers
+    // don't cache (no max-age). The edge cache key includes ?includeExpired.
+    { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } },
   );
 }
