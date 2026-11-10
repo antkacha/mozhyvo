@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { OrgProfileRow } from "@/lib/org-profile";
 
 // Module-level cache — shared across all hook instances in the same browser session.
 // This means the second call to useOrgSession() returns data synchronously from cache
@@ -15,7 +16,6 @@ function notifyListeners() { _listeners.forEach((fn) => fn()); }
 
 export interface OrgProfile {
   id: string;
-  userId: string;
   slug: string;
   name: string;
   type: string;
@@ -42,16 +42,14 @@ export interface OrgProfile {
     twitter?: string;
     youtube?: string;
   };
-  orgFormat: "official" | "informal";
-  registrationNumber: string;
   status: "pending" | "verified" | "rejected" | "blocked";
-  createdAt: string;
 }
 
-function fromRow(row: Record<string, unknown>): OrgProfile {
+// row is exactly what GET /api/me/org selects (lib/org-profile) — reading any
+// other column here is a type error.
+function fromRow(row: OrgProfileRow): OrgProfile {
   return {
     id:           (row.id as string) ?? "",
-    userId:       (row.user_id as string) ?? "",
     slug:         (row.slug as string) ?? "",
     name:         (row.name as string) ?? "",
     type:         (row.type as string) ?? "",
@@ -70,10 +68,7 @@ function fromRow(row: Record<string, unknown>): OrgProfile {
     brandColor:   (row.brand_color as string) ?? "#3B4FE8",
     focusAreas:   (row.focus_areas as string[]) ?? [],
     socials:             (row.socials as OrgProfile["socials"]) ?? {},
-    orgFormat:           ((row.org_format as string) ?? "official") as OrgProfile["orgFormat"],
-    registrationNumber:  (row.registration_number as string) ?? "",
     status:              (row.status as OrgProfile["status"]) ?? "pending",
-    createdAt:           (row.created_at as string) ?? "",
   };
 }
 
@@ -124,7 +119,7 @@ export function useOrgSession() {
       // Use server-side API to bypass RLS restrictions on orgs table
       const res = await fetch("/api/me/org");
       if (!res.ok) { setCache(null, true); return; }
-      const json = await res.json() as { org: Record<string, unknown> | null; role?: string };
+      const json = await res.json() as { org: OrgProfileRow | null; role?: string };
       if (json.org) {
         const role = (json.role ?? "owner") as "owner" | "admin" | "reviewer";
         setCache(fromRow(json.org), true, role);
@@ -162,14 +157,10 @@ export function useOrgSession() {
       const json = await res.json() as { error?: string };
       throw new Error(json.error ?? "Save failed");
     }
-    // Update cache from the actual saved DB row, not just the form values.
-    // This catches silent 0-row updates and confirms the data is really persisted.
-    const json = await res.json() as { ok: boolean; org?: Record<string, unknown> };
-    if (json.org) {
-      setCache(fromRow(json.org), true, _cachedMemberRole);
-    } else {
-      setCache(_cachedOrg ? { ..._cachedOrg, ...data } : null, true);
-    }
+    // The route confirms exactly one row was updated (0 rows → error above)
+    // but doesn't echo the row back — that used to send base64 images back on
+    // every save. Merge what was sent into the cache instead.
+    setCache(_cachedOrg ? { ..._cachedOrg, ...data } : null, true, _cachedMemberRole);
   }, [setCache]);
 
   const logout = useCallback(async () => {

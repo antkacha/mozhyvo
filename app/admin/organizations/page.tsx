@@ -2,26 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import ShowcaseLogoField from "@/components/ShowcaseLogoField";
-
-type OrgStatus = "verified" | "pending" | "rejected" | "blocked";
-
-interface OrgRow {
-  id: string;
-  name: string;
-  contact_email: string;
-  country: string;
-  type: string;
-  status: OrgStatus;
-  description: string;
-  website: string;
-  created_at: string;
-  verified_at: string | null;
-  rejection_reason: string | null;
-  slug: string;
-  showcase_logo_url: string | null;
-  partner_hidden: boolean;
-  _projectCount?: number;
-}
+import type { AdminOrgRow as OrgRow, OrgStatus } from "@/lib/admin-orgs";
 
 // Mirrors the homepage rule in lib/partners.
 function partnerStripState(o: OrgRow): { shown: boolean; reason: string } {

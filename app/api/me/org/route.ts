@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgForRequest, requireActiveOrg } from "@/lib/active-org";
+import { ORG_PROFILE_SELECT } from "@/lib/org-profile";
 
 export async function GET() {
   const supabase = createClient();
@@ -20,7 +21,8 @@ export async function GET() {
 
   if (active) {
     const admin = createAdminClient();
-    const { data: rows, error } = await admin.from("orgs").select("*").eq("id", active.id).limit(1);
+    // Only the columns the dashboard reads (lib/org-profile), not select("*").
+    const { data: rows, error } = await admin.from("orgs").select(ORG_PROFILE_SELECT).eq("id", active.id).limit(1);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     if (rows?.[0]) return NextResponse.json({ org: rows[0], role: active.role });
   }
@@ -67,21 +69,20 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "No valid fields" }, { status: 400 });
   }
 
-  // Update and return the saved row so the client can verify what was actually written
-  const { data: savedOrg, error } = await admin
+  // .select("id").single() still proves exactly one row was written (0 rows →
+  // error), without echoing the row — that sent base64 images back on every
+  // save. The client merges what it sent into its cache.
+  const { error } = await admin
     .from("orgs")
     .update(safeBody)
     .eq("id", orgId)
-    .select()
+    .select("id")
     .single();
 
   if (error) {
     console.error("[PATCH /api/me/org] update error:", error.message, "orgId:", orgId);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  console.log("[PATCH /api/me/org] saved:", {
-    id: savedOrg?.id, slug: savedOrg?.slug,
-    website: savedOrg?.website, socials: savedOrg?.socials,
-  });
-  return NextResponse.json({ ok: true, org: savedOrg });
+  console.log("[PATCH /api/me/org] saved:", { id: orgId, fields: Object.keys(safeBody) });
+  return NextResponse.json({ ok: true });
 }

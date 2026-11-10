@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
-import { useOrgSession } from "@/hooks/useOrgSession";
+import { useOrgSession, type OrgProfile } from "@/hooks/useOrgSession";
 import CoverPickerModal, { type CoverResult } from "@/components/CoverPickerModal";
 import ShowcaseLogoField from "@/components/ShowcaseLogoField";
 
@@ -305,9 +305,20 @@ function ProfileContent() {
 
   async function handleSave() {
     if (!form.name.trim()) return;
+    if (!org) return;
+    const next = { ...form, name: form.name.trim(), description: form.description.trim(), mission: form.mission.trim() };
+    // Send only what changed vs the saved org — in particular the (base64)
+    // logo and cover go over the wire only when the user actually replaced or
+    // removed them in this session, not on every text edit.
+    const changed: Partial<OrgProfile> = {};
+    for (const key of Object.keys(next) as (keyof typeof next)[]) {
+      const a = next[key], b = org[key];
+      const same = typeof a === "object" && a !== null ? JSON.stringify(a) === JSON.stringify(b) : a === b;
+      if (!same) (changed as Record<string, unknown>)[key] = a;
+    }
     setSaving(true);
     try {
-      await update({ ...form, name: form.name.trim(), description: form.description.trim(), mission: form.mission.trim() });
+      if (Object.keys(changed).length > 0) await update(changed);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } finally {

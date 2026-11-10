@@ -9,6 +9,7 @@ import ArchiveSection from "./ArchiveSection";
 import { opportunities, normalizeType, typeNames, type Opportunity } from "@/lib/data";
 import OpportunityCard from "@/components/OpportunityCard";
 import { isDeadlinePassed } from "@/lib/deadline";
+import { selectColumns } from "@/lib/select-columns";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -153,7 +154,7 @@ type SupabaseOrg = {
   id: string; slug: string | null; name: string; type: string; country: string; city: string;
   website: string | null; contact_email: string | null; description: string | null;
   mission: string | null; logo_url: string | null; cover_image_url: string | null;
-  cover_video_url: string | null; brand_color: string; focus_areas: string[];
+  brand_color: string; focus_areas: string[];
   socials: Record<string, string>; status: string; founded: string | null;
 };
 
@@ -161,8 +162,21 @@ type SupabaseProject = {
   id: string; title: string; type: string; type_name: string | null; country: string; flag: string;
   location: string | null; format: string | null; funding: string | null; duration: string | null;
   deadline: string | null; deadline_display: string | null;
-  status: string; short_description: string | null; photo_url: string | null;
+  short_description: string | null; photo_url: string | null;
 };
+
+// Explicit columns instead of select("*") — typecheck fails if the types above
+// gain a field that isn't selected. logo_url / cover_image_url stay: the page
+// renders them.
+const ORG_SELECT = selectColumns<SupabaseOrg>()([
+  "id", "slug", "name", "type", "country", "city", "website", "contact_email",
+  "description", "mission", "logo_url", "cover_image_url", "brand_color",
+  "focus_areas", "socials", "status", "founded",
+] as const);
+const PROJECT_SELECT = selectColumns<SupabaseProject>()([
+  "id", "title", "type", "type_name", "country", "flag", "location", "format",
+  "funding", "duration", "deadline", "deadline_display", "short_description", "photo_url",
+] as const);
 
 // One mapping, shared by every card on this page (active list + archive),
 // so photo/badges/deadline always come from the same fields the catalog
@@ -403,7 +417,7 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
   const admin = createAdminClient();
   let { data: org } = await admin
     .from("orgs")
-    .select("*")
+    .select<string, SupabaseOrg>(ORG_SELECT)
     .eq("slug", slug)
     .not("status", "in", '("rejected","blocked")')
     .maybeSingle();
@@ -412,7 +426,7 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
   if (!org && /^[0-9a-f-]{36}$/i.test(slug)) {
     const { data } = await admin
       .from("orgs")
-      .select("*")
+      .select<string, SupabaseOrg>(ORG_SELECT)
       .eq("id", slug)
       .not("status", "in", '("rejected","blocked")')
       .maybeSingle();
@@ -421,15 +435,14 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
 
   if (!org) notFound();
 
-  // Fetch all published projects (active + archived) — select("*") so this
-  // page automatically picks up new org_projects columns (photo_url was
-  // added later and missed here, which is exactly why cards showed no
-  // cover photo while the catalog — already select("*") — had them).
+  // Fetch all published projects (active + archived). Explicit columns
+  // (PROJECT_SELECT) — a new column the cards need must be added to
+  // SupabaseProject, and then typecheck forces it into the select too.
   // Only verified orgs' projects are public; a pending org's page lists none.
   const { data: projects } = org.status === "verified"
     ? await admin
         .from("org_projects")
-        .select("*")
+        .select<string, SupabaseProject>(PROJECT_SELECT)
         .eq("org_id", org.id)
         .eq("status", "published")
         .order("created_at", { ascending: false })
