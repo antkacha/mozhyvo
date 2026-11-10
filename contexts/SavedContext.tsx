@@ -34,18 +34,24 @@ async function filterVisible(slugs: string[]): Promise<string[]> {
   const dbSlugs = slugs.filter((s) => !STATIC_SLUGS.has(s));
   if (dbSlugs.length === 0) return staticVisible;
 
-  try {
-    const res = await fetch("/api/saved-opportunities/visible", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slugs: dbSlugs }),
-    });
-    if (!res.ok) return [...staticVisible, ...dbSlugs]; // fail open
-    const { visible } = await res.json() as { visible: string[] };
-    return [...staticVisible, ...visible];
-  } catch {
-    return [...staticVisible, ...dbSlugs]; // fail open — network hiccup, don't hide saves
-  }
+  // The endpoint takes at most 100 slugs per call.
+  const chunks: string[][] = [];
+  for (let i = 0; i < dbSlugs.length; i += 100) chunks.push(dbSlugs.slice(i, i + 100));
+  const results = await Promise.all(chunks.map(async (chunk) => {
+    try {
+      const res = await fetch("/api/saved-opportunities/visible", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slugs: chunk }),
+      });
+      if (!res.ok) return chunk; // fail open
+      const { visible } = await res.json() as { visible: string[] };
+      return visible;
+    } catch {
+      return chunk; // fail open — network hiccup, don't hide saves
+    }
+  }));
+  return [...staticVisible, ...results.flat()];
 }
 
 const SavedContext = createContext<SavedContextValue | null>(null);

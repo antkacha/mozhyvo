@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 const subjects = [
@@ -51,6 +51,11 @@ export default function ContactsPage() {
     subject: "",
     message: "",
   });
+  // Anti-spam: a hidden field only bots fill, and how long the form was open
+  // (the API silently drops submits under 3 s).
+  const [website, setWebsite] = useState("");
+  const openedAt = useRef(0);
+  useEffect(() => { openedAt.current = Date.now(); }, []);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
 
@@ -62,9 +67,11 @@ export default function ContactsPage() {
   const validate = () => {
     const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = "Вкажи ім'я";
-    if (!form.email.includes("@")) e.email = "Вкажи коректний email";
+    else if (form.name.trim().length > 100) e.name = "Ім'я задовге (до 100 символів)";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) || form.email.trim().length > 254) e.email = "Вкажи коректний email";
     if (!form.subject) e.subject = "Обери тему";
     if (form.message.trim().length < 10) e.message = "Повідомлення занадто коротке";
+    else if (form.message.trim().length > 5000) e.message = "Повідомлення задовге (до 5000 символів)";
     return e;
   };
 
@@ -83,7 +90,7 @@ export default function ContactsPage() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, website, elapsedMs: Date.now() - openedAt.current }),
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({})) as { error?: string };
@@ -196,6 +203,13 @@ export default function ContactsPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                {/* Honeypot: hidden from people and screen readers; bots fill it. */}
+                <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+                  <label>
+                    Website
+                    <input type="text" name="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
+                  </label>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-1.5">
@@ -204,6 +218,7 @@ export default function ContactsPage() {
                     <input
                       type="text"
                       value={form.name}
+                      maxLength={100}
                       onChange={(e) => set("name", e.target.value)}
                       placeholder="Іванна Шевченко"
                       className={`w-full px-4 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white ${
@@ -222,6 +237,7 @@ export default function ContactsPage() {
                     <input
                       type="email"
                       value={form.email}
+                      maxLength={254}
                       onChange={(e) => set("email", e.target.value)}
                       placeholder="твій@email.com"
                       className={`w-full px-4 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white ${
@@ -268,6 +284,7 @@ export default function ContactsPage() {
                   )}
                   <textarea
                     value={form.message}
+                    maxLength={5000}
                     onChange={(e) => set("message", e.target.value)}
                     placeholder="Розкажи детальніше про своє запитання..."
                     rows={5}
@@ -281,7 +298,7 @@ export default function ContactsPage() {
                     ) : (
                       <span />
                     )}
-                    <p className="text-xs text-muted">{form.message.length} символів</p>
+                    <p className="text-xs text-muted">{form.message.length} / 5000</p>
                   </div>
                 </div>
 

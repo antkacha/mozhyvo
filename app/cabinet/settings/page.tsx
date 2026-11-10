@@ -57,6 +57,16 @@ export default function CabinetSettingsPage() {
   const [deleteInput, setDeleteInput] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [needsReauth, setNeedsReauth] = useState(false);
+  const deleteEmailOk = !!user?.email && deleteInput.trim().toLowerCase() === user.email.toLowerCase();
+
+  // Back from the re-login (/login?next=/cabinet/settings?delete=1): reopen the
+  // delete confirmation and bring it into view.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("delete") !== "1") return;
+    setDeleteConfirm(true);
+    setTimeout(() => document.getElementById("delete-account")?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+  }, []);
 
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
   const [pwLoading, setPwLoading] = useState(false);
@@ -75,11 +85,17 @@ export default function CabinetSettingsPage() {
   async function handleDeleteAccount() {
     setDeleting(true);
     setDeleteError("");
+    setNeedsReauth(false);
     try {
-      const res = await fetch("/api/user/delete", { method: "POST" });
+      const res = await fetch("/api/user/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmEmail: deleteInput.trim() }),
+      });
       if (!res.ok) {
-        const json = await res.json().catch(() => ({})) as { error?: string };
-        setDeleteError(json.error ?? "Не вдалося видалити акаунт. Спробуй ще раз або напиши нам на mozhyvo@gmail.com");
+        const json = await res.json().catch(() => ({})) as { error?: string; code?: string };
+        if (json.code === "reauth_required") setNeedsReauth(true);
+        else setDeleteError(json.error ?? "Не вдалося видалити акаунт. Спробуй ще раз або напиши нам на mozhyvo@gmail.com");
         setDeleting(false);
         return;
       }
@@ -90,6 +106,13 @@ export default function CabinetSettingsPage() {
     }
     await signOut();
     window.location.href = "/";
+  }
+
+  // Deleting needs a sign-in from the last 15 min: sign out, then log in
+  // again and come straight back to this confirmation.
+  async function reauthForDelete() {
+    await signOut();
+    window.location.href = `/login?next=${encodeURIComponent("/cabinet/settings?delete=1")}`;
   }
 
   function toggle(key: keyof NotifSettings) {
@@ -276,7 +299,7 @@ export default function CabinetSettingsPage() {
       </div>
 
       {/* Danger zone */}
-      <div className="bg-white rounded-2xl border border-red-200 p-6 space-y-4">
+      <div id="delete-account" className="bg-white rounded-2xl border border-red-200 p-6 space-y-4">
         <h2 className="text-sm font-bold text-red-600">Небезпечна зона</h2>
         {!deleteConfirm ? (
           <>
@@ -288,19 +311,33 @@ export default function CabinetSettingsPage() {
           </>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm font-semibold text-foreground">Введіть <span className="text-red-600">ВИДАЛИТИ</span> для підтвердження</p>
+            <p className="text-sm font-semibold text-foreground">
+              Щоб підтвердити, введіть email вашого акаунта{user?.email ? <> (<span className="text-red-600 break-all">{user.email}</span>)</> : null}
+            </p>
             <input
+              type="email"
               value={deleteInput}
-              onChange={(e) => setDeleteInput(e.target.value)}
-              placeholder="ВИДАЛИТИ"
+              onChange={(e) => { setDeleteInput(e.target.value); setDeleteError(""); }}
+              placeholder="ваш@email.com"
+              autoComplete="off"
               className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-red-200 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400"
             />
             {deleteError && (
               <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">{deleteError}</p>
             )}
+            {needsReauth && (
+              <div className="text-sm bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 space-y-2">
+                <p className="font-semibold text-amber-900">Для видалення акаунта увійдіть ще раз</p>
+                <p className="text-amber-800">З міркувань безпеки видалити акаунт можна лише протягом 15 хвилин після входу. Після входу ви повернетеся сюди.</p>
+                <button onClick={reauthForDelete}
+                  className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-semibold hover:bg-amber-600 transition-all">
+                  Вийти й увійти знову
+                </button>
+              </div>
+            )}
             <div className="flex gap-3">
               <button
-                disabled={deleteInput !== "ВИДАЛИТИ" || deleting}
+                disabled={!deleteEmailOk || deleting}
                 onClick={handleDeleteAccount}
                 className="px-5 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 disabled:opacity-40 transition-all flex items-center gap-2"
               >
@@ -308,7 +345,7 @@ export default function CabinetSettingsPage() {
                   <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Видалення...</>
                 ) : "Підтвердити видалення"}
               </button>
-              <button onClick={() => { setDeleteConfirm(false); setDeleteInput(""); }}
+              <button onClick={() => { setDeleteConfirm(false); setDeleteInput(""); setNeedsReauth(false); setDeleteError(""); }}
                 className="px-5 py-2.5 border border-border rounded-xl text-sm font-medium hover:bg-muted-bg transition-all">
                 Скасувати
               </button>

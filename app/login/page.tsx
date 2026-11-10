@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { safeNextPath, AFTER_LOGIN_COOKIE } from "@/lib/safe-next";
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -37,7 +38,7 @@ function LoginContent() {
       return;
     }
     setStatus("success");
-    const next = searchParams.get("next");
+    const next = safeNextPath(searchParams.get("next"));
     if (next) {
       setTimeout(() => { window.location.href = next; }, 400);
       return;
@@ -51,6 +52,12 @@ function LoginContent() {
 
   const handleGoogle = async () => {
     setStatus("loading");
+    // Carry ?next= through the OAuth round trip (the callback URL itself stays
+    // unchanged so it keeps matching the Supabase redirect allowlist).
+    const next = safeNextPath(searchParams.get("next"));
+    document.cookie = next
+      ? `${AFTER_LOGIN_COOKIE}=${encodeURIComponent(next)}; path=/; max-age=600; samesite=lax`
+      : `${AFTER_LOGIN_COOKIE}=; path=/; max-age=0`;
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/callback` },

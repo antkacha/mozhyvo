@@ -12,17 +12,16 @@ export async function DELETE(
 
   const admin = createAdminClient();
 
-  const { data: note } = await admin
+  // Only the author can delete. "Doesn't exist" and "someone else's" get the
+  // same 404, so ids can't be probed.
+  const { data, error } = await admin
     .from("org_app_notes")
-    .select("id, author_id")
+    .delete()
     .eq("id", params.id)
-    .single();
-
-  if (!note) return NextResponse.json({ error: "Note not found" }, { status: 404 });
-  if (note.author_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const { error } = await admin.from("org_app_notes").delete().eq("id", params.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    .eq("author_id", user.id)
+    .select("id");
+  if (error && error.code !== "22P02") return NextResponse.json({ error: "Server error" }, { status: 500 });
+  if (!data?.length) return NextResponse.json({ error: "Note not found" }, { status: 404 });
 
   return NextResponse.json({ ok: true });
 }
