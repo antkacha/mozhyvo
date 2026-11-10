@@ -12,10 +12,11 @@ async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<string>
     if (!imageSrc.startsWith("data:")) img.crossOrigin = "anonymous";
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = 1400;
-      canvas.height = 200;
+      // Same box the server stores (lib/org-media: 1600x229 WebP, 7:1).
+      canvas.width = 1600;
+      canvas.height = 229;
       const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, 1400, 200);
+      ctx.drawImage(img, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, 1600, 229);
       try {
         resolve(canvas.toDataURL("image/jpeg", 0.92));
       } catch {
@@ -226,7 +227,7 @@ export default function CoverPickerModal({ isOpen, onClose, onApply }: Props) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
           <div>
             <h2 className="text-base font-bold text-foreground">Обкладинка профілю</h2>
-            <p className="text-xs text-muted mt-0.5">Зображення, банер або відео-фон · 1400×200 px (7:1)</p>
+            <p className="text-xs text-muted mt-0.5">Зображення, банер або відео-фон · 1600×229 px (7:1)</p>
           </div>
           <button onClick={handleClose} className="w-8 h-8 rounded-xl hover:bg-muted-bg flex items-center justify-center text-muted transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -383,7 +384,7 @@ export default function CoverPickerModal({ isOpen, onClose, onApply }: Props) {
         <div className="flex items-center justify-between px-6 py-4 border-t border-border flex-shrink-0 bg-muted-bg/30">
           <p className="text-[10px] text-muted">
             {tab === "file"
-              ? "Обрізається до 1400×200 px"
+              ? "Обрізається до 1600×229 px"
               : urlLoaded?.kind === "video" ? "Відео зберігається як фон" : "Зображення обрізається до 1200×400 px"}
           </p>
           <div className="flex items-center gap-3">

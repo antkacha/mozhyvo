@@ -209,6 +209,25 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 const inp = "w-full px-3.5 py-2.5 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted/40";
 const lbl = "block text-sm font-medium text-foreground mb-1.5";
 
+// ── Logo / cover upload (POST /api/org/media → Storage, returns the URL) ──
+async function uploadOrgMedia(kind: "logo" | "cover", input: Blob | { url: string }): Promise<string> {
+  let res: Response;
+  if (input instanceof Blob) {
+    const fd = new FormData();
+    fd.append("file", input, input instanceof File ? input.name : `${kind}.jpg`);
+    res = await fetch(`/api/org/media?kind=${kind}`, { method: "POST", body: fd });
+  } else {
+    res = await fetch(`/api/org/media?kind=${kind}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
+    });
+  }
+  const json = await res.json().catch(() => ({})) as { url?: string; error?: string };
+  if (!res.ok || !json.url) throw new Error(json.error ?? "Не вдалося завантажити зображення");
+  return json.url;
+}
+
+const MEDIA_MAX_BYTES = 4 * 1024 * 1024;
+
 // ── Main component ───────────────────────────────────────────────────
 function ProfileContent() {
   const { org, update, isOwner, patchLocal } = useOrgSession();
@@ -218,6 +237,9 @@ function ProfileContent() {
   const [saving, setSaving] = useState(false);
   const [coverModalOpen, setCoverModalOpen] = useState(false);
   const [logoError, setLogoError] = useState("");
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [coverError, setCoverError] = useState("");
 
   const [form, setForm] = useState({
     name:         org?.name         ?? "",
@@ -263,14 +285,30 @@ function ProfileContent() {
   }, [org]);
 
   // Must be before conditional return (Rules of Hooks)
-  const handleCoverApply = useCallback((result: CoverResult) => {
-    if (result.kind === "image") {
-      setForm((p) => ({ ...p, coverImage: result.data, coverVideo: null }));
-    } else {
+  const handleCoverApply = useCallback(async (result: CoverResult) => {
+    if (result.kind !== "image") {
       setForm((p) => ({ ...p, coverVideo: result.url, coverImage: null }));
+      setSaved(false);
+      return;
     }
-    setSaved(false);
-  }, []);
+    // Image covers are stored right away (like the logo): a cropped canvas
+    // result goes up as a file; an uncropped/CORS-blocked link is downloaded
+    // by the server — never hotlinked, never base64 in the DB.
+    setCoverError("");
+    setCoverUploading(true);
+    try {
+      const input = result.data.startsWith("data:")
+        ? await (await fetch(result.data)).blob()
+        : { url: result.data };
+      const url = await uploadOrgMedia("cover", input);
+      setForm((p) => ({ ...p, coverImage: url, coverVideo: null }));
+      patchLocal({ coverImage: url, coverVideo: null });
+    } catch (e) {
+      setCoverError(e instanceof Error ? e.message : "Не вдалося завантажити обкладинку");
+    } finally {
+      setCoverUploading(false);
+    }
+  }, [patchLocal]);
 
   if (!org) return null;
 
@@ -281,14 +319,25 @@ function ProfileContent() {
     setSaved(false);
   }
 
-  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  // The logo is stored right away through /api/org/media (Storage, 256x256
+  // WebP); the form and the cached org get the returned URL, so "Save" has
+  // nothing image-related left to send.
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
+    e.target.value = "";
     if (!f) return;
     setLogoError("");
-    if (f.size > 2 * 1024 * 1024) { setLogoError("Максимум 2 МБ для логотипу"); return; }
-    const r = new FileReader();
-    r.onload = () => set("logo", r.result as string);
-    r.readAsDataURL(f);
+    if (f.size > MEDIA_MAX_BYTES) { setLogoError("Максимум 4 МБ для логотипу"); return; }
+    setLogoUploading(true);
+    try {
+      const url = await uploadOrgMedia("logo", f);
+      setForm((p) => ({ ...p, logo: url }));
+      patchLocal({ logo: url });
+    } catch (err) {
+      setLogoError(err instanceof Error ? err.message : "Не вдалося завантажити логотип");
+    } finally {
+      setLogoUploading(false);
+    }
   }
 
   function removeCover() {
@@ -413,6 +462,11 @@ function ProfileContent() {
                     brandColor={form.brandColor}
                     height="h-full"
                   />
+                  {coverUploading && (
+                    <div className="absolute inset-0 z-10 bg-white/70 flex items-center justify-center text-xs font-semibold text-primary">
+                      Завантаження…
+                    </div>
+                  )}
 
                   {/* Hover overlay */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-all flex items-center justify-center">
@@ -451,6 +505,7 @@ function ProfileContent() {
                     </button>
                   )}
                 </div>
+                {coverError && <p className="text-xs text-red-500 mt-1">{coverError}</p>}
               </div>
 
               {/* Logo + brand color */}
@@ -470,8 +525,8 @@ function ProfileContent() {
                 <div className="flex-1">
                   <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
                   <div className="flex items-center gap-3 mb-1.5">
-                    <button onClick={() => logoRef.current?.click()} className="px-4 py-2 rounded-xl bg-primary-light text-primary text-sm font-semibold hover:bg-primary/10 transition-all">
-                      {form.logo ? "Змінити лого" : "Завантажити лого"}
+                    <button onClick={() => logoRef.current?.click()} disabled={logoUploading} className="px-4 py-2 rounded-xl bg-primary-light text-primary text-sm font-semibold hover:bg-primary/10 transition-all disabled:opacity-60">
+                      {logoUploading ? "Завантаження…" : form.logo ? "Змінити лого" : "Завантажити лого"}
                     </button>
                     {form.logo && (
                       <button onClick={() => set("logo", null)} className="text-xs text-muted hover:text-red-500 transition-colors">

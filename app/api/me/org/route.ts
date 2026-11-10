@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgForRequest, requireActiveOrg } from "@/lib/active-org";
 import { ORG_PROFILE_SELECT } from "@/lib/org-profile";
+import { isOwnOrgMediaUrl, deleteOwnOrgMediaFile } from "@/lib/org-media";
 
 export async function GET() {
   const supabase = createClient();
@@ -69,6 +70,26 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "No valid fields" }, { status: 400 });
   }
 
+  // Logo / cover images are uploaded through POST /api/org/media, which writes
+  // the file to Storage and the URL to the row. Here they may only be cleared
+  // (null) or set to one of THIS org's own org-media files — never a base64
+  // data: URL or an external link.
+  const mediaCols = (["logo_url", "cover_image_url"] as const).filter((c) => c in safeBody);
+  for (const col of mediaCols) {
+    const v = safeBody[col];
+    if (v !== null && !isOwnOrgMediaUrl(v, orgId)) {
+      return NextResponse.json(
+        { error: "Логотип і обкладинку можна змінити лише завантаженням файлу" },
+        { status: 400 },
+      );
+    }
+  }
+  let previousMedia: Record<string, unknown> = {};
+  if (mediaCols.length) {
+    const { data } = await admin.from("orgs").select(mediaCols.join(", ")).eq("id", orgId).maybeSingle();
+    previousMedia = (data ?? {}) as Record<string, unknown>;
+  }
+
   // .select("id").single() still proves exactly one row was written (0 rows →
   // error), without echoing the row — that sent base64 images back on every
   // save. The client merges what it sent into its cache.
@@ -82,6 +103,11 @@ export async function PATCH(req: Request) {
   if (error) {
     console.error("[PATCH /api/me/org] update error:", error.message, "orgId:", orgId);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  // Files of ours that the row no longer points to (e.g. cover removed or
+  // replaced by a video). Legacy data:/external values are simply dropped.
+  for (const col of mediaCols) {
+    if (previousMedia[col] !== safeBody[col]) await deleteOwnOrgMediaFile(previousMedia[col], orgId);
   }
   console.log("[PATCH /api/me/org] saved:", { id: orgId, fields: Object.keys(safeBody) });
   return NextResponse.json({ ok: true });
