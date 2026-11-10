@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isMemberRole } from "@/lib/org-access";
 import {
   EMAIL_FROM, SITE_URL,
   wrapEmailTemplate, emailButton, emailDivider, emailSectionLabel, emailFeatureRow,
@@ -15,6 +16,7 @@ export async function POST(req: NextRequest) {
 
   const { email, role } = await req.json() as { email: string; role: string };
   if (!email || !role) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  if (!isMemberRole(role)) return NextResponse.json({ error: "Invalid role" }, { status: 400 });
 
   const admin = createAdminClient();
 

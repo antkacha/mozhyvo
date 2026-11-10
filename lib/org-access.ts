@@ -109,6 +109,12 @@ export async function resolveActiveOrg(
   return pickActiveOrg(await listUserOrgs(userId, admin), requestedOrgId);
 }
 
+/** Roles an org_members row can have (owners live in orgs.user_id, not here). */
+export const MEMBER_ROLES = ["admin", "reviewer"] as const;
+export type MemberRole = (typeof MEMBER_ROLES)[number];
+export const isMemberRole = (r: unknown): r is MemberRole =>
+  typeof r === "string" && (MEMBER_ROLES as readonly string[]).includes(r);
+
 /** Team management (invites, roles, removal) is owner-only; admin members manage opportunities. */
 export function canManageTeam(orgAccess: OrgAccess | null | undefined): boolean {
   return orgAccess?.isOwner === true;

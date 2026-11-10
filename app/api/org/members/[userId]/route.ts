@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { assertAffected, ApiError } from "@/lib/supabase/assert-rows";
+import { isMemberRole } from "@/lib/org-access";
 
 // DELETE — remove member from org
 export async function DELETE(
@@ -61,8 +62,9 @@ export async function PATCH(
   if (ctx.response) return ctx.response;
   const { org } = ctx;
 
-  const { role } = await req.json() as { role: string };
-  if (!role) return NextResponse.json({ error: "Missing role" }, { status: 400 });
+  const body = await req.json().catch(() => null) as { role?: unknown } | null;
+  const role = body?.role;
+  if (!isMemberRole(role)) return NextResponse.json({ error: "Invalid role" }, { status: 400 });
 
   const { userId } = params;
 

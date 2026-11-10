@@ -5,21 +5,24 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import UserAvatar from "@/components/UserAvatar";
 
+// Public fields always; country/graduation_year/contacts only when the API
+// decided this viewer may see them (lib/profile-visibility) — otherwise they
+// are absent and the contacts block isn't rendered.
 interface PublicProfile {
   first_name: string;
   last_name: string;
-  country: string;
   city: string;
   institution: string;
   degree: string;
-  graduation_year: string;
   languages: string[];
   bio: string;
   avatar_url: string;
-  linkedin_url: string;
-  cv_url: string;
-  telegram: string;
   interests: string[];
+  country?: string;
+  graduation_year?: string;
+  linkedin_url?: string;
+  cv_url?: string;
+  telegram?: string;
 }
 
 // ── Icons ──────────────────────────────────────────────────────────────────────
