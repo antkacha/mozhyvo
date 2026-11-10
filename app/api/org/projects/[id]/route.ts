@@ -4,6 +4,7 @@ import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { assertAffected, ApiError } from "@/lib/supabase/assert-rows";
 import { pickProjectFields, canPublish, PUBLISH_REQUIRES_VERIFIED } from "@/lib/project-fields";
+import { revalidateOrg } from "@/lib/revalidate-org";
 
 export async function PATCH(
   req: NextRequest,
@@ -43,6 +44,7 @@ export async function PATCH(
       "Project"
     );
     revalidateTag("projects");
+    await revalidateOrg({ id: orgId });
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (e instanceof ApiError) return NextResponse.json({ error: e.message }, { status: e.status });
@@ -70,6 +72,7 @@ export async function DELETE(
       "Project"
     );
     revalidateTag("projects");
+    await revalidateOrg({ id: orgId });
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (e instanceof ApiError) return NextResponse.json({ error: e.message }, { status: e.status });

@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { orgsBySlug, orgNameToSlug } from "@/lib/organizations";
 import ArchiveSection from "./ArchiveSection";
@@ -11,8 +10,20 @@ import OpportunityCard from "@/components/OpportunityCard";
 import { isDeadlinePassed } from "@/lib/deadline";
 import { selectColumns } from "@/lib/select-columns";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// ISR: rendered on first request, then served from cache for everyone. The
+// page reads no cookies/headers/session, so its HTML is the same for every
+// visitor. Org and project writes call revalidateOrg() (lib/revalidate-org)
+// so edits show up immediately; the 5-min window only matters for
+// deadline-based moves from "active" to "archive".
+export const revalidate = 300;
+
+// No pages are built ahead of time (the build never touches the DB): each
+// org page is rendered on its first request and then cached — on-demand ISR.
+// Without generateStaticParams Next 14 treats a [slug] route as fully dynamic
+// and never caches its HTML, even with `revalidate` set.
+export function generateStaticParams() {
+  return [];
+}
 
 // ── Social icons ──────────────────────────────────────────────────────────────
 const socialIcons: Record<string, { label: string; icon: React.ReactNode; bg: string }> = {
@@ -407,7 +418,6 @@ function DynamicOrgPage({
 
 // ── Route handler ─────────────────────────────────────────────────────────────
 export default async function OrgProfilePage({ params }: { params: { slug: string } }) {
-  noStore(); // Opt out of Next.js data cache entirely for this render
   const { slug } = params;
 
   // 1. Try static org

@@ -1,5 +1,6 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { slugify } from "@/lib/slugify";
+import { revalidateOrg } from "@/lib/revalidate-org";
 
 // /org/register never inserts into `orgs` directly — signUp() only stores
 // the form fields in user_metadata. This is the one place that turns that
@@ -46,6 +47,7 @@ export async function bootstrapOrgFromMetadata(admin: SupabaseClient, user: User
 
   if (created) {
     await admin.from("profiles").upsert({ id: user.id, role: "org" }, { onConflict: "id" });
+    await revalidateOrg({ id: created.id as string, slug: created.slug as string | null });
     return created;
   }
 

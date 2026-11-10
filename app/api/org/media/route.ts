@@ -5,6 +5,7 @@ import { ACTIVE_ORG_COOKIE } from "@/lib/org-access";
 import {
   setOrgMedia, clearOrgMedia, readOrgMediaInput, parseOrgMediaKind, orgMediaErrorResponse,
 } from "@/lib/org-media";
+import { revalidateOrg } from "@/lib/revalidate-org";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
   try {
     const kind = parseOrgMediaKind(new URL(req.url).searchParams.get("kind"));
     const url = await setOrgMedia(ctx.org.id, kind, await readOrgMediaInput(req, kind));
+    await revalidateOrg({ id: ctx.org.id });
     return NextResponse.json({ url });
   } catch (e) {
     return orgMediaErrorResponse(e);
@@ -51,6 +53,7 @@ export async function DELETE(req: Request) {
   try {
     const kind = parseOrgMediaKind(new URL(req.url).searchParams.get("kind"));
     await clearOrgMedia(ctx.org.id, kind);
+    await revalidateOrg({ id: ctx.org.id });
     return NextResponse.json({ url: null });
   } catch (e) {
     return orgMediaErrorResponse(e);

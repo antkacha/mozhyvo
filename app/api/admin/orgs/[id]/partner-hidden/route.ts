@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePartners } from "@/lib/partners";
+import { revalidateOrg } from "@/lib/revalidate-org";
 
 export const dynamic = "force-dynamic";
 
@@ -25,5 +26,6 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (!data) return NextResponse.json({ error: "Org not found" }, { status: 404 });
 
   revalidatePartners();
+  await revalidateOrg({ id: params.id });
   return NextResponse.json({ partner_hidden: data.partner_hidden });
 }

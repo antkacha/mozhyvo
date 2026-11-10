@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { assertAffected, ApiError } from "@/lib/supabase/assert-rows";
+import { revalidateOrg } from "@/lib/revalidate-org";
 
 async function assertAdmin() {
   const supabase = createClient();
@@ -22,6 +23,7 @@ export async function DELETE(
 
   try {
     const admin = createAdminClient();
+    const { data: project } = await admin.from("org_projects").select("org_id").eq("id", params.id).maybeSingle();
     assertAffected(
       await admin
         .from("org_projects")
@@ -31,6 +33,7 @@ export async function DELETE(
       "Project"
     );
     revalidateTag("projects");
+    if (project?.org_id) await revalidateOrg({ id: project.org_id as string });
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (e instanceof ApiError) return NextResponse.json({ error: e.message }, { status: e.status });

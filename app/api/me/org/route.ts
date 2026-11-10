@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgForRequest, requireActiveOrg } from "@/lib/active-org";
 import { ORG_PROFILE_SELECT } from "@/lib/org-profile";
 import { isOwnOrgMediaUrl, deleteOwnOrgMediaFile } from "@/lib/org-media";
+import { revalidateOrg } from "@/lib/revalidate-org";
 
 export async function GET() {
   const supabase = createClient();
@@ -109,6 +110,7 @@ export async function PATCH(req: Request) {
   for (const col of mediaCols) {
     if (previousMedia[col] !== safeBody[col]) await deleteOwnOrgMediaFile(previousMedia[col], orgId);
   }
+  await revalidateOrg({ id: orgId });
   console.log("[PATCH /api/me/org] saved:", { id: orgId, fields: Object.keys(safeBody) });
   return NextResponse.json({ ok: true });
 }

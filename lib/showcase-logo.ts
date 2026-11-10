@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { COVER_ALLOWED_TYPES, COVER_MAX_BYTES } from "@/lib/cover-photo";
 import { revalidatePartners } from "@/lib/partners";
+import { revalidateOrg } from "@/lib/revalidate-org";
 
 // The wide "showcase" logo an org shows in the homepage partner strip.
 // Separate from orgs.logo_url (the small square avatar). Server-side only.
@@ -92,6 +93,7 @@ export async function setOrgShowcaseLogo(orgId: string, file: File): Promise<str
   }
   await deleteShowcaseFile(org.showcase_logo_url as string | null);
   revalidatePartners();
+  await revalidateOrg({ id: orgId });
   return url;
 }
 
@@ -107,6 +109,7 @@ export async function clearOrgShowcaseLogo(orgId: string): Promise<void> {
   if (error) throw new Error(error.message);
   await deleteShowcaseFile(org.showcase_logo_url as string | null);
   revalidatePartners();
+  await revalidateOrg({ id: orgId });
 }
 
 /** Reads the "logo" file from a multipart body, or throws a 400. */

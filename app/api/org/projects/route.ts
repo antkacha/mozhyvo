@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { requireActiveOrg } from "@/lib/active-org";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { pickProjectFields, canPublish, PUBLISH_REQUIRES_VERIFIED } from "@/lib/project-fields";
+import { revalidateOrg } from "@/lib/revalidate-org";
 
 export async function GET() {
   const ctx = await requireActiveOrg();
@@ -45,5 +46,6 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   revalidateTag("projects");
+  await revalidateOrg({ id: orgId });
   return NextResponse.json({ project: data });
 }

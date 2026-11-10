@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { COVER_WIDTH, COVER_HEIGHT, COVER_BUCKET, COVER_THUMB_WIDTH, COVER_THUMB_HEIGHT, COVER_THUMB_QUALITY } from "@/lib/cover-photo";
 import { COVER_FILE, COVER_THUMB_FILE } from "@/lib/cover-url";
 import { fetchRemoteImage } from "@/lib/remote-image";
+import { revalidateOrg } from "@/lib/revalidate-org";
 
 export const runtime = "nodejs";
 // Vercel Hobby's hard function limit is 10s — this route must always
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (updateError) throw new Error(updateError.message);
 
     revalidateTag("projects");
+    await revalidateOrg({ id: orgId });
     return NextResponse.json({ photoUrl });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Server error" }, { status: 400 });

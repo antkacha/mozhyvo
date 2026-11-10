@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePartners } from "@/lib/partners";
 import { deleteShowcaseFile } from "@/lib/showcase-logo";
+import { revalidateOrg } from "@/lib/revalidate-org";
 
 async function assertAdmin() {
   const supabase = createClient();
@@ -28,7 +29,7 @@ export async function DELETE(
   const admin = createAdminClient();
   const orgId = params.id;
 
-  const { data: org } = await admin.from("orgs").select("id, name, user_id, showcase_logo_url").eq("id", orgId).maybeSingle();
+  const { data: org } = await admin.from("orgs").select("id, name, slug, user_id, showcase_logo_url").eq("id", orgId).maybeSingle();
   if (!org) return NextResponse.json({ error: "Org not found" }, { status: 404 });
 
   const { data: projects } = await admin.from("org_projects").select("id").eq("org_id", orgId);
@@ -78,6 +79,7 @@ export async function DELETE(
   // before the best-effort account cleanup below.
   await deleteShowcaseFile(org.showcase_logo_url as string | null);
   revalidatePartners();
+  await revalidateOrg({ id: orgId, slug: org.slug as string | null });
 
   // Sever the data bootstrapOrgFromMetadata keys off — user_metadata.role
   // stays "org" forever otherwise, since nothing else ever clears it. That's
