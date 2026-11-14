@@ -83,11 +83,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
   // Supabase org
   const admin = createAdminClient();
-  const { data } = await admin
+  const { data, error } = await admin
     .from("orgs")
     .select("name, description")
     .eq("slug", params.slug)
     .maybeSingle();
+  // DB/network failure → throw, so empty metadata isn't cached with the page.
+  if (error) throw new Error(`orgs metadata ${params.slug}: ${error.message}`);
   if (!data) return {};
   return {
     title: data.name,
@@ -425,21 +427,27 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
 
   // 2. Try Supabase org by slug (use admin client to bypass RLS)
   const admin = createAdminClient();
-  let { data: org } = await admin
+  // supabase-js returns DB/network failures as `error` rather than throwing.
+  // Throw on them: notFound() only when the query succeeded with no row, so a
+  // Supabase outage never gets cached as a 404 (ISR keeps the last good page).
+  const bySlug = await admin
     .from("orgs")
     .select<string, SupabaseOrg>(ORG_SELECT)
     .eq("slug", slug)
     .not("status", "in", '("rejected","blocked")')
     .maybeSingle();
+  if (bySlug.error) throw new Error(`orgs ${slug}: ${bySlug.error.message}`);
+  let org = bySlug.data;
 
   // 3. Fallback: try by UUID id (only if slug looks like a UUID)
   if (!org && /^[0-9a-f-]{36}$/i.test(slug)) {
-    const { data } = await admin
+    const { data, error } = await admin
       .from("orgs")
       .select<string, SupabaseOrg>(ORG_SELECT)
       .eq("id", slug)
       .not("status", "in", '("rejected","blocked")')
       .maybeSingle();
+    if (error) throw new Error(`orgs id ${slug}: ${error.message}`);
     org = data;
   }
 
@@ -449,14 +457,16 @@ export default async function OrgProfilePage({ params }: { params: { slug: strin
   // (PROJECT_SELECT) — a new column the cards need must be added to
   // SupabaseProject, and then typecheck forces it into the select too.
   // Only verified orgs' projects are public; a pending org's page lists none.
-  const { data: projects } = org.status === "verified"
+  const { data: projects, error: projectsError } = org.status === "verified"
     ? await admin
         .from("org_projects")
         .select<string, SupabaseProject>(PROJECT_SELECT)
         .eq("org_id", org.id)
         .eq("status", "published")
         .order("created_at", { ascending: false })
-    : { data: [] };
+    : { data: [], error: null };
+  // Same rule: a failed read must not be cached as "this org has no projects".
+  if (projectsError) throw new Error(`org_projects org ${org.id}: ${projectsError.message}`);
 
   const isExpired = (p: SupabaseProject) => isDeadlinePassed(p.deadline ?? "");
   const all = (projects ?? []) as SupabaseProject[];

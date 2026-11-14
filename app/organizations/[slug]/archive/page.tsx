@@ -27,21 +27,25 @@ export default async function OrgArchivePage({ params }: { params: { slug: strin
   if (orgsBySlug[slug]) notFound();
 
   const admin = createAdminClient();
-  const { data: org } = await admin
+  const { data: org, error: orgError } = await admin
     .from("orgs")
     .select("id, name, slug, logo_url, brand_color, status")
     .eq("slug", slug)
     .eq("status", "verified")
     .maybeSingle();
 
+  // DB/network failure → throw (never cached), not a cached 404. notFound()
+  // only when the query succeeded and no verified org matched.
+  if (orgError) throw new Error(`orgs ${slug}: ${orgError.message}`);
   if (!org) notFound();
 
-  const { data: allProjects } = await admin
+  const { data: allProjects, error: projectsError } = await admin
     .from("org_projects")
     .select("id, title, type, type_name, country, flag, deadline, deadline_display, funding, short_description, photo_url")
     .eq("org_id", org.id)
     .eq("status", "published")
     .order("deadline", { ascending: false });
+  if (projectsError) throw new Error(`org_projects org ${org.id}: ${projectsError.message}`);
 
   const archived = ((allProjects ?? []) as Project[]).filter(
     (p) => isDeadlinePassed(p.deadline ?? ""),

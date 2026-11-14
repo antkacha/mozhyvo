@@ -46,7 +46,13 @@ async function brandPlaceholder(cacheControl: string) {
 export default async function Image({ params }: { params: { slug: string } }) {
   // Not found, not published, or org not verified → brand image, so a
   // non-public opportunity never leaks a preview.
-  const opp = await getPublicOpportunity(params.slug);
+  let opp: Awaited<ReturnType<typeof getPublicOpportunity>>;
+  try {
+    opp = await getPublicOpportunity(params.slug);
+  } catch {
+    // DB unreachable: brand image, but short-cached like any other failure.
+    return brandPlaceholder(OG_CACHE_ERROR);
+  }
   if (!opp?.photo) return brandPlaceholder(OG_CACHE_OK);
 
   // A missing, slow or non-image cover must never break the preview.

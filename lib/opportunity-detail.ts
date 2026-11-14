@@ -11,12 +11,16 @@ import { createAdminClient } from "@/lib/supabase/admin";
 const fetchOrgProjectRow = unstable_cache(
   async (id: string) => {
     const admin = createAdminClient();
-    const { data } = await admin
+    const { data, error } = await admin
       .from("org_projects")
       .select("*, orgs!inner(id, name, status, slug)")
       .eq("id", id)
       .eq("status", "published")
       .maybeSingle();
+    // supabase-js returns network/DB failures as `error` instead of throwing.
+    // Throw so neither this cache nor the page's ISR entry stores the failure
+    // as "not found" (a cached 404 outlived the Nov 2026 Supabase outage).
+    if (error) throw new Error(`org_projects ${id}: ${error.message}`);
     return data;
   },
   ["org-project-detail"],
@@ -25,48 +29,46 @@ const fetchOrgProjectRow = unstable_cache(
 
 // The one definition of "this opportunity is public": published, and its
 // org is verified. Used by the detail page, its metadata and its OG image.
+// null = the query succeeded and the opportunity isn't public (callers 404).
+// A DB/network failure throws — callers must not treat it as "not found".
 export async function getPublicOpportunity(id: string): Promise<Opportunity | null> {
-  try {
-    const data = await fetchOrgProjectRow(id);
-    if (!data) return null;
-    const org = data.orgs as { id: string; name: string; status?: string; slug?: string };
-    // Only verified orgs' projects are public — also by direct URL.
-    if (org.status !== "verified") return null;
-    return {
-      slug:             data.id as string,
-      type:             normalizeType(data.type as string, data.type_name as string),
-      typeName:         (data.type_name as string) ?? "",
-      org:              org.name ?? "",
-      orgSlug:          org.slug || org.id,
-      title:            (data.title as string) ?? "",
-      shortDescription: (data.short_description as string) ?? "",
-      fullDescription:  (data.full_description as string) ?? "",
-      deadline:         (data.deadline as string) ?? "",
-      deadlineDisplay:  (data.deadline_display as string) ?? "",
-      flag:             (data.flag as string) ?? "🇺🇦",
-      location:         (data.location as string) ?? "",
-      country:          (data.country as string) ?? "",
-      format:           (data.format as Opportunity["format"]) ?? "offline",
-      languages:        (data.languages as string[]) ?? [],
-      ageMin:           data.age_min as number | undefined,
-      ageMax:           data.age_max as number | undefined,
-      funding:          (data.funding as Opportunity["funding"]) ?? "fully-funded",
-      fundingDetails:   (data.funding_details as string) ?? "",
-      requirements:     (data.requirements as string[]) ?? [],
-      benefits:         (data.benefits as string[]) ?? [],
-      tags:             (data.tags as string[]) ?? [],
-      ...applyFieldsFromRow(data),
-      duration:         (data.duration as string) ?? "",
-      infoPackUrl:      (data.info_pack_url as string) || undefined,
-      photo:            (data.photo_url as string) || undefined,
-      importantNote:    (data.important_note as string) || undefined,
-      hasFee:           (data.has_fee as boolean) ?? false,
-      feeAmount:        (data.fee_amount as string) || undefined,
-      feeWho:           (data.fee_who as Opportunity["feeWho"]) ?? "selected",
-      projectId:        data.id as string,
-      orgVerified:      org.status === "verified",
-    };
-  } catch {
-    return null;
-  }
+  const data = await fetchOrgProjectRow(id);
+  if (!data) return null;
+  const org = data.orgs as { id: string; name: string; status?: string; slug?: string };
+  // Only verified orgs' projects are public — also by direct URL.
+  if (org.status !== "verified") return null;
+  return {
+    slug:             data.id as string,
+    type:             normalizeType(data.type as string, data.type_name as string),
+    typeName:         (data.type_name as string) ?? "",
+    org:              org.name ?? "",
+    orgSlug:          org.slug || org.id,
+    title:            (data.title as string) ?? "",
+    shortDescription: (data.short_description as string) ?? "",
+    fullDescription:  (data.full_description as string) ?? "",
+    deadline:         (data.deadline as string) ?? "",
+    deadlineDisplay:  (data.deadline_display as string) ?? "",
+    flag:             (data.flag as string) ?? "🇺🇦",
+    location:         (data.location as string) ?? "",
+    country:          (data.country as string) ?? "",
+    format:           (data.format as Opportunity["format"]) ?? "offline",
+    languages:        (data.languages as string[]) ?? [],
+    ageMin:           data.age_min as number | undefined,
+    ageMax:           data.age_max as number | undefined,
+    funding:          (data.funding as Opportunity["funding"]) ?? "fully-funded",
+    fundingDetails:   (data.funding_details as string) ?? "",
+    requirements:     (data.requirements as string[]) ?? [],
+    benefits:         (data.benefits as string[]) ?? [],
+    tags:             (data.tags as string[]) ?? [],
+    ...applyFieldsFromRow(data),
+    duration:         (data.duration as string) ?? "",
+    infoPackUrl:      (data.info_pack_url as string) || undefined,
+    photo:            (data.photo_url as string) || undefined,
+    importantNote:    (data.important_note as string) || undefined,
+    hasFee:           (data.has_fee as boolean) ?? false,
+    feeAmount:        (data.fee_amount as string) || undefined,
+    feeWho:           (data.fee_who as Opportunity["feeWho"]) ?? "selected",
+    projectId:        data.id as string,
+    orgVerified:      org.status === "verified",
+  };
 }
